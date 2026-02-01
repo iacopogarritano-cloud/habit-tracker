@@ -1,0 +1,107 @@
+# Habit Tracker - Contesto Progetto
+
+## Panoramica
+**Nome:** Habit Tracker
+**Tipo:** Web App per tracciamento abitudini personali
+**Status:** MVP in sviluppo - Fase 1 (Setup completato)
+**PRD:** Vedi [PRD.md](./PRD.md) per requisiti completi
+
+---
+
+## Stack Tecnologico
+
+### Frontend
+- **Framework:** React 18+ con Vite
+- **Styling:** CSS (da definire se vanilla o Tailwind)
+- **Build Tool:** Vite v7
+
+### Data Storage (MVP)
+- **LocalStorage** del browser
+- Nessun backend per MVP
+- Nessun login/autenticazione
+
+### Hosting (Futuro)
+- GitHub Pages o Vercel
+
+---
+
+## Struttura Progetto
+```
+habit-tracker/
+├── src/
+│   ├── components/    # Componenti React riutilizzabili
+│   ├── pages/         # Pagine/schermate principali
+│   ├── hooks/         # Custom hooks
+│   ├── utils/         # Funzioni utility
+│   └── styles/        # File CSS
+├── public/            # Asset statici
+└── PRD.md            # Product Requirements Document
+```
+
+---
+
+## Decisioni Architetturali
+
+### Già Prese
+1. **React + Vite** invece di vanilla JS → per scalabilità e apprendimento
+2. **LocalStorage** per MVP → semplicità, zero backend
+3. **Component-based** → ogni elemento UI è un componente riutilizzabile
+
+### Da Prendere
+- [ ] Styling: CSS vanilla vs Tailwind CSS
+- [ ] State management: useState/useContext vs libreria esterna
+- [ ] Struttura cartelle definitiva
+
+---
+
+## Data Model (MVP)
+
+```javascript
+// Habit
+{
+  id: "uuid",
+  name: "Nome abitudine",
+  type: "boolean" | "count" | "duration",
+  target: number,
+  timeframe: "daily",
+  createdAt: "ISO date",
+  color: "#hex"
+}
+
+// CheckIn
+{
+  id: "uuid",
+  habitId: "habit-uuid",
+  date: "YYYY-MM-DD",
+  value: number,
+  completed: boolean,
+  timestamp: "ISO datetime"
+}
+```
+
+---
+
+## Stato Attuale
+
+### Completato
+- [x] Setup progetto React + Vite
+- [x] Struttura cartelle base
+- [x] PRD definito
+
+### In Corso
+- [ ] Componenti UI base
+- [ ] Data model implementation
+- [ ] LocalStorage service
+
+### Prossimi Step
+1. Creare componente HabitCard
+2. Implementare CRUD abitudini
+3. Dashboard principale
+
+---
+
+## Note per Claude
+- Questo è il mio PRIMO progetto React
+- Spiegare sempre i concetti React quando li usi (useState, useEffect, props, etc.)
+- Preferire soluzioni semplici e ben commentate
+- Riferirsi al PRD.md per feature e requisiti
