@@ -1,42 +1,1435 @@
-#root {
-  max-width: 1280px;
+/**
+ * Habit Tracker - MVP Styles
+ * Mobile-first, clean design
+ */
+
+/* ============================================
+   CSS VARIABLES
+   ============================================ */
+
+:root {
+  --color-primary: #4CAF50;
+  --color-primary-dark: #388E3C;
+  --color-secondary: #2196F3;
+  --color-accent: #FF9800;
+  --color-danger: #ef4444;
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+
+  --color-bg: #f5f5f5;
+  --color-card: #ffffff;
+  --color-text: #1a1a1a;
+  --color-text-secondary: #666666;
+  --color-border: #e0e0e0;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.app {
+  max-width: 600px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 16px;
+  min-height: 100vh;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.app-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.app-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 4px;
+}
+
+.today-date {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+/* ============================================
+   ERROR BANNER
+   ============================================ */
+
+.error-banner {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--color-danger);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+/* ============================================
+   PROGRESS DASHBOARD (US-001)
+   ============================================ */
+
+.progress-dashboard {
+  margin-bottom: 24px;
+}
+
+.progress-card {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+
+.progress-percent {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.progress-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.progress-detail {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+/* ============================================
+   HABITS SECTION
+   ============================================ */
+
+.habits-section {
+  margin-bottom: 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.btn-add {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-add:hover {
+  background: var(--color-primary-dark);
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+
+.empty-state {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.empty-state p {
+  margin-bottom: 8px;
+}
+
+/* ============================================
+   HABIT LIST
+   ============================================ */
+
+.habit-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.habit-card {
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s;
+}
+
+.habit-card.completed {
+  border-left: 4px solid var(--color-success);
+}
+
+.habit-info {
+  flex: 1;
+  min-width: 120px;
+}
+
+.habit-name {
+  font-weight: 500;
+}
+
+.habit-weight {
+  font-size: 12px;
+  color: var(--color-accent);
+}
+
+.habit-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.habit-streak {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ef6c00;
+  background: #fff3e0;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ============================================
+   HABIT PROGRESS BAR
+   ============================================ */
+
+.habit-progress {
+  flex: 1;
+  min-width: 100px;
+  height: 24px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.habit-progress .progress-bar {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: var(--radius-sm);
+  transition: width 0.3s ease;
+}
+
+.habit-progress .progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ============================================
+   HABIT ACTIONS
+   ============================================ */
+
+.habit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-increment,
+.btn-decrement,
+.btn-check,
+.btn-edit,
+.btn-delete {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-increment {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-increment:hover {
+  background: var(--color-primary-dark);
+}
+
+.btn-decrement {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-decrement:hover:not(:disabled) {
+  background: var(--color-border);
+}
+
+.btn-decrement:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-edit {
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+}
+
+.btn-edit:hover {
+  background: #dbeafe;
+  color: var(--color-secondary);
+}
+
+.btn-delete {
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+}
+
+.btn-delete:hover {
+  background: #fee2e2;
+  color: var(--color-danger);
+}
+
+/* ============================================
+   MODAL (US-007)
+   ============================================ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal-content {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: var(--shadow-md);
+  animation: modal-enter 0.2s ease-out;
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--color-text);
+}
+
+.modal-text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-danger {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-danger);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+/* Checkbox Button for Boolean Habits */
+.btn-check {
+  background: var(--color-bg);
+  color: var(--color-border);
+  border: 1px solid var(--color-border);
+}
+
+.btn-check:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-check.checked {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: white;
+}
+
+/* ============================================
+   HABIT FORM (US-002)
+   ============================================ */
+
+.form-section {
+  margin-bottom: 24px;
+}
+
+.habit-form {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+}
+
+.form-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--color-text);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+
+.label-hint {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.form-error {
+  display: block;
+  color: var(--color-danger);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Type Selector */
+.type-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.type-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--color-text);
+}
+
+.type-option:hover {
+  border-color: var(--color-primary);
+}
+
+.type-option.active {
+  border-color: var(--color-primary);
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.type-label {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.type-desc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* Weight Selector */
+.weight-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.weight-stars {
+  display: flex;
+  gap: 4px;
+}
+
+.weight-star {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  color: var(--color-border);
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.weight-star:hover {
+  transform: scale(1.1);
+}
+
+.weight-star.active {
+  color: var(--color-accent);
+}
+
+.weight-star:disabled {
+  cursor: not-allowed;
+}
+
+.weight-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.impact-preview,
+.target-preview {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+/* Color Picker */
+.color-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.color-option {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  aspect-ratio: 1;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-option.active {
+  border-color: var(--color-text);
+  box-shadow: 0 0 0 2px var(--color-card);
+}
+
+/* Target with Unit (US-015) */
+.target-with-unit {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.target-input {
+  width: 80px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 16px;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.target-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
-@keyframes logo-spin {
+.unit-select {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  background: var(--color-card);
+  cursor: pointer;
+}
+
+.unit-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.unit-select optgroup {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.unit-select option {
+  font-weight: 400;
+  padding: 4px;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.btn-cancel {
+  padding: 10px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background: var(--color-bg);
+}
+
+.btn-submit {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-submit:hover {
+  background: var(--color-primary-dark);
+}
+
+/* ============================================
+   DEBUG FOOTER
+   ============================================ */
+
+.debug-footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.debug-footer summary {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.debug-footer pre {
+  margin-top: 8px;
+  padding: 12px;
+  background: #1a1a1a;
+  color: #22c55e;
+  border-radius: var(--radius-md);
+  font-size: 11px;
+  overflow-x: auto;
+}
+
+.debug-controls {
+  margin-top: 12px;
+  padding: 12px;
+  background: #2a2a2a;
+  border-radius: var(--radius-md);
+}
+
+.debug-controls p {
+  color: #ccc;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.debug-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.debug-habit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.debug-habit-row span {
+  flex: 1;
+  min-width: 100px;
+  color: #eee;
+  font-size: 12px;
+}
+
+.debug-habit-row button {
+  padding: 4px 8px;
+  font-size: 11px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #4CAF50;
+  color: white;
+}
+
+.debug-habit-row button:last-child {
+  background: #ef4444;
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+
+.app-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-size: 18px;
+  color: var(--color-text-secondary);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (min-width: 480px) {
+  .app {
+    padding: 24px;
+  }
+
+  .progress-percent {
+    font-size: 64px;
+  }
+}
+
+/* ============================================
+   HABIT DETAIL MODAL (US-008)
+   ============================================ */
+
+.habit-detail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.habit-detail-modal {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 450px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-md);
+  animation: modal-enter 0.2s ease-out;
+}
+
+.habit-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.habit-detail-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.habit-detail-header h2 {
+  flex: 1;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.habit-detail-header .btn-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: all 0.2s;
+}
+
+.habit-detail-header .btn-close:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+/* Stats Grid */
+.habit-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  padding: 16px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-icon {
+  font-size: 20px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Calendar Section */
+.habit-calendar-section {
+  margin-bottom: 24px;
+}
+
+.habit-calendar-section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--color-text);
+}
+
+.habit-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+  cursor: default;
+}
+
+.calendar-day.missed {
+  background: var(--color-border);
+}
+
+.calendar-day.partial {
+  background: var(--color-warning);
+}
+
+.calendar-day.completed {
+  background: var(--color-success);
+}
+
+.calendar-day.future {
+  background: transparent;
+  border: 1px dashed var(--color-border);
+}
+
+/* Calendar Legend */
+.calendar-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.legend-dot.missed {
+  background: var(--color-border);
+}
+
+.legend-dot.partial {
+  background: var(--color-warning);
+}
+
+.legend-dot.completed {
+  background: var(--color-success);
+}
+
+/* Habit Info Section */
+.habit-info-section {
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.habit-info-section p {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.habit-info-section strong {
+  color: var(--color-text);
+}
+
+/* ============================================
+   DAY EDITING (US-012)
+   ============================================ */
+
+.calendar-hint {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.calendar-day.clickable {
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.calendar-day.clickable:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.calendar-day.editing {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.day-edit-form {
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 16px;
+  animation: slide-down 0.2s ease-out;
+}
+
+@keyframes slide-down {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
+    transform: translateY(-10px);
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.day-edit-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--color-text);
 }
 
-.card {
-  padding: 2em;
+.day-edit-boolean {
+  display: flex;
+  justify-content: center;
 }
 
-.read-the-docs {
-  color: #888;
+.btn-boolean {
+  padding: 12px 24px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-boolean:hover {
+  border-color: var(--color-primary);
+}
+
+.btn-boolean.active {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: white;
+}
+
+.day-edit-numeric {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.day-edit-numeric .btn-increment,
+.day-edit-numeric .btn-decrement {
+  width: 40px;
+  height: 40px;
+}
+
+.edit-value-input {
+  width: 60px;
+  height: 40px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.edit-value-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.edit-target {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-left: 4px;
+}
+
+.day-edit-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.btn-cancel-small,
+.btn-save-small {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel-small {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.btn-cancel-small:hover {
+  background: var(--color-bg);
+}
+
+.btn-save-small {
+  background: var(--color-primary);
+  border: none;
+  color: white;
+}
+
+.btn-save-small:hover {
+  background: var(--color-primary-dark);
+}
+
+/* Clickable habit card */
+.habit-card {
+  cursor: pointer;
+}
+
+.habit-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ============================================
+   DAY VIEW - Dashboard per data
+   ============================================ */
+
+/* Clickable date button in header */
+.today-date-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.today-date-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.today-date-btn .calendar-icon {
+  font-size: 1.1rem;
+}
+
+/* Overlay */
+.dayview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+/* Modal */
+.dayview-modal {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-md);
+}
+
+/* Header con navigazione */
+.dayview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  background: var(--color-card);
+  z-index: 10;
+}
+
+.dayview-date {
+  flex: 1;
+  text-align: center;
+}
+
+.dayview-date h2 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.dayview-today-badge {
+  display: inline-block;
+  background: var(--color-primary);
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 8px;
+}
+
+.dayview-nav-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text);
+}
+
+.dayview-nav-btn:hover:not(:disabled) {
+  background: var(--color-bg);
+}
+
+.dayview-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.dayview-close {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+}
+
+/* Mini-calendario per selezione rapida */
+.dayview-calendar-picker {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.dayview-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+}
+
+.dayview-calendar-day {
+  width: 100%;
+  aspect-ratio: 1;
+  border: none;
+  background: var(--color-card);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--color-text);
+}
+
+.dayview-calendar-day:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.dayview-calendar-day.selected {
+  background: var(--color-primary);
+  color: white;
+  font-weight: bold;
+}
+
+.dayview-calendar-day.today {
+  border: 2px solid var(--color-primary);
+}
+
+.dayview-calendar-day.today.selected {
+  border-color: white;
+}
+
+/* Avviso giorni futuri */
+.dayview-future-warning {
+  background: var(--color-warning);
+  color: #000;
+  text-align: center;
+  padding: 8px;
+  font-size: 0.85rem;
+}
+
+/* Progresso del giorno */
+.dayview-progress {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dayview-progress-circle {
+  font-size: 2rem;
+  font-weight: bold;
+  min-width: 80px;
+  text-align: center;
+}
+
+.dayview-progress-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.dayview-progress-label {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.dayview-progress-detail {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Lista abitudini */
+.dayview-habits {
+  padding: 16px;
+}
+
+.dayview-empty {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: 32px;
+}
+
+.dayview-habit-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dayview-habit-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s;
+}
+
+.dayview-habit-card.completed {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.dayview-habit-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.dayview-habit-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dayview-habit-name {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.dayview-habit-progress {
+  flex: 1;
+  height: 24px;
+  background: var(--color-card);
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.dayview-progress-bar {
+  height: 100%;
+  border-radius: var(--radius-sm);
+  transition: width 0.3s ease;
+}
+
+.dayview-progress-text {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.dayview-habit-actions {
+  display: flex;
+  gap: 4px;
 }

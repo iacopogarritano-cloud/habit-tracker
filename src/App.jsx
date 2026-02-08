@@ -1,35 +1,327 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+/**
+ * Habit Tracker - MVP
+ * US-002: Form creazione abitudine con peso
+ */
+
+import { useState, useCallback } from 'react';
+import { useHabitStore } from './hooks/useHabitStore';
+import { HabitForm } from './components/HabitForm';
+import { HabitDetail } from './components/HabitDetail';
+import { DayView } from './components/DayView';
+import { getCheckIn } from './utils/storage';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const {
+    habits,
+    isLoading,
+    error,
+    progress,
+    today,
+    addHabit,
+    updateHabit,
+    deleteHabit,
+    checkIn,
+    getTodayCheckIn,
+    getStats,
+    getLastNDays,
+    _rawData,
+  } = useHabitStore();
+
+  // State per mostrare/nascondere il form
+  const [showForm, setShowForm] = useState(false);
+  // State per editing
+  const [editingHabit, setEditingHabit] = useState(null);
+  // State per delete confirmation
+  const [deletingHabit, setDeletingHabit] = useState(null);
+  // State per detail view (US-008)
+  const [selectedHabit, setSelectedHabit] = useState(null);
+  // State per day view (dashboard per data)
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  // Handler per navigare tra i giorni nella DayView (DEVE essere prima di early return)
+  const handleDateNavigate = useCallback((offset) => {
+    setSelectedDate(current => {
+      const d = new Date(current);
+      d.setDate(d.getDate() + offset);
+      return d.toISOString().split('T')[0];
+    });
+  }, []);
+
+  // Funzione per ottenere check-in per una data specifica (DEVE essere prima di early return)
+  const getCheckInForDate = useCallback((habitId, date) => {
+    if (!_rawData) return null;
+    return getCheckIn(_rawData, habitId, date);
+  }, [_rawData]);
+
+  // Loading state
+  if (isLoading) {
+    return <div className="app-loading">Caricamento...</div>;
+  }
+
+  // Handler per creare/modificare abitudine
+  const handleSubmitHabit = (habitData) => {
+    if (editingHabit) {
+      // Modifica abitudine esistente
+      updateHabit(editingHabit.id, habitData);
+      setEditingHabit(null);
+    } else {
+      // Crea nuova abitudine
+      addHabit(habitData);
+    }
+    setShowForm(false);
+  };
+
+  // Handler per iniziare modifica
+  const handleEditHabit = (habit) => {
+    setEditingHabit(habit);
+    setShowForm(true);
+  };
+
+  // Handler per annullare form
+  const handleCancelForm = () => {
+    setShowForm(false);
+    setEditingHabit(null);
+  };
+
+  // Handler per confermare eliminazione
+  const handleConfirmDelete = () => {
+    if (deletingHabit) {
+      deleteHabit(deletingHabit.id);
+      setDeletingHabit(null);
+    }
+  };
+
+  // Handler per incrementare
+  const handleIncrement = (habitId, currentValue) => {
+    checkIn(habitId, currentValue + 1);
+  };
+
+  // Handler per decrementare
+  const handleDecrement = (habitId, currentValue) => {
+    if (currentValue > 0) {
+      checkIn(habitId, currentValue - 1);
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+    <div className="app">
+      {/* Header con data cliccabile */}
+      <header className="app-header">
+        <h1>Habit Tracker</h1>
+        <button
+          className="today-date-btn"
+          onClick={() => setSelectedDate(today)}
+          title="Clicca per vedere il dettaglio del giorno"
+        >
+          <span className="calendar-icon">📅</span>
+          <span>{today}</span>
         </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      </header>
+
+      {/* Error display */}
+      {error && (
+        <div className="error-banner">
+          {error}
+        </div>
+      )}
+
+      {/* Dashboard progresso pesato (US-001) */}
+      <section className="progress-dashboard">
+        <div className="progress-card">
+          <div className="progress-percent" style={{
+            color: progress.percent >= 70 ? '#22c55e' :
+                   progress.percent >= 40 ? '#eab308' : '#ef4444'
+          }}>
+            {progress.percent}%
+          </div>
+          <div className="progress-label">Progresso Pesato</div>
+          <div className="progress-detail">
+            {progress.completed}/{progress.total} abitudini completate
+          </div>
+        </div>
+      </section>
+
+      {/* Form creazione/modifica abitudine (US-002, US-006) */}
+      {showForm && (
+        <section className="form-section">
+          <HabitForm
+            onSubmit={handleSubmitHabit}
+            onCancel={handleCancelForm}
+            initialData={editingHabit}
+          />
+        </section>
+      )}
+
+      {/* Modal conferma eliminazione (US-007) */}
+      {deletingHabit && (
+        <div className="modal-overlay" onClick={() => setDeletingHabit(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">Eliminare abitudine?</h3>
+            <p className="modal-text">
+              Stai per eliminare "<strong>{deletingHabit.name}</strong>".
+              <br />
+              Questa azione è irreversibile e perderai tutto lo storico.
+            </p>
+            <div className="modal-actions">
+              <button
+                className="btn-cancel"
+                onClick={() => setDeletingHabit(null)}
+              >
+                Annulla
+              </button>
+              <button
+                className="btn-danger"
+                onClick={handleConfirmDelete}
+              >
+                Elimina
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal dettaglio abitudine (US-008, US-012) */}
+      {selectedHabit && (
+        <HabitDetail
+          habit={selectedHabit}
+          stats={getStats(selectedHabit.id)}
+          lastNDays={getLastNDays(30)}
+          onClose={() => setSelectedHabit(null)}
+          onCheckIn={checkIn}
+        />
+      )}
+
+      {/* Modal day view (dashboard per data) */}
+      {selectedDate && (
+        <DayView
+          date={selectedDate}
+          habits={habits}
+          getCheckInForDate={getCheckInForDate}
+          onCheckIn={checkIn}
+          onClose={() => setSelectedDate(null)}
+          onNavigate={handleDateNavigate}
+          onSelectDate={setSelectedDate}
+        />
+      )}
+
+      {/* Lista abitudini (US-003) */}
+      <section className="habits-section">
+        <div className="section-header">
+          <h2>Le tue abitudini</h2>
+          {!showForm && (
+            <button onClick={() => setShowForm(true)} className="btn-add">
+              + Aggiungi
+            </button>
+          )}
+        </div>
+
+        {habits.length === 0 ? (
+          <div className="empty-state">
+            <p>Nessuna abitudine ancora.</p>
+            <p>Clicca "+ Aggiungi" per creare la tua prima abitudine!</p>
+          </div>
+        ) : (
+          <ul className="habit-list">
+            {habits.map((habit) => {
+              const todayCheckIn = getTodayCheckIn(habit.id);
+              const currentValue = todayCheckIn?.value || 0;
+              const completionPercent = Math.min(100, (currentValue / habit.target) * 100);
+              const isCompleted = currentValue >= habit.target;
+              const stats = getStats(habit.id);
+
+              return (
+                <li
+                  key={habit.id}
+                  className={`habit-card ${isCompleted ? 'completed' : ''}`}
+                  onClick={() => setSelectedHabit(habit)}
+                >
+                  <div className="habit-info">
+                    <div className="habit-name-row">
+                      <span className="habit-name">{habit.name}</span>
+                      {stats.currentStreak > 0 && (
+                        <span className="habit-streak">🔥 {stats.currentStreak}</span>
+                      )}
+                    </div>
+                    <span className="habit-weight">{'★'.repeat(habit.weight)}</span>
+                  </div>
+
+                  <div className="habit-progress">
+                    <div
+                      className="progress-bar"
+                      style={{
+                        width: `${completionPercent}%`,
+                        backgroundColor: habit.color || 'var(--color-primary)'
+                      }}
+                    />
+                    <span className="progress-text">
+                      {currentValue}/{habit.target}{habit.unit ? ` ${habit.unit}` : ''}
+                    </span>
+                  </div>
+
+                  <div className="habit-actions" onClick={(e) => e.stopPropagation()}>
+                    {habit.type === 'boolean' ? (
+                      /* Checkbox per abitudini boolean */
+                      <button
+                        onClick={() => checkIn(habit.id, isCompleted ? 0 : 1)}
+                        className={`btn-check ${isCompleted ? 'checked' : ''}`}
+                        title={isCompleted ? 'Segna come non fatto' : 'Segna come fatto'}
+                      >
+                        ✓
+                      </button>
+                    ) : (
+                      /* +/- buttons per count/duration - ordine: +, - */
+                      <>
+                        <button
+                          onClick={() => handleIncrement(habit.id, currentValue)}
+                          className="btn-increment"
+                        >
+                          +
+                        </button>
+                        <button
+                          onClick={() => handleDecrement(habit.id, currentValue)}
+                          className="btn-decrement"
+                          disabled={currentValue === 0}
+                        >
+                          -
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => handleEditHabit(habit)}
+                      className="btn-edit"
+                      title="Modifica"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      onClick={() => setDeletingHabit(habit)}
+                      className="btn-delete"
+                      title="Elimina"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      {/* Debug info */}
+      <footer className="debug-footer">
+        <details>
+          <summary>Debug Info</summary>
+          <pre>{JSON.stringify({ habits: habits.length, progress }, null, 2)}</pre>
+          <p style={{ marginTop: '8px', fontSize: '11px', color: '#888' }}>
+            Per testare streak: apri DevTools (F12) → Console → esegui:<br/>
+            <code>localStorage.setItem('habit-tracker-test', 'true')</code>
+          </p>
+        </details>
+      </footer>
+    </div>
+  );
 }
 
-export default App
+export default App;

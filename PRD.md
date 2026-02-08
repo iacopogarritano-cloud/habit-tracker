@@ -2,28 +2,49 @@
 
 ## Executive Summary
 
-**Prodotto:** Habit Tracker - App per monitoraggio e visualizzazione abitudini personali
-**Target User:** Individui che vogliono migliorare la propria produttività e salute tracciando abitudini quotidiane
-**Problema:** Le app esistenti sono costose (es. Delta di eToro diventata a pagamento) o troppo complesse
-**Soluzione:** Web app semplice, intuitiva e gratuita per tracciare abitudini con metriche personalizzabili e report visuali
+**Prodotto:** Habit Tracker - App per monitoraggio e visualizzazione abitudini personali con **weighted prioritization**
+**Target User:** Professionisti e studenti che vogliono migliorare produttività e benessere tracciando abitudini in modo significativo
+**Problema Chiave:**
+- **52% degli utenti abbandona app habit tracking entro 30 giorni** (retention crisis)
+- App esistenti hanno paywall aggressivi (HBT: *"only good if you upgrade"*)
+- Nessuna app permette di **pesare l'importanza delle abitudini** (tutte trattate ugualmente)
+- Complessità eccessiva (Habitica) o feature poverty (Streaks: 12 task limit)
+
+**Soluzione:**
+Web app semplice, gratuita (ads poco invasive), e **unica nel mercato** per:
+1. **Weighted Completion Dashboard:** Capire a colpo d'occhio se le priorità importanti sono rispettate
+2. **Retention-first design:** Compassionate streaks, focus su progresso vs perfezione
+3. **Honest pricing:** Free tier genuinamente utile, no dark patterns
+4. **Rock-solid reliability:** Notifications e data persistence che funzionano sempre
+
+**Mercato:** USD $13.06B (2025) → $43.87B (2034), CAGR 14.41% - in rapida crescita
 
 ---
 
 ## 1. Vision e Obiettivi
 
 ### Vision
-Creare uno strumento minimalista ma potente per il self-improvement, che renda il tracking delle abitudini semplice, visuale e motivante.
+> **"Rendere il tracciamento delle abitudini così semplice e veloce che diventa esso stesso un'abitudine."**
+
+Creare l'habit tracker più **affidabile e onesto** del mercato, che:
+- Rispetta le **vere priorità** dell'utente (weighted habits)
+- È progettato per **retention long-term**, non solo acquisition
+- È **genuinamente gratuito**, non "free-to-useless"
+- **Funziona sempre** (rock-solid notifications e data persistence)
 
 ### Obiettivi di Business
-- **Primario:** Progetto portfolio per transizione verso ruolo PM in tech (Bending Spoons, Big Tech)
-- **Secondario:** Risolvere problema personale di tracking abitudini senza costi ricorrenti
-- **Terziario:** Imparare sviluppo web e principi di product management
+- **Primario:** Progetto portfolio dimostrando **PM thinking end-to-end** (discovery, strategy, execution)
+- **Secondario:** Risolvere problema personale reale (HBT paywall + mancanza weighting)
+- **Terziario:** Imparare sviluppo web moderno (React) e product management
+- **Revenue Model (futuro):** Ads poco invasive (free forever) + optional premium features
 
 ### Obiettivi Utente
-- Tracciare facilmente abitudini giornaliere/settimanali/mensili
-- Visualizzare progressi e streak (giorni consecutivi)
-- Identificare pattern e trend nel comportamento
-- Rimanere motivati con feedback visuale immediato
+- **Capire davvero come sta andando la vita** (non solo "quante abitudini completate")
+- Tracciare facilmente abitudini con **diverse priorità/importanza**
+- Visualizzare progressi **ponderati** su vere priorità
+- Vedere streak e trend senza sentirsi puniti per fallimenti occasionali
+- **Check-in rapido** (< 1 minuto al giorno) con multiple opzioni (drag, tap, checkbox)
+- Rimanere motivati long-term (no abbandono dopo 30 giorni come 52% degli utenti)
 
 ---
 
@@ -90,33 +111,53 @@ Come utente, voglio...
 
 #### 4.1 Gestione Abitudini
 - **Creare abitudine:**
-  - Nome (es. "Lavarsi i denti")
+  - Nome (es. "Produttività personale")
   - Tipo metrica:
     - Boolean (fatto/non fatto)
     - Count (es. 3 volte)
     - Duration (es. 30 minuti)
   - Target giornaliero (numero)
-  - Timeframe: solo GIORNALIERO per MVP
+  - **⭐ PESO/IMPORTANZA** (1-5 scale) - **UNIQUE FEATURE!**
+    - 5/5: Priorità assoluta (es. produttività personale, progetti importanti)
+    - 4-5/5: Fondamentale (es. frutta e verdura, salute)
+    - 3/5: Importante (es. dormire bene, allenamento)
+    - 2/5: Routine base (es. lavarsi i denti)
+    - 1/5: Nice-to-have
+  - Timeframe: solo GIORNALIERO per MVP (settimana/mese in V2)
+  - Colore (optional)
 
 - **Modificare/eliminare abitudine**
 
 #### 4.2 Tracking Giornaliero
 - Dashboard con lista abitudini del giorno
+- **Multiple check-in options** (user choice):
+  - **Drag bar** (slide per segnare 1, 2, 3...)
+  - **+/- buttons** (tap per incrementare/decrementare)
+  - **Checkbox** (tap per check/uncheck - per boolean habits)
 - Per ogni abitudine:
-  - Pulsante rapido per check-in
   - Contatore progressivo (es. "2/3 completati")
   - Indicatore visuale (barra di progresso, colore)
+  - **Badge peso** (1-5 stars o numero) per visual reminder importanza
   - Streak counter (es. "🔥 7 giorni")
 
 #### 4.3 Visualizzazione Dati
-- **Dashboard principale:**
-  - Card per ogni abitudine
-  - Progresso giornaliero (%)
+
+**Dashboard principale (Homepage):**
+- **⭐ MINI DASHBOARD OVERVIEW** (top of page) - **UNIQUE FEATURE!**
+  - **Weighted Completion % Today:** Es. "72% delle priorità completate"
+  - Formula: `(Σ peso_habit × completion_%) / Σ peso_totale`
+  - Visual: Circular progress bar o gauge
+  - Color-coded: Verde (>80%), Giallo (60-80%), Rosso (<60%)
+  - **Value:** Colpo d'occhio su "come sta andando la mia vita oggi" (non solo "quante abitudini")
+- Lista abitudini del giorno (card per ognuna)
+  - Progresso individuale (%)
+  - Badge peso (importanza)
   - Streak corrente
 
-- **Vista singola abitudine:**
-  - Storico ultimi 7 giorni (semplice lista)
-  - Statistiche base: % successo, streak max, streak corrente
+**Vista singola abitudine:**
+- Storico ultimi 7-30 giorni (line chart o calendar heatmap)
+- Statistiche base: % successo, streak max, streak corrente
+- Impatto sul weighted completion (quanto contribuisce al totale)
 
 #### 4.4 Persistenza Dati
 - **LocalStorage browser** (MVP)
@@ -220,9 +261,10 @@ Come utente, voglio...
 // Habit Schema
 {
   id: "uuid",
-  name: "Lavarsi i denti",
-  type: "count", // "boolean" | "count" | "duration"
-  target: 3,
+  name: "Produttività personale",
+  type: "duration", // "boolean" | "count" | "duration"
+  target: 120, // 120 minuti o 3 count
+  weight: 5, // ⭐ NEW: 1-5 importance scale (default: 3)
   timeframe: "daily", // solo "daily" per MVP
   createdAt: "2026-02-01",
   color: "#4CAF50" // optional
@@ -314,15 +356,30 @@ Come utente, voglio...
 
 ## Appendix: Comparazione Competitor
 
-| Feature | Delta (eToro) | Habitica | Streaks | **Il Nostro MVP** |
-|---------|---------------|----------|---------|-------------------|
-| Tracking custom | ✅ | ✅ | ✅ | ✅ |
-| Metriche flessibili | ✅ | ❌ | ✅ | ✅ |
-| Grafici avanzati | ✅ | ✅ | ✅ | ❌ (V2) |
-| Apple Health | ✅ | ❌ | ✅ | ❌ (V3) |
-| Gamification | ❌ | ✅ | ❌ | ❌ |
-| Costo | €5/mese | Freemium | $5 one-time | **Gratis** |
-| Complessità | Media | Alta | Bassa | **Bassa** |
+### Market Research Summary
+**Market Size:** USD $13.06B (2025) → $43.87B (2034), CAGR 14.41%
+**Critical Challenge:** 52% abandon within 30 days, 44% quit after breaking streaks
+
+### Competitor Comparison
+
+| Feature | HBT | Habitica | Streaks | Loop | Notion | **Habit Tracker (nostro)** |
+|---------|-----|----------|---------|------|--------|---------------------------|
+| **Costo** | Freemium (paywall) | $5/mese | $5 once | **Gratis** | $10/mese | **Gratis + ads** ✅ |
+| **Semplicità** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | **⭐⭐⭐⭐⭐** ✅ |
+| **Habit Weighting** | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ UNIQUE!** 🆕 |
+| **Weighted Dashboard** | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ UNIQUE!** 🆕 |
+| **Metriche flessibili** | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **⭐⭐⭐⭐** ✅ |
+| **Cross-platform** | iOS only | ✅ | iOS only | Android only | ✅ | **✅ (Web MVP)** |
+| **Privacy** | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | **⭐⭐⭐⭐⭐** ✅ |
+| **Retention Focus** | ⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | **⭐⭐⭐⭐⭐** ✅ |
+| **Apple Health** | ❓ | ❌ | ✅ | ❌ | ❌ | V2 (iOS) |
+
+### Key Differentiators (MVP)
+1. **⭐ Habit Weighting:** UNICA app che permette prioritization - risolve pain "all habits treated equally"
+2. **⭐ Weighted Dashboard:** Completion % che riflette vere priorità, non solo conteggio
+3. **Honest pricing:** Free tier genuinely useful (no "free-to-useless")
+4. **Retention-first:** Designed per long-term success (compassionate streaks, no punishment)
+5. **Rock-solid reliability:** Notifications e data che funzionano sempre (top complaint competitor)
 
 ---
 

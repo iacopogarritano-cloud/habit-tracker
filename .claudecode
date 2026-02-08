@@ -3,8 +3,15 @@
 ## Panoramica
 **Nome:** Habit Tracker
 **Tipo:** Web App per tracciamento abitudini personali
-**Status:** MVP in sviluppo - Fase 1 (Setup completato)
-**PRD:** Vedi [PRD.md](./PRD.md) per requisiti completi
+**Status:** ✅ MVP + Extensions COMPLETATO (11/17 user stories)
+**Fase corrente:** Polish & Final Features
+
+### Documenti di Riferimento
+- **[PRD.md](./PRD.md)** - Product Requirements (executive)
+- **[VISION.md](./VISION.md)** - Product Discovery & Strategy (dettagliato)
+- **[BACKLOG.md](./BACKLOG.md)** - Product Backlog con user stories prioritizzate (WSJF)
+- **[JOURNEY.md](./JOURNEY.md)** - Portfolio storytelling e decision log
+- **[STATO.md](./STATO.md)** - Progress tracking sessione per sessione
 
 ---
 
@@ -63,9 +70,11 @@ habit-tracker/
   name: "Nome abitudine",
   type: "boolean" | "count" | "duration",
   target: number,
+  weight: number, // 1-5 (importanza/priorità) - DIFFERENZIATORE CHIAVE
   timeframe: "daily",
   createdAt: "ISO date",
-  color: "#hex"
+  color: "#hex",
+  unit: "string" // US-015: unità di misura (min, litri, pagine, etc.)
 }
 
 // CheckIn
@@ -83,25 +92,70 @@ habit-tracker/
 
 ## Stato Attuale
 
-### Completato
+### Completato (11/17 User Stories)
 - [x] Setup progetto React + Vite
-- [x] Struttura cartelle base
-- [x] PRD definito
-
-### In Corso
-- [ ] Componenti UI base
-- [ ] Data model implementation
-- [ ] LocalStorage service
+- [x] PRD, VISION, BACKLOG definiti
+- [x] US-001: Dashboard progresso pesato
+- [x] US-002: Form creazione abitudine con peso
+- [x] US-003: Lista abitudini
+- [x] US-004: Check-in multiple modes
+- [x] US-005: LocalStorage persistence
+- [x] US-006: Modifica abitudine
+- [x] US-007: Elimina abitudine
+- [x] US-008: Streak e cronologia (gamification)
+- [x] US-012: Edit check-in giorni passati
+- [x] US-015: Unità di misura personalizzabili
+- [x] US-017: Dashboard per data (DayView)
 
 ### Prossimi Step
-1. Creare componente HabitCard
-2. Implementare CRUD abitudini
-3. Dashboard principale
+1. US-016: Categorie per abitudini (Should Have)
+2. US-013: Polish UI con shadcn/ui (Should Have)
+3. US-009: Filtra e ricerca (Could Have)
+4. US-010: Dark mode (Could Have)
+5. Deploy su Vercel/Netlify
+
+---
 
 ---
 
 ## Note per Claude
-- Questo è il mio PRIMO progetto React
-- Spiegare sempre i concetti React quando li usi (useState, useEffect, props, etc.)
+
+### Approccio al Progetto
+- **PM-First Approach:** Vision e strategy PRIMA di scrivere codice
+- Questo è un **progetto portfolio** per dimostrare competenze PM
+- Primo progetto React dell'utente → approccio didattico sempre
+
+### Durante lo Sviluppo
+- Spiegare sempre i concetti React (useState, useEffect, props, etc.)
 - Preferire soluzioni semplici e ben commentate
-- Riferirsi al PRD.md per feature e requisiti
+- Riferirsi a PRD.md per requirements, VISION.md per strategy
+
+### Gestione Documenti
+- **Aggiornare sempre** STATO.md, JOURNEY.md, BACKLOG.md e documenti rilevanti a fine sessione
+- Aggiornare BACKLOG.md quando user stories vengono completate o priorità cambiano
+- Quando utente dice "Sync context" → rileggi tutti i documenti (.claudecode, STATO, PRD, VISION, JOURNEY, BACKLOG)
+
+### Gestione Backlog
+- **Prima di aggiungere una nuova user story:** verificare SEMPRE se esiste già nel BACKLOG.md
+- Se esiste già, non creare duplicati - eventualmente aggiornare priorità/descrizione
+- Se l'utente chiede di aggiungere qualcosa, confermare prima se è già presente
+
+### Priorità Corrente (Prossima Sessione)
+1. ✅ **11/17 User Stories COMPLETATE** (65% backlog)
+2. 📋 **Prossime user stories:**
+   - US-016: Categorie per abitudini (Should Have)
+   - US-013: Polish UI con shadcn/ui (Should Have)
+   - US-009: Filtra e ricerca (Could Have)
+   - US-010: Dark mode (Could Have)
+3. 🚀 **Considerare deploy** su Vercel/Netlify
+4. 💡 **Considerare Technical Literacy Session** (~9 sessioni completate)
+
+### Status Componenti
+- `src/utils/storage.js` - localStorage service + streak calculations + units
+- `src/hooks/useHabitStore.js` - React hook con tutte le operazioni
+- `src/components/HabitForm.jsx` - form creazione/modifica con unità
+- `src/components/WeightSelector.jsx` - selezione peso 1-5
+- `src/components/HabitDetail.jsx` - modale streak, calendario, edit passato
+- `src/components/DayView.jsx` - dashboard per data specifica
+- `src/App.jsx` - main app con lista, dashboard, modali
+- `src/App.css` - tutti gli stili

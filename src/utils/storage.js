@@ -1,0 +1,723 @@
+/**
+ * LocalStorage Service - Habit Tracker
+ * US-005: Persistence layer for habits and check-ins
+ *
+ * Features:
+ * - Auto-save on every modification
+ * - Schema versioning for future migrations
+ * - Error handling (quota exceeded, disabled, corrupted)
+ * - Graceful fallback to in-memory state
+ */
+
+// ============================================
+// CONSTANTS
+// ============================================
+
+const STORAGE_KEY = 'habit-tracker-data';
+const SCHEMA_VERSION = 1;
+
+// ============================================
+// DATA MODEL (TypeScript-style JSDoc)
+// ============================================
+
+/**
+ * @typedef {Object} Habit
+ * @property {string} id - UUID
+ * @property {string} name - Nome abitudine
+ * @property {'boolean' | 'count' | 'duration'} type - Tipo di metrica
+ * @property {number} target - Target giornaliero (1 per boolean)
+ * @property {number} weight - Peso/importanza 1-5 (default: 3)
+ * @property {'daily'} timeframe - Solo 'daily' per MVP
+ * @property {string} createdAt - ISO date string
+ * @property {string} [color] - Colore HEX opzionale
+ */
+
+/**
+ * @typedef {Object} CheckIn
+ * @property {string} id - UUID
+ * @property {string} habitId - Reference to Habit.id
+ * @property {string} date - YYYY-MM-DD format
+ * @property {number} value - Valore registrato
+ * @property {boolean} completed - Se ha raggiunto il target
+ * @property {string} timestamp - ISO datetime string
+ */
+
+/**
+ * @typedef {Object} StorageData
+ * @property {number} version - Schema version
+ * @property {Habit[]} habits - Array of habits
+ * @property {CheckIn[]} checkIns - Array of check-ins
+ * @property {string} lastUpdated - ISO datetime of last save
+ */
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+
+/**
+ * Genera un UUID v4
+ * @returns {string}
+ */
+export function generateId() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+/**
+ * Restituisce la data odierna in formato YYYY-MM-DD
+ * @returns {string}
+ */
+export function getTodayDate() {
+  return new Date().toISOString().split('T')[0];
+}
+
+/**
+ * Verifica se localStorage è disponibile
+ * @returns {boolean}
+ */
+function isStorageAvailable() {
+  try {
+    const test = '__storage_test__';
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ============================================
+// CORE STORAGE FUNCTIONS
+// ============================================
+
+/**
+ * Crea struttura dati vuota con schema version
+ * @returns {StorageData}
+ */
+function createEmptyData() {
+  return {
+    version: SCHEMA_VERSION,
+    habits: [],
+    checkIns: [],
+    lastUpdated: new Date().toISOString(),
+  };
+}
+
+/**
+ * Migra dati da versioni precedenti (placeholder per future migrations)
+ * @param {Object} data - Dati da migrare
+ * @returns {StorageData}
+ */
+function migrateData(data) {
+  // Version 1 → 2 migration (esempio per futuro)
+  // if (data.version === 1) {
+  //   data.habits = data.habits.map(h => ({ ...h, newField: 'default' }));
+  //   data.version = 2;
+  // }
+
+  return data;
+}
+
+/**
+ * Carica dati da localStorage
+ * @returns {{ data: StorageData, error: string | null }}
+ */
+export function loadFromStorage() {
+  // Check se localStorage disponibile
+  if (!isStorageAvailable()) {
+    console.warn('[Storage] localStorage non disponibile, usando stato in-memory');
+    return { data: createEmptyData(), error: 'localStorage non disponibile' };
+  }
+
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+
+    // Nessun dato salvato → ritorna struttura vuota
+    if (!raw) {
+      return { data: createEmptyData(), error: null };
+    }
+
+    // Parse JSON
+    const parsed = JSON.parse(raw);
+
+    // Validazione base
+    if (!parsed || typeof parsed !== 'object') {
+      console.warn('[Storage] Dati corrotti, resetting');
+      return { data: createEmptyData(), error: 'Dati corrotti, reset effettuato' };
+    }
+
+    // Migrazione se necessario
+    const migrated = migrateData(parsed);
+
+    return { data: migrated, error: null };
+  } catch (e) {
+    console.error('[Storage] Errore caricamento:', e);
+    return { data: createEmptyData(), error: `Errore caricamento: ${e.message}` };
+  }
+}
+
+/**
+ * Salva dati in localStorage
+ * @param {StorageData} data - Dati da salvare
+ * @returns {{ success: boolean, error: string | null }}
+ */
+export function saveToStorage(data) {
+  if (!isStorageAvailable()) {
+    console.warn('[Storage] localStorage non disponibile');
+    return { success: false, error: 'localStorage non disponibile' };
+  }
+
+  try {
+    // Aggiorna timestamp
+    const dataToSave = {
+      ...data,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    return { success: true, error: null };
+  } catch (e) {
+    // Gestione quota exceeded
+    if (e.name === 'QuotaExceededError' || e.code === 22) {
+      console.error('[Storage] Quota localStorage superata');
+      return { success: false, error: 'Spazio di archiviazione esaurito' };
+    }
+
+    console.error('[Storage] Errore salvataggio:', e);
+    return { success: false, error: `Errore salvataggio: ${e.message}` };
+  }
+}
+
+/**
+ * Cancella tutti i dati (con conferma)
+ * @returns {{ success: boolean, error: string | null }}
+ */
+export function clearStorage() {
+  if (!isStorageAvailable()) {
+    return { success: false, error: 'localStorage non disponibile' };
+  }
+
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    return { success: true, error: null };
+  } catch (e) {
+    console.error('[Storage] Errore cancellazione:', e);
+    return { success: false, error: `Errore cancellazione: ${e.message}` };
+  }
+}
+
+// ============================================
+// HABIT CRUD OPERATIONS
+// ============================================
+
+/**
+ * Crea una nuova abitudine
+ * @param {Omit<Habit, 'id' | 'createdAt'>} habitData
+ * @returns {Habit}
+ */
+export function createHabit(habitData) {
+  return {
+    id: generateId(),
+    name: habitData.name,
+    type: habitData.type || 'boolean',
+    target: habitData.target || 1,
+    weight: habitData.weight ?? 3, // Default peso medio
+    timeframe: 'daily',
+    createdAt: new Date().toISOString(),
+    color: habitData.color || null,
+    unit: habitData.unit || '', // US-015: unità di misura
+  };
+}
+
+/**
+ * Aggiunge una nuova abitudine e salva
+ * @param {StorageData} data - Stato attuale
+ * @param {Omit<Habit, 'id' | 'createdAt'>} habitData - Dati nuova abitudine
+ * @returns {{ data: StorageData, habit: Habit, error: string | null }}
+ */
+export function addHabit(data, habitData) {
+  const newHabit = createHabit(habitData);
+  const newData = {
+    ...data,
+    habits: [...data.habits, newHabit],
+  };
+
+  const { error } = saveToStorage(newData);
+  return { data: newData, habit: newHabit, error };
+}
+
+/**
+ * Aggiorna un'abitudine esistente
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine da aggiornare
+ * @param {Partial<Habit>} updates - Campi da aggiornare
+ * @returns {{ data: StorageData, error: string | null }}
+ */
+export function updateHabit(data, habitId, updates) {
+  const newData = {
+    ...data,
+    habits: data.habits.map((h) =>
+      h.id === habitId ? { ...h, ...updates } : h
+    ),
+  };
+
+  const { error } = saveToStorage(newData);
+  return { data: newData, error };
+}
+
+/**
+ * Elimina un'abitudine e tutti i suoi check-in
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine da eliminare
+ * @returns {{ data: StorageData, error: string | null }}
+ */
+export function deleteHabit(data, habitId) {
+  const newData = {
+    ...data,
+    habits: data.habits.filter((h) => h.id !== habitId),
+    checkIns: data.checkIns.filter((c) => c.habitId !== habitId),
+  };
+
+  const { error } = saveToStorage(newData);
+  return { data: newData, error };
+}
+
+// ============================================
+// CHECK-IN OPERATIONS
+// ============================================
+
+/**
+ * Registra o aggiorna un check-in per una data specifica
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine
+ * @param {number} value - Valore registrato
+ * @param {string} [date] - Data YYYY-MM-DD (default: oggi)
+ * @returns {{ data: StorageData, checkIn: CheckIn, error: string | null }}
+ */
+export function recordCheckIn(data, habitId, value, date = getTodayDate()) {
+  const habit = data.habits.find((h) => h.id === habitId);
+  if (!habit) {
+    return { data, checkIn: null, error: 'Abitudine non trovata' };
+  }
+
+  // Cerca check-in esistente per questa data
+  const existingIndex = data.checkIns.findIndex(
+    (c) => c.habitId === habitId && c.date === date
+  );
+
+  const checkIn = {
+    id: existingIndex >= 0 ? data.checkIns[existingIndex].id : generateId(),
+    habitId,
+    date,
+    value,
+    completed: value >= habit.target,
+    timestamp: new Date().toISOString(),
+  };
+
+  let newCheckIns;
+  if (existingIndex >= 0) {
+    // Aggiorna esistente
+    newCheckIns = [...data.checkIns];
+    newCheckIns[existingIndex] = checkIn;
+  } else {
+    // Aggiungi nuovo
+    newCheckIns = [...data.checkIns, checkIn];
+  }
+
+  const newData = { ...data, checkIns: newCheckIns };
+  const { error } = saveToStorage(newData);
+
+  return { data: newData, checkIn, error };
+}
+
+/**
+ * Ottiene il check-in di un'abitudine per una data specifica
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine
+ * @param {string} [date] - Data YYYY-MM-DD (default: oggi)
+ * @returns {CheckIn | null}
+ */
+export function getCheckIn(data, habitId, date = getTodayDate()) {
+  return data.checkIns.find((c) => c.habitId === habitId && c.date === date) || null;
+}
+
+/**
+ * Ottiene tutti i check-in di oggi
+ * @param {StorageData} data - Stato attuale
+ * @returns {CheckIn[]}
+ */
+export function getTodayCheckIns(data) {
+  const today = getTodayDate();
+  return data.checkIns.filter((c) => c.date === today);
+}
+
+// ============================================
+// PROGRESS CALCULATIONS
+// ============================================
+
+/**
+ * Calcola la percentuale di completamento per un'abitudine oggi
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine
+ * @returns {number} Percentuale 0-100
+ */
+export function getHabitCompletionPercent(data, habitId) {
+  const habit = data.habits.find((h) => h.id === habitId);
+  if (!habit) return 0;
+
+  const checkIn = getCheckIn(data, habitId);
+  if (!checkIn) return 0;
+
+  return Math.min(100, (checkIn.value / habit.target) * 100);
+}
+
+/**
+ * Calcola il progresso pesato giornaliero (US-001 formula)
+ * Formula: Σ(peso × completion%) / Σ pesi_totali
+ * @param {StorageData} data - Stato attuale
+ * @returns {{ percent: number, completed: number, total: number }}
+ */
+export function getWeightedDailyProgress(data) {
+  if (data.habits.length === 0) {
+    return { percent: 0, completed: 0, total: 0 };
+  }
+
+  let weightedSum = 0;
+  let totalWeight = 0;
+  let completedCount = 0;
+
+  for (const habit of data.habits) {
+    const completionPercent = getHabitCompletionPercent(data, habit.id) / 100;
+    weightedSum += habit.weight * completionPercent;
+    totalWeight += habit.weight;
+
+    if (completionPercent >= 1) {
+      completedCount++;
+    }
+  }
+
+  const percent = totalWeight > 0 ? (weightedSum / totalWeight) * 100 : 0;
+
+  return {
+    percent: Math.round(percent * 10) / 10, // 1 decimal
+    completed: completedCount,
+    total: data.habits.length,
+  };
+}
+
+// ============================================
+// STREAK & HISTORY CALCULATIONS (US-008)
+// ============================================
+
+/**
+ * Genera un array di date negli ultimi N giorni
+ * @param {number} days - Numero di giorni
+ * @returns {string[]} Array di date YYYY-MM-DD (dal più recente al più vecchio)
+ */
+export function getLastNDays(days) {
+  const dates = [];
+  const today = new Date();
+
+  for (let i = 0; i < days; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    dates.push(date.toISOString().split('T')[0]);
+  }
+
+  return dates;
+}
+
+/**
+ * Ottiene tutti i check-in di un'abitudine come mappa per lookup O(1)
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine
+ * @returns {Map<string, CheckIn>} Mappa data → check-in
+ */
+export function getHabitHistory(data, habitId) {
+  const checkInsMap = new Map();
+
+  // Filtra check-in per questa abitudine e crea mappa per lookup O(1)
+  for (const checkIn of data.checkIns) {
+    if (checkIn.habitId === habitId) {
+      checkInsMap.set(checkIn.date, checkIn);
+    }
+  }
+
+  return checkInsMap;
+}
+
+/**
+ * Calcola lo streak corrente (giorni consecutivi completati)
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine
+ * @returns {number} Numero di giorni consecutivi
+ */
+export function calculateCurrentStreak(data, habitId) {
+  const habit = data.habits.find(h => h.id === habitId);
+  if (!habit) return 0;
+
+  const checkInsMap = getHabitHistory(data, habitId);
+  let streak = 0;
+  const today = new Date();
+
+  // Parti da oggi e vai indietro
+  for (let i = 0; i < 365; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+
+    const checkIn = checkInsMap.get(dateStr);
+
+    // Se è oggi e non c'è check-in, salta (streak non rotto)
+    if (i === 0 && !checkIn) continue;
+
+    // Se completato, incrementa streak
+    if (checkIn && checkIn.value >= habit.target) {
+      streak++;
+    } else {
+      // Streak rotto
+      break;
+    }
+  }
+
+  return streak;
+}
+
+/**
+ * Calcola lo streak più lungo di sempre
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine
+ * @returns {number} Streak più lungo
+ */
+export function calculateLongestStreak(data, habitId) {
+  const habit = data.habits.find(h => h.id === habitId);
+  if (!habit) return 0;
+
+  // Ordina check-in per data
+  const habitCheckIns = data.checkIns
+    .filter(c => c.habitId === habitId && c.value >= habit.target)
+    .map(c => c.date)
+    .sort();
+
+  if (habitCheckIns.length === 0) return 0;
+
+  let longest = 1;
+  let current = 1;
+
+  for (let i = 1; i < habitCheckIns.length; i++) {
+    const prevDate = new Date(habitCheckIns[i - 1]);
+    const currDate = new Date(habitCheckIns[i]);
+
+    // Calcola differenza in giorni
+    const diffDays = Math.round((currDate - prevDate) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) {
+      // Giorni consecutivi
+      current++;
+      longest = Math.max(longest, current);
+    } else {
+      // Streak rotto
+      current = 1;
+    }
+  }
+
+  return longest;
+}
+
+/**
+ * Calcola il completion rate su un periodo
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine
+ * @param {number} [days=30] - Numero di giorni
+ * @returns {number} Percentuale 0-100
+ */
+export function calculateCompletionRate(data, habitId, days = 30) {
+  const habit = data.habits.find(h => h.id === habitId);
+  if (!habit) return 0;
+
+  const checkInsMap = getHabitHistory(data, habitId);
+  const dates = getLastNDays(days);
+
+  // Conta solo i giorni dopo la creazione dell'abitudine
+  const createdAt = habit.createdAt.split('T')[0];
+  let completedDays = 0;
+  let countableDays = 0;
+
+  for (const date of dates) {
+    // Non contare giorni prima della creazione
+    if (date < createdAt) continue;
+
+    countableDays++;
+    const checkIn = checkInsMap.get(date);
+
+    if (checkIn && checkIn.value >= habit.target) {
+      completedDays++;
+    }
+  }
+
+  if (countableDays === 0) return 0;
+  return Math.round((completedDays / countableDays) * 100);
+}
+
+/**
+ * Ottiene statistiche complete per un'abitudine
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine
+ * @returns {{ currentStreak: number, longestStreak: number, completionRate: number, history: Map<string, CheckIn> }}
+ */
+export function getHabitStats(data, habitId) {
+  return {
+    currentStreak: calculateCurrentStreak(data, habitId),
+    longestStreak: calculateLongestStreak(data, habitId),
+    completionRate: calculateCompletionRate(data, habitId, 30),
+    history: getHabitHistory(data, habitId),
+  };
+}
+
+// ============================================
+// DEBUG UTILITIES (per testing streak)
+// ============================================
+
+/**
+ * [DEBUG] Genera check-in finti per testare streak e statistiche
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine
+ * @param {number} daysBack - Quanti giorni indietro simulare
+ * @param {number} successRate - Percentuale successo (0-100), default 80%
+ * @returns {{ data: StorageData, error: string|null }}
+ */
+export function debugGenerateFakeCheckIns(data, habitId, daysBack = 14, successRate = 80) {
+  try {
+    // Validazione input
+    if (!data || !data.habits || !data.checkIns) {
+      console.error('[DEBUG] Data invalida:', data);
+      return { data, error: 'Dati non validi' };
+    }
+
+    const habit = data.habits.find(h => h.id === habitId);
+    if (!habit) {
+      console.error('[DEBUG] Habit non trovata:', habitId);
+      return { data, error: 'Abitudine non trovata' };
+    }
+
+    const newCheckIns = [...data.checkIns];
+    const today = new Date();
+
+    for (let i = 1; i <= daysBack; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+
+      // Salta se esiste già un check-in per questa data
+      const existing = newCheckIns.find(c => c.habitId === habitId && c.date === dateStr);
+      if (existing) continue;
+
+      // Simula completamento basato su successRate
+      const isSuccess = Math.random() * 100 < successRate;
+      const value = isSuccess ? habit.target : 0;
+
+      if (value > 0) {
+        newCheckIns.push({
+          id: generateId(),
+          habitId,
+          date: dateStr,
+          value,
+          completed: true,
+          timestamp: date.toISOString(),
+        });
+      }
+    }
+
+    // Preserva tutti i campi di data
+    const newData = {
+      ...data,
+      checkIns: newCheckIns,
+    };
+
+    const { error: saveError } = saveToStorage(newData);
+    console.log('[DEBUG] Generati check-in finti:', newCheckIns.length - data.checkIns.length);
+
+    return { data: newData, error: saveError };
+  } catch (error) {
+    console.error('[DEBUG] Errore in debugGenerateFakeCheckIns:', error);
+    return { data, error: error.message };
+  }
+}
+
+/**
+ * [DEBUG] Pulisce tutti i check-in finti (mantiene solo oggi)
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine (opzionale, se null pulisce tutti)
+ * @returns {{ data: StorageData, error: string|null }}
+ */
+export function debugClearFakeCheckIns(data, habitId = null) {
+  try {
+    // Validazione input
+    if (!data || !data.habits || !data.checkIns) {
+      console.error('[DEBUG] Data invalida:', data);
+      return { data, error: 'Dati non validi' };
+    }
+
+    const today = getTodayDate();
+    console.log('[DEBUG] Oggi:', today, '- Pulisco storico per habitId:', habitId || 'TUTTI');
+
+    const newCheckIns = data.checkIns.filter(c => {
+      // Mantieni check-in di oggi
+      if (c.date === today) return true;
+      // Se specificato habitId, filtra solo quella abitudine
+      if (habitId && c.habitId !== habitId) return true;
+      // Altrimenti rimuovi
+      return false;
+    });
+
+    // Preserva tutti i campi di data
+    const newData = {
+      ...data,
+      checkIns: newCheckIns,
+    };
+
+    const { error: saveError } = saveToStorage(newData);
+    console.log('[DEBUG] Check-in rimossi:', data.checkIns.length - newCheckIns.length);
+
+    return { data: newData, error: saveError };
+  } catch (error) {
+    console.error('[DEBUG] Errore in debugClearFakeCheckIns:', error);
+    return { data, error: error.message };
+  }
+}
+
+// ============================================
+// EXPORT DEFAULT
+// ============================================
+
+export default {
+  // Core
+  loadFromStorage,
+  saveToStorage,
+  clearStorage,
+  // Utilities
+  generateId,
+  getTodayDate,
+  getLastNDays,
+  // Habits
+  createHabit,
+  addHabit,
+  updateHabit,
+  deleteHabit,
+  // Check-ins
+  recordCheckIn,
+  getCheckIn,
+  getTodayCheckIns,
+  // Progress
+  getHabitCompletionPercent,
+  getWeightedDailyProgress,
+  // Streak & History (US-008)
+  getHabitHistory,
+  calculateCurrentStreak,
+  calculateLongestStreak,
+  calculateCompletionRate,
+  getHabitStats,
+};
