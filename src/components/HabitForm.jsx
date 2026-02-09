@@ -88,15 +88,17 @@ const DEFAULT_FORM = {
   weight: 3,
   color: '#4CAF50',
   unit: '',
+  categoryId: '', // US-016
 };
 
-export function HabitForm({ onSubmit, onCancel, initialData = null }) {
+export function HabitForm({ onSubmit, onCancel, initialData = null, categories = [] }) {
   const [form, setForm] = useState(() => {
     if (initialData) {
       return {
         ...DEFAULT_FORM,
         ...initialData,
         unit: initialData.unit || DEFAULT_UNITS[initialData.type] || '',
+        categoryId: initialData.categoryId || '', // US-016
       };
     }
     return DEFAULT_FORM;
@@ -154,6 +156,7 @@ export function HabitForm({ onSubmit, onCancel, initialData = null }) {
       target: form.type === 'boolean' ? 1 : Number(form.target),
       weight: Number(form.weight),
       unit: form.type === 'boolean' ? '' : form.unit,
+      categoryId: form.categoryId || null, // US-016
     };
 
     onSubmit(habitData);
@@ -191,6 +194,26 @@ export function HabitForm({ onSubmit, onCancel, initialData = null }) {
         />
         {errors.name && <span className="form-error">{errors.name}</span>}
       </div>
+
+      {/* Categoria (US-016) */}
+      {categories.length > 0 && (
+        <div className="form-group">
+          <label htmlFor="habit-category">Categoria</label>
+          <select
+            id="habit-category"
+            value={form.categoryId}
+            onChange={(e) => handleChange('categoryId', e.target.value)}
+            className="category-select"
+          >
+            <option value="">Senza categoria</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.icon} {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Tipo */}
       <div className="form-group">

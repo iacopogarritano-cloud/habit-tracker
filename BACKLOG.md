@@ -323,8 +323,8 @@ Corretto: Job Size troppo alto per priorità. Riduciamo a JS=3 per MVP (solo 2 m
 
 ---
 
-### 🟡 US-009: Filtra e ricerca abitudini
-**Priority:** Could Have (SP: 2.0)
+### ✅ US-009: Filtra e ricerca abitudini
+**Priority:** Could Have (SP: 2.0) — **COMPLETATA**
 
 **User Story (Extended Format):**
 - **As a**: utente con molte abitudini (20+)
@@ -336,12 +336,12 @@ Corretto: Job Size troppo alto per priorità. Riduciamo a JS=3 per MVP (solo 2 m
 - **To/So that**: risparmi tempo e navighi efficacemente anche con tante abitudini
 
 **Acceptance Criteria:**
-- [ ] Search bar filtra in real-time per nome abitudine (case-insensitive)
-- [ ] Dropdown filtri: tipo (boolean/count/duration), peso (1-5), completate oggi (sì/no)
-- [ ] Filtri combinabili (es: boolean + peso 5 + non completate)
-- [ ] Visual feedback: mostra "X abitudini trovate"
-- [ ] Reset filtri: bottone "Clear all"
-- [ ] Performance: debounce search input (300ms)
+- [x] Search bar filtra in real-time per nome abitudine (case-insensitive)
+- [ ] Dropdown filtri: tipo (boolean/count/duration), peso (1-5), completate oggi (sì/no) - FUTURE
+- [ ] Filtri combinabili (es: boolean + peso 5 + non completate) - FUTURE
+- [x] Visual feedback: mostra "X abitudini trovate"
+- [x] Reset filtri: bottone "Clear all" (icona × nella search bar + bottone "Cancella ricerca")
+- [x] Performance: useMemo per filtro ottimizzato
 
 **Technical Notes:**
 - State: `searchQuery` e `filters` object
@@ -495,8 +495,8 @@ Corretto: Job Size troppo alto per priorità. Riduciamo a JS=3 per MVP (solo 2 m
 
 ---
 
-### 🟠 US-016: Categorie personalizzate per abitudini
-**Priority:** Should Have (SP: 3.5)
+### ✅ US-016: Categorie personalizzate per abitudini
+**Priority:** Should Have (SP: 3.5) — **COMPLETATA**
 
 **User Story (Extended Format):**
 - **As a**: utente che vuole organizzare le abitudini per area di vita
@@ -508,12 +508,12 @@ Corretto: Job Size troppo alto per priorità. Riduciamo a JS=3 per MVP (solo 2 m
 - **To/So that**: possa organizzare, filtrare e visualizzare le abitudini per area di vita
 
 **Acceptance Criteria:**
-- [ ] Utente può creare categorie personalizzate (nome + colore/icona opzionale)
-- [ ] Dropdown "Categoria" nel form creazione/modifica abitudine
-- [ ] Categorie visibili nella lista abitudini (badge o raggruppamento)
-- [ ] Categorie salvate in localStorage
-- [ ] Opzione "Senza categoria" per abitudini non categorizzate
-- [ ] Gestione categorie: crea, modifica, elimina (in settings o modal dedicato)
+- [ ] Utente può creare categorie personalizzate (nome + colore/icona opzionale) - FUTURE (API pronta)
+- [x] Dropdown "Categoria" nel form creazione/modifica abitudine
+- [x] Categorie visibili nella lista abitudini (badge colorato)
+- [x] Categorie salvate in localStorage (8 preset + supporto custom)
+- [x] Opzione "Senza categoria" per abitudini non categorizzate
+- [ ] Gestione categorie: crea, modifica, elimina (in settings o modal dedicato) - FUTURE (API pronta)
 
 **Categorie Suggerite (preset opzionali):**
 - 🏃 Salute & Fitness
@@ -685,6 +685,77 @@ Corretto: Job Size troppo alto per priorità. Riduciamo a JS=3 per MVP (solo 2 m
 
 ---
 
+### 🟠 US-018: Reportistica settimanale e mensile
+**Priority:** Should Have (SP: 5.3)
+
+**User Story (Extended Format):**
+- **As a**: utente che vuole capire i propri trend nel tempo
+- **When**: voglio valutare la mia costanza oltre il singolo giorno
+- **In**: dashboard principale o sezione dedicata
+- **Since**: vedere solo il punteggio giornaliero non mi dice se sto migliorando o peggiorando nel tempo
+- **I want to**: visualizzare il progresso pesato aggregato per settimana e mese
+- **Doing this/in this way**: mostrando card/sezione con "Progresso Settimanale: X%" e "Progresso Mensile: Y%", con possibilità di vedere breakdown per abitudine
+- **To/So that**: possa identificare pattern, celebrare miglioramenti, e intervenire se noto un calo di performance
+
+**Acceptance Criteria:**
+- [ ] Dashboard mostra card "Progresso Settimanale" (media pesata ultimi 7 giorni)
+- [ ] Dashboard mostra card "Progresso Mensile" (media pesata ultimi 30 giorni)
+- [ ] Formula: `Σ(daily_weighted_progress) / days_with_data` per evitare penalizzare giorni futuri
+- [ ] Colore dinamico per ogni card (verde ≥70%, giallo 40-69%, rosso <40%)
+- [ ] Click su card apre dettaglio con:
+  - Grafico trend (linea o barre) degli ultimi 7/30 giorni
+  - Breakdown per abitudine: quali hanno contribuito di più/meno
+  - Confronto con periodo precedente (opzionale, V2)
+- [ ] Responsive: card si adattano su mobile (stack verticale)
+- [ ] Performance: calcolo memoizzato per evitare ricalcoli ad ogni render
+
+**Visualizzazione Proposta:**
+```
+┌─────────────────────────────────────────────────┐
+│  📅 Oggi      │  📆 Settimana  │  📅 Mese      │
+│     85%       │      72%       │     68%       │
+│   ████████░░  │   ███████░░░   │   ██████░░░░  │
+└─────────────────────────────────────────────────┘
+```
+
+**Dettaglio Settimanale (click):**
+```
+Settimana 5-11 Feb 2026
+━━━━━━━━━━━━━━━━━━━━━━━
+Media: 72% (↑3% vs settimana precedente)
+
+📊 Trend giornaliero:
+Lun ████████░░ 80%
+Mar ███████░░░ 70%
+Mer █████████░ 90%
+Gio ██████░░░░ 60%
+Ven ███████░░░ 70%
+Sab ██████░░░░ 65%
+Dom ███████░░░ 72%
+
+📋 Breakdown per abitudine:
+✓ Produttività (★★★★★) — 85% → contribuisce 25%
+✓ Esercizio (★★★★☆) — 70% → contribuisce 18%
+✓ Lettura (★★★☆☆) — 60% → contribuisce 12%
+```
+
+**Technical Notes:**
+- Creare funzione `getWeeklyProgress()` e `getMonthlyProgress()` in useHabitStore
+- Riutilizzare logica di `calculateWeightedProgress()` già esistente
+- Per il grafico trend: considerare libreria leggera (recharts ~200kb) o SVG custom
+- Cache dei calcoli con useMemo per performance
+- Componente: `<ReportCard />` riutilizzabile per giorno/settimana/mese
+- Modal: `<ReportDetail />` con grafico e breakdown
+
+**WSJF Scoring:**
+- **Business Value**: 8 (insight fondamentale per retention e motivazione)
+- **Time Criticality**: 2 (utenti lo chiedono dopo pochi giorni di uso)
+- **RROE**: 1 (non abilita altre feature, ma migliora value proposition)
+- **Job Size**: 3 (medio - calcoli esistenti + UI + grafici opzionali)
+- **Story Points**: (8 × 2 × 1) / 3 = **5.3**
+
+---
+
 ## 🔮 V2 Roadmap - Multi-Timeframe & Scoring System
 
 > **Note:** Queste feature sono out-of-scope per MVP ma documentate per design futuro.
@@ -735,18 +806,18 @@ Dove:
 
 ## 📈 Backlog Summary
 
-**Total User Stories:** 17
-**Completate:** 11 (US-001 a US-008, US-012, US-015, US-017) ✅
+**Total User Stories:** 18
+**Completate:** 13 (US-001 a US-009, US-012, US-015, US-016, US-017) ✅
 **In Progress:** 0
-**Rimanenti:** 6
+**Rimanenti:** 5
 
 **Status MVP:**
 - ✅ **Must Have:** 5/5 completate (US-001 a US-005)
 - ✅ **Should Have (Core):** 3/5 completate (US-006, US-007, US-008)
-- ✅ **Should Have (Done):** US-015 (unità di misura), US-017 (dashboard per data)
-- 🔄 **Should Have (Remaining):** US-013 (shadcn/ui), US-016 (categorie)
-- ✅ **Could Have (Done):** US-012 (edit check-in passati)
-- ⏳ **Could Have (Remaining):** US-009, US-010
+- ✅ **Should Have (Done):** US-015 (unità di misura), US-016 (categorie), US-017 (dashboard per data)
+- 🔄 **Should Have (Remaining):** US-013 (shadcn/ui), US-018 (reportistica settimanale/mensile)
+- ✅ **Could Have (Done):** US-009 (filtro/ricerca), US-012 (edit check-in passati)
+- ⏳ **Could Have (Remaining):** US-010 (dark mode)
 - ⚪ **Won't Have:** US-011, US-014
 
 **MVP Core: COMPLETATO! 🎉**
@@ -779,4 +850,4 @@ Streak, cronologia, editing check-in passati, unità di misura e dashboard per d
 ---
 
 **Status:** ✅ MVP Core + Gamification + Day View Completato
-**Next Action:** US-016 (Categorie) o US-013 (shadcn/ui) per polish
+**Next Action:** US-009 (Filtro/Ricerca) → US-018 (Reportistica) → US-016 (Categorie)

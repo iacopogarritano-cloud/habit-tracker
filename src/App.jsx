@@ -3,7 +3,7 @@
  * US-002: Form creazione abitudine con peso
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useHabitStore } from './hooks/useHabitStore';
 import { HabitForm } from './components/HabitForm';
 import { HabitDetail } from './components/HabitDetail';
@@ -14,6 +14,7 @@ import './App.css';
 function App() {
   const {
     habits,
+    categories, // US-016
     isLoading,
     error,
     progress,
@@ -25,6 +26,7 @@ function App() {
     getTodayCheckIn,
     getStats,
     getLastNDays,
+    getCategory, // US-016
     _rawData,
   } = useHabitStore();
 
@@ -38,6 +40,17 @@ function App() {
   const [selectedHabit, setSelectedHabit] = useState(null);
   // State per day view (dashboard per data)
   const [selectedDate, setSelectedDate] = useState(null);
+  // State per ricerca abitudini (US-009)
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filtra abitudini in base alla ricerca (US-009)
+  const filteredHabits = useMemo(() => {
+    if (!searchQuery.trim()) return habits;
+    const query = searchQuery.toLowerCase().trim();
+    return habits.filter(habit =>
+      habit.name.toLowerCase().includes(query)
+    );
+  }, [habits, searchQuery]);
 
   // Handler per navigare tra i giorni nella DayView (DEVE essere prima di early return)
   const handleDateNavigate = useCallback((offset) => {
@@ -149,6 +162,7 @@ function App() {
             onSubmit={handleSubmitHabit}
             onCancel={handleCancelForm}
             initialData={editingHabit}
+            categories={categories}
           />
         </section>
       )}
@@ -216,19 +230,59 @@ function App() {
           )}
         </div>
 
+        {/* Barra di ricerca (US-009) */}
+        {habits.length > 0 && (
+          <div className="search-bar">
+            <input
+              type="text"
+              placeholder="Cerca abitudine..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input"
+            />
+            {searchQuery && (
+              <button
+                className="search-clear"
+                onClick={() => setSearchQuery('')}
+                title="Cancella ricerca"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Conteggio risultati filtrati */}
+        {searchQuery && (
+          <div className="search-results-count">
+            {filteredHabits.length} {filteredHabits.length === 1 ? 'abitudine trovata' : 'abitudini trovate'}
+          </div>
+        )}
+
         {habits.length === 0 ? (
           <div className="empty-state">
             <p>Nessuna abitudine ancora.</p>
             <p>Clicca "+ Aggiungi" per creare la tua prima abitudine!</p>
           </div>
+        ) : filteredHabits.length === 0 ? (
+          <div className="empty-state">
+            <p>Nessuna abitudine corrisponde a "{searchQuery}"</p>
+            <button
+              className="btn-clear-search"
+              onClick={() => setSearchQuery('')}
+            >
+              Cancella ricerca
+            </button>
+          </div>
         ) : (
           <ul className="habit-list">
-            {habits.map((habit) => {
+            {filteredHabits.map((habit) => {
               const todayCheckIn = getTodayCheckIn(habit.id);
               const currentValue = todayCheckIn?.value || 0;
               const completionPercent = Math.min(100, (currentValue / habit.target) * 100);
               const isCompleted = currentValue >= habit.target;
               const stats = getStats(habit.id);
+              const category = getCategory(habit.categoryId); // US-016
 
               return (
                 <li
@@ -243,7 +297,17 @@ function App() {
                         <span className="habit-streak">🔥 {stats.currentStreak}</span>
                       )}
                     </div>
-                    <span className="habit-weight">{'★'.repeat(habit.weight)}</span>
+                    <div className="habit-meta">
+                      <span className="habit-weight">{'★'.repeat(habit.weight)}</span>
+                      {category && (
+                        <span
+                          className="habit-category-badge"
+                          style={{ backgroundColor: category.color + '20', color: category.color }}
+                        >
+                          {category.icon} {category.name}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="habit-progress">

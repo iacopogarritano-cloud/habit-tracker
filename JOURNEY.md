@@ -635,7 +635,7 @@ Completed US-008 (Streak e cronologia) adding gamification elements. Expanded ba
 - **[BACKLOG.md](BACKLOG.md)** - Product Backlog with WSJF prioritization
 - **[STATO.md](STATO.md)** - Session-by-session progress tracker
 - **[README.md](README.md)** - User-facing documentation
-- **[.claudecode](.claudecode)** - AI collaboration guidelines
+- **[claude.md](claude.md)** - AI collaboration guidelines
 
 ---
 

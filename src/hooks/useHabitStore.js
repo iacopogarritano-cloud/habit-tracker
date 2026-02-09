@@ -21,6 +21,11 @@ import {
   getLastNDays,
   debugGenerateFakeCheckIns,
   debugClearFakeCheckIns,
+  // Category functions (US-016)
+  addCategory as addCategoryToStorage,
+  updateCategory as updateCategoryInStorage,
+  deleteCategory as deleteCategoryFromStorage,
+  getCategory as getCategoryFromStorage,
 } from '../utils/storage';
 
 export function useHabitStore() {
@@ -122,11 +127,65 @@ export function useHabitStore() {
   }, [data]);
 
   // ============================================
+  // CATEGORY OPERATIONS (US-016)
+  // ============================================
+
+  /**
+   * Aggiunge una nuova categoria
+   * @param {{ name: string, icon?: string, color?: string }} categoryData
+   */
+  const addCategory = useCallback((categoryData) => {
+    if (!data) return null;
+
+    const { data: newData, category, error: saveError } = addCategoryToStorage(data, categoryData);
+    setData(newData);
+    if (saveError) setError(saveError);
+    return category;
+  }, [data]);
+
+  /**
+   * Aggiorna una categoria esistente
+   * @param {string} categoryId
+   * @param {Partial<Category>} updates
+   */
+  const updateCategoryFn = useCallback((categoryId, updates) => {
+    if (!data) return;
+
+    const { data: newData, error: saveError } = updateCategoryInStorage(data, categoryId, updates);
+    setData(newData);
+    if (saveError) setError(saveError);
+  }, [data]);
+
+  /**
+   * Elimina una categoria
+   * @param {string} categoryId
+   */
+  const deleteCategory = useCallback((categoryId) => {
+    if (!data) return;
+
+    const { data: newData, error: saveError } = deleteCategoryFromStorage(data, categoryId);
+    setData(newData);
+    if (saveError) setError(saveError);
+  }, [data]);
+
+  /**
+   * Ottiene una categoria per ID
+   * @param {string} categoryId
+   */
+  const getCategory = useCallback((categoryId) => {
+    if (!data) return null;
+    return getCategoryFromStorage(data, categoryId);
+  }, [data]);
+
+  // ============================================
   // DERIVED STATE
   // ============================================
 
   // Lista abitudini ordinata per peso (decrescente)
   const habits = data?.habits?.slice().sort((a, b) => b.weight - a.weight) || [];
+
+  // Lista categorie (US-016)
+  const categories = data?.categories || [];
 
   // Progresso pesato giornaliero
   const progress = data ? getWeightedDailyProgress(data) : { percent: 0, completed: 0, total: 0 };
@@ -217,6 +276,7 @@ export function useHabitStore() {
   return {
     // State
     habits,
+    categories, // US-016
     isLoading,
     error,
     today,
@@ -228,6 +288,12 @@ export function useHabitStore() {
     addHabit,
     updateHabit,
     deleteHabit,
+
+    // Category actions (US-016)
+    addCategory,
+    updateCategory: updateCategoryFn,
+    deleteCategory,
+    getCategory,
 
     // Check-in actions
     checkIn,

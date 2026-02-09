@@ -21,6 +21,14 @@ const SCHEMA_VERSION = 1;
 // ============================================
 
 /**
+ * @typedef {Object} Category
+ * @property {string} id - UUID
+ * @property {string} name - Nome categoria
+ * @property {string} [icon] - Emoji icona (opzionale)
+ * @property {string} [color] - Colore HEX (opzionale)
+ */
+
+/**
  * @typedef {Object} Habit
  * @property {string} id - UUID
  * @property {string} name - Nome abitudine
@@ -30,6 +38,7 @@ const SCHEMA_VERSION = 1;
  * @property {'daily'} timeframe - Solo 'daily' per MVP
  * @property {string} createdAt - ISO date string
  * @property {string} [color] - Colore HEX opzionale
+ * @property {string} [categoryId] - ID categoria (opzionale, US-016)
  */
 
 /**
@@ -47,8 +56,24 @@ const SCHEMA_VERSION = 1;
  * @property {number} version - Schema version
  * @property {Habit[]} habits - Array of habits
  * @property {CheckIn[]} checkIns - Array of check-ins
+ * @property {Category[]} categories - Array of categories (US-016)
  * @property {string} lastUpdated - ISO datetime of last save
  */
+
+// ============================================
+// DEFAULT CATEGORIES (US-016)
+// ============================================
+
+export const DEFAULT_CATEGORIES = [
+  { id: 'cat-health', name: 'Salute & Fitness', icon: '🏃', color: '#22c55e' },
+  { id: 'cat-productivity', name: 'Produttività & Lavoro', icon: '🧠', color: '#3b82f6' },
+  { id: 'cat-finance', name: 'Finanze', icon: '💰', color: '#eab308' },
+  { id: 'cat-social', name: 'Relazioni & Sociale', icon: '👥', color: '#ec4899' },
+  { id: 'cat-learning', name: 'Apprendimento', icon: '📚', color: '#8b5cf6' },
+  { id: 'cat-wellness', name: 'Benessere Mentale', icon: '🧘', color: '#14b8a6' },
+  { id: 'cat-home', name: 'Casa & Organizzazione', icon: '🏠', color: '#f97316' },
+  { id: 'cat-hobby', name: 'Hobby & Creatività', icon: '🎨', color: '#ef4444' },
+];
 
 // ============================================
 // UTILITY FUNCTIONS
@@ -102,6 +127,7 @@ function createEmptyData() {
     version: SCHEMA_VERSION,
     habits: [],
     checkIns: [],
+    categories: [...DEFAULT_CATEGORIES], // Categorie preset (US-016)
     lastUpdated: new Date().toISOString(),
   };
 }
@@ -112,6 +138,12 @@ function createEmptyData() {
  * @returns {StorageData}
  */
 function migrateData(data) {
+  // Aggiungi categories se mancante (US-016 migration)
+  if (!data.categories) {
+    data.categories = [...DEFAULT_CATEGORIES];
+    console.log('[Storage] Migrazione: aggiunte categorie di default');
+  }
+
   // Version 1 → 2 migration (esempio per futuro)
   // if (data.version === 1) {
   //   data.habits = data.habits.map(h => ({ ...h, newField: 'default' }));
@@ -229,6 +261,7 @@ export function createHabit(habitData) {
     createdAt: new Date().toISOString(),
     color: habitData.color || null,
     unit: habitData.unit || '', // US-015: unità di misura
+    categoryId: habitData.categoryId || null, // US-016: categoria
   };
 }
 
@@ -283,6 +316,83 @@ export function deleteHabit(data, habitId) {
 
   const { error } = saveToStorage(newData);
   return { data: newData, error };
+}
+
+// ============================================
+// CATEGORY CRUD OPERATIONS (US-016)
+// ============================================
+
+/**
+ * Aggiunge una nuova categoria
+ * @param {StorageData} data - Stato attuale
+ * @param {{ name: string, icon?: string, color?: string }} categoryData
+ * @returns {{ data: StorageData, category: Category, error: string | null }}
+ */
+export function addCategory(data, categoryData) {
+  const newCategory = {
+    id: generateId(),
+    name: categoryData.name,
+    icon: categoryData.icon || '',
+    color: categoryData.color || '#6b7280',
+  };
+
+  const newData = {
+    ...data,
+    categories: [...(data.categories || []), newCategory],
+  };
+
+  const { error } = saveToStorage(newData);
+  return { data: newData, category: newCategory, error };
+}
+
+/**
+ * Aggiorna una categoria esistente
+ * @param {StorageData} data - Stato attuale
+ * @param {string} categoryId - ID categoria
+ * @param {Partial<Category>} updates - Campi da aggiornare
+ * @returns {{ data: StorageData, error: string | null }}
+ */
+export function updateCategory(data, categoryId, updates) {
+  const newData = {
+    ...data,
+    categories: (data.categories || []).map((c) =>
+      c.id === categoryId ? { ...c, ...updates } : c
+    ),
+  };
+
+  const { error } = saveToStorage(newData);
+  return { data: newData, error };
+}
+
+/**
+ * Elimina una categoria (le abitudini rimangono senza categoria)
+ * @param {StorageData} data - Stato attuale
+ * @param {string} categoryId - ID categoria da eliminare
+ * @returns {{ data: StorageData, error: string | null }}
+ */
+export function deleteCategory(data, categoryId) {
+  const newData = {
+    ...data,
+    categories: (data.categories || []).filter((c) => c.id !== categoryId),
+    // Rimuovi categoryId dalle abitudini che la usavano
+    habits: data.habits.map((h) =>
+      h.categoryId === categoryId ? { ...h, categoryId: null } : h
+    ),
+  };
+
+  const { error } = saveToStorage(newData);
+  return { data: newData, error };
+}
+
+/**
+ * Ottiene una categoria per ID
+ * @param {StorageData} data - Stato attuale
+ * @param {string} categoryId - ID categoria
+ * @returns {Category | null}
+ */
+export function getCategory(data, categoryId) {
+  if (!categoryId) return null;
+  return (data.categories || []).find((c) => c.id === categoryId) || null;
 }
 
 // ============================================
