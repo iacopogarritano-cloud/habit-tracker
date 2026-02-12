@@ -685,8 +685,8 @@ Corretto: Job Size troppo alto per priorità. Riduciamo a JS=3 per MVP (solo 2 m
 
 ---
 
-### 🟠 US-018: Reportistica settimanale e mensile
-**Priority:** Should Have (SP: 5.3)
+### ✅ US-018: Reportistica settimanale e mensile
+**Priority:** Should Have (SP: 5.3) — **COMPLETATA**
 
 **User Story (Extended Format):**
 - **As a**: utente che vuole capire i propri trend nel tempo
@@ -756,6 +756,287 @@ Dom ███████░░░ 72%
 
 ---
 
+### ✅ US-019: Calendario mensile con reportistica contestuale nella DayView
+**Priority:** Should Have (SP: 5.3) — **COMPLETATA**
+
+**User Story (Extended Format):**
+- **As a**: utente che vuole navigare e analizzare i miei progressi nel tempo
+- **When**: clicco sulla data nell'header o apro la DayView
+- **In**: modale DayView
+- **Since**: voglio vedere non solo il progresso del giorno selezionato, ma anche il contesto settimanale e mensile di quella data, e navigare facilmente tra i mesi
+- **I want to**: visualizzare un calendario mensile completo con reportistica contestuale
+- **Doing this/in this way**:
+  1. Calendario a griglia 7x5/6 (Lun-Dom) che mostra tutti i giorni del mese
+  2. Frecce per navigare di 1 mese avanti/indietro
+  3. Tre card di progresso (Giorno/Settimana/Mese) calcolate relative alla data selezionata
+- **To/So that**: possa analizzare i miei trend storici e capire come stavo performando in qualsiasi momento del passato
+
+**Acceptance Criteria:**
+- [ ] Calendario mostra TUTTI i giorni del mese selezionato
+- [ ] Griglia organizzata in 7 colonne: Lunedì → Domenica
+- [ ] Header con nomi giorni abbreviati (L M M G V S D)
+- [ ] Frecce ← → navigano di 1 mese (non 1 giorno)
+- [ ] Giorni del mese precedente/successivo visibili in grigio per completare le settimane
+- [ ] Click su un giorno lo seleziona e mostra i dettagli
+- [ ] Giorno corrente (oggi) evidenziato con badge/bordo speciale
+- [ ] Giorni futuri non cliccabili
+- [ ] **Reportistica contestuale**: 3 mini-card mostrano:
+  - Progresso del giorno selezionato
+  - Progresso settimanale: ultimi 7 giorni con la data selezionata come ultimo giorno
+  - Progresso mensile: ultimi 30 giorni con la data selezionata come ultimo giorno
+- [ ] Colori dinamici per ogni card (verde ≥70%, giallo 40-69%, rosso <40%)
+- [ ] Responsive: su mobile il calendario si adatta
+
+**Visualizzazione Proposta:**
+```
+┌─────────────────────────────────────────────────────┐
+│  ←  Febbraio 2026  →                            [×] │
+├─────────────────────────────────────────────────────┤
+│  📅 12 Feb    │  📆 Settimana  │  📊 Mese          │
+│     85%       │      72%       │     68%           │
+├─────────────────────────────────────────────────────┤
+│   L    M    M    G    V    S    D                   │
+│  26   27   28   29   30   31    1                   │
+│   2    3    4    5    6    7    8                   │
+│   9   10   11  [12]  13   14   15                   │
+│  16   17   18   19   20   21   22                   │
+│  23   24   25   26   27   28    1                   │
+├─────────────────────────────────────────────────────┤
+│  [Lista abitudini del giorno selezionato...]        │
+└─────────────────────────────────────────────────────┘
+```
+
+**Technical Notes:**
+- Creare funzione `getCalendarDaysForMonth(date)` per generare la griglia
+- Creare `getWeeklyProgressForDate(data, endDate)` - ultimi 7 giorni con endDate come ultimo
+- Creare `getMonthlyProgressForDate(data, endDate)` - ultimi 30 giorni con endDate come ultimo
+- La navigazione mese cambia il mese visualizzato, non la data selezionata
+- Quando si cambia mese, selezionare automaticamente il primo giorno disponibile (non futuro)
+
+**WSJF Scoring:**
+- **Business Value**: 5 (migliora UX di navigazione storica)
+- **Time Criticality**: 2 (utenti lo vorranno dopo US-018)
+- **RROE**: 2 (abilita analisi trend più profonda)
+- **Job Size**: 3 (medio - refactor calendario + integrazione ReportCards)
+- **Story Points**: (5 × 2 × 2) / 3 = **6.7** → arrotondato a **5.3**
+
+---
+
+### ⚪ US-020 (Futura): Vista Report per Periodi Specifici
+**Priority:** Won't Have (V2)
+
+**Concept:**
+Una scheda/pagina dedicata ai report dove l'utente può:
+- Selezionare un mese specifico (es: Gennaio 2026) e vedere il progresso dal 1° al 31
+- Selezionare una settimana specifica (es: 3-9 Feb) e vedere il progresso Lun-Dom
+
+**Differenza con DayView (US-019):**
+- DayView: "centrato" sulla data selezionata (ultimi 7/30 giorni)
+- ReportView: "periodo fisso" (mese intero, settimana intera)
+
+**Da implementare in V2.**
+
+---
+
+### ⏳ US-DEV-001: Setup Test Framework (Vitest)
+**Priority:** Should Have (SP: 4.0)
+**Target:** Developer
+
+**User Story (Extended Format):**
+- **As a**: developer che vuole mantenere la qualità del codice
+- **When**: scrivo nuovo codice o modifico funzionalità esistenti
+- **In**: ambiente di sviluppo locale
+- **Since**: senza test automatizzati non posso verificare che le modifiche non rompano funzionalità esistenti
+- **I want to**: avere un framework di test configurato e funzionante
+- **Doing this/in this way**: configurando Vitest (test runner ottimizzato per Vite) con React Testing Library
+- **To/So that**: possa scrivere e eseguire test automatici per verificare il comportamento del codice
+
+**Acceptance Criteria:**
+- [ ] Vitest configurato nel progetto
+- [ ] React Testing Library installata per test componenti
+- [ ] Script `npm test` funzionante
+- [ ] Script `npm run test:watch` per development
+- [ ] Almeno 1 test di esempio funzionante
+- [ ] Coverage report configurato (`npm run test:coverage`)
+
+**Technical Notes:**
+```bash
+npm install -D vitest @testing-library/react @testing-library/jest-dom jsdom
+```
+- Configurare `vite.config.js` per Vitest
+- Creare file `setupTests.js` per configurazione globale
+
+**WSJF Scoring:**
+- **Business Value**: 6 (riduce bug in produzione, migliora confidence nel deploy)
+- **Time Criticality**: 3 (più aspettiamo, più codice da testare retroattivamente)
+- **RROE**: 2 (abilita US-DEV-002, US-DEV-003)
+- **Job Size**: 3 (setup una tantum)
+- **Story Points**: (6 × 3 × 2) / 3 = **12** → normalizzato a **4.0**
+
+---
+
+### ⏳ US-DEV-002: Unit Tests per Storage Functions
+**Priority:** Should Have (SP: 3.0)
+**Target:** Developer
+**Depends on:** US-DEV-001
+
+**User Story (Extended Format):**
+- **As a**: developer che lavora sulle funzioni di calcolo progress
+- **When**: modifico la logica di calcolo in storage.js
+- **In**: funzioni come `getWeightedProgressForDate`, `getPeriodProgressForDate`, `getCalendarDays`
+- **Since**: queste funzioni contengono logica complessa che può facilmente rompersi
+- **I want to**: avere test automatici che verificano i calcoli
+- **Doing this/in this way**: scrivendo unit test per ogni funzione critica
+- **To/So that**: possa modificare il codice con confidence che non ho rotto nulla
+
+**Acceptance Criteria:**
+- [ ] Test per `getWeightedProgressForDate()` - verifica calcolo pesato
+- [ ] Test per `getPeriodProgressForDate()` - verifica range date corretto
+- [ ] Test per `getCalendarDays()` - verifica padding e struttura calendario
+- [ ] Test per `getLastNDaysFromDate()` - verifica generazione date
+- [ ] Test per edge cases (no habits, no check-ins, future dates)
+- [ ] Coverage >= 80% per storage.js
+
+**Test Cases Esempio:**
+```javascript
+describe('getWeightedProgressForDate', () => {
+  it('returns 0% when no check-ins exist', () => {...});
+  it('returns 100% when all habits completed', () => {...});
+  it('weighs habits correctly (peso 3 vs peso 1)', () => {...});
+  it('ignores habits created after the date', () => {...});
+});
+```
+
+**WSJF Scoring:**
+- **Business Value**: 5 (previene regressioni nei calcoli critici)
+- **Time Criticality**: 2 (utile ora che il codice è fresco)
+- **RROE**: 1 (non abilita altre feature)
+- **Job Size**: 3 (molti test ma logica chiara)
+- **Story Points**: (5 × 2 × 1) / 3 = **3.3** → arrotondato a **3.0**
+
+---
+
+### ⏳ US-DEV-003: Component Tests per UI Critica
+**Priority:** Could Have (SP: 2.0)
+**Target:** Developer
+**Depends on:** US-DEV-001
+
+**User Story (Extended Format):**
+- **As a**: developer che modifica componenti React
+- **When**: cambio la struttura o il comportamento di un componente
+- **In**: componenti come DayView, HabitForm, ReportCards
+- **Since**: i test manuali sono lenti e non coprono tutti i casi
+- **I want to**: avere test di integrazione per i componenti principali
+- **Doing this/in this way**: usando React Testing Library per simulare interazioni utente
+- **To/So that**: possa verificare che l'UI si comporta correttamente
+
+**Acceptance Criteria:**
+- [ ] Test per DayView: apertura modale, selezione data, navigazione mesi
+- [ ] Test per HabitForm: validazione, submit, cancel
+- [ ] Test per ReportCards: rendering corretto dei valori
+- [ ] Test per interazioni: click, input, form submit
+
+**WSJF Scoring:**
+- **Business Value**: 4 (previene bug UI visibili all'utente)
+- **Time Criticality**: 1 (meno urgente dei test logica)
+- **RROE**: 1 (non abilita altro)
+- **Job Size**: 4 (componenti complessi da testare)
+- **Story Points**: (4 × 1 × 1) / 4 = **1.0** → arrotondato a **2.0**
+
+---
+
+### ⏳ US-DEV-004: ESLint + Prettier Configuration
+**Priority:** Could Have (SP: 2.5)
+**Target:** Developer
+
+**User Story (Extended Format):**
+- **As a**: developer che vuole codice consistente
+- **When**: scrivo o modifico codice
+- **In**: tutti i file del progetto
+- **Since**: senza linting automatico il codice può diventare inconsistente e contenere errori comuni
+- **I want to**: avere ESLint e Prettier configurati con regole appropriate
+- **Doing this/in this way**: configurando regole per React, hooks, e formattazione automatica
+- **To/So that**: il codice sia sempre formattato in modo consistente e privo di errori comuni
+
+**Acceptance Criteria:**
+- [ ] ESLint configurato con plugin React e Hooks
+- [ ] Prettier configurato per formattazione automatica
+- [ ] Script `npm run lint` funzionante
+- [ ] Script `npm run lint:fix` per auto-fix
+- [ ] Integrazione con VSCode (format on save)
+- [ ] Nessun warning ESLint nel codebase attuale
+
+**WSJF Scoring:**
+- **Business Value**: 4 (migliora qualità codice, previene bug)
+- **Time Criticality**: 2 (utile subito)
+- **RROE**: 1 (non abilita altro)
+- **Job Size**: 2 (setup veloce)
+- **Story Points**: (4 × 2 × 1) / 2 = **4.0** → normalizzato a **2.5**
+
+---
+
+### ⚪ US-DEV-005: CI/CD Pipeline (GitHub Actions)
+**Priority:** Won't Have (V2)
+**Target:** Developer
+**Depends on:** US-DEV-001, US-DEV-004
+
+**User Story (Extended Format):**
+- **As a**: developer che vuole deploy automatici
+- **When**: faccio push su main o creo una PR
+- **In**: GitHub repository
+- **Since**: i test manuali pre-deploy sono error-prone e time-consuming
+- **I want to**: avere una pipeline CI/CD che esegue test e build automaticamente
+- **Doing this/in this way**: configurando GitHub Actions workflow
+- **To/So that**: ogni push sia verificato automaticamente e i deploy siano sicuri
+
+**Acceptance Criteria:**
+- [ ] Workflow che esegue `npm run lint` su ogni PR
+- [ ] Workflow che esegue `npm test` su ogni PR
+- [ ] Workflow che esegue `npm run build` su ogni PR
+- [ ] Badge status nel README
+- [ ] (Opzionale) Deploy automatico su Vercel/Netlify per preview
+
+**WSJF Scoring:**
+- **Business Value**: 5 (automazione deploy, riduce errori)
+- **Time Criticality**: 1 (non urgente per MVP)
+- **RROE**: 2 (abilita deploy automatici)
+- **Job Size**: 3 (richiede setup GitHub)
+- **Story Points**: (5 × 1 × 2) / 3 = **3.3** → arrotondato a **2.5**
+
+**Decision:** Won't Have per MVP. Implementare quando il progetto va in produzione.
+
+---
+
+### ⚪ US-DEV-006: Error Boundaries React
+**Priority:** Won't Have (V2)
+**Target:** Developer
+
+**User Story (Extended Format):**
+- **As a**: utente che usa l'app
+- **When**: si verifica un errore JavaScript non gestito
+- **In**: qualsiasi parte dell'app
+- **Since**: senza Error Boundaries l'intera app crasha mostrando schermo bianco
+- **I want to**: vedere un messaggio di errore user-friendly con opzione di ripristino
+- **Doing this/in this way**: implementando React Error Boundaries attorno ai componenti critici
+- **To/So that**: l'app sia resiliente agli errori e l'utente possa continuare a usarla
+
+**Acceptance Criteria:**
+- [ ] ErrorBoundary component creato
+- [ ] Wrapping dei componenti principali (App, DayView, HabitDetail)
+- [ ] UI di fallback con messaggio chiaro e bottone "Riprova"
+- [ ] Logging degli errori (console o servizio esterno)
+
+**WSJF Scoring:**
+- **Business Value**: 4 (migliora UX in caso di errori)
+- **Time Criticality**: 1 (non urgente, l'app è stabile)
+- **RROE**: 1 (non abilita altro)
+- **Job Size**: 2 (implementazione semplice)
+- **Story Points**: (4 × 1 × 1) / 2 = **2.0**
+
+**Decision:** Won't Have per MVP. L'app è stabile, implementare se emergono problemi.
+
+---
+
 ## 🔮 V2 Roadmap - Multi-Timeframe & Scoring System
 
 > **Note:** Queste feature sono out-of-scope per MVP ma documentate per design futuro.
@@ -806,23 +1087,28 @@ Dove:
 
 ## 📈 Backlog Summary
 
-**Total User Stories:** 18
-**Completate:** 13 (US-001 a US-009, US-012, US-015, US-016, US-017) ✅
+**Total User Stories:** 26 (20 funzionali + 6 developer)
+**Completate:** 15 (US-001 a US-009, US-012, US-015, US-016, US-017, US-018, US-019) ✅
 **In Progress:** 0
-**Rimanenti:** 5
+**Rimanenti:** 11 (5 funzionali + 6 developer)
 
-**Status MVP:**
+**Status MVP - User Stories Funzionali:**
 - ✅ **Must Have:** 5/5 completate (US-001 a US-005)
-- ✅ **Should Have (Core):** 3/5 completate (US-006, US-007, US-008)
-- ✅ **Should Have (Done):** US-015 (unità di misura), US-016 (categorie), US-017 (dashboard per data)
-- 🔄 **Should Have (Remaining):** US-013 (shadcn/ui), US-018 (reportistica settimanale/mensile)
+- ✅ **Should Have (Core):** 4/5 completate (US-006, US-007, US-008, US-019)
+- ✅ **Should Have (Done):** US-015, US-016, US-017, US-018, US-019
+- ⏳ **Should Have (Remaining):** US-013 (shadcn/ui)
 - ✅ **Could Have (Done):** US-009 (filtro/ricerca), US-012 (edit check-in passati)
 - ⏳ **Could Have (Remaining):** US-010 (dark mode)
-- ⚪ **Won't Have:** US-011, US-014
+- ⚪ **Won't Have:** US-011, US-014, US-020 (V2)
+
+**Status Developer Stories:**
+- ⏳ **Should Have:** US-DEV-001 (test framework), US-DEV-002 (unit tests)
+- ⏳ **Could Have:** US-DEV-003 (component tests), US-DEV-004 (ESLint+Prettier)
+- ⚪ **Won't Have:** US-DEV-005 (CI/CD), US-DEV-006 (Error Boundaries)
 
 **MVP Core: COMPLETATO! 🎉**
 L'app è ora funzionale con tutte le feature essenziali.
-Streak, cronologia, editing check-in passati, unità di misura e dashboard per data implementate.
+Calendario mensile con reportistica contestuale implementato (US-019).
 
 ---
 

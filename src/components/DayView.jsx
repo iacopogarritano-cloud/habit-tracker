@@ -1,42 +1,148 @@
 /**
- * DayView - Dashboard per un giorno specifico
- * Permette di visualizzare e modificare tutte le abitudini per una data
+ * DayView - Dashboard per un giorno specifico (US-019)
+ * Calendario mensile con reportistica contestuale
  *
  * Props:
  * - date: data selezionata (formato YYYY-MM-DD)
  * - habits: lista di tutte le abitudini
  * - getCheckInForDate: funzione per ottenere check-in (habitId, date) => checkIn
+ * - getProgressForDate: funzione per progresso giornaliero (date) => progress
+ * - getWeeklyProgressForDate: funzione per progresso settimanale (date) => progress
+ * - getMonthlyProgressForDate: funzione per progresso mensile (date) => progress
  * - onCheckIn: callback per registrare check-in (habitId, value, date)
  * - onClose: callback per chiudere la vista
- * - onNavigate: callback per navigare (offset: -1 o +1)
+ * - onSelectDate: callback per selezionare una data
  */
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 
-export function DayView({ date, habits, getCheckInForDate, onCheckIn, onClose, onNavigate, onSelectDate }) {
+// Costanti - fuori dal componente per evitare ricreazione
+const MONTH_NAMES = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                     'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+const WEEK_DAYS = ['L', 'M', 'M', 'G', 'V', 'S', 'D'];
+const DAY_NAMES = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+
+/**
+ * Genera tutti i giorni per il calendario mensile
+ * Include padding per completare le settimane (Lun-Dom)
+ */
+function getCalendarDays(year, month) {
+  const days = [];
+
+  // Primo giorno del mese
+  const firstDay = new Date(year, month, 1);
+  // Ultimo giorno del mese
+  const lastDay = new Date(year, month + 1, 0);
+
+  // Giorno della settimana del primo (0=Dom, 1=Lun, ..., 6=Sab)
+  // Convertiamo in (0=Lun, 1=Mar, ..., 6=Dom)
+  const firstDayOfWeek = (firstDay.getDay() + 6) % 7;
+
+  // Giorni da aggiungere prima (dal mese precedente)
+  const paddingBefore = firstDayOfWeek;
+
+  // Giorni totali nel mese
+  const daysInMonth = lastDay.getDate();
+
+  // Giorni da aggiungere dopo per completare l'ultima settimana
+  const totalCells = Math.ceil((paddingBefore + daysInMonth) / 7) * 7;
+  const paddingAfter = totalCells - paddingBefore - daysInMonth;
+
+  // Helper per formattare data
+  const formatDate = (d) => d.toISOString().split('T')[0];
+
+  // Padding prima (giorni del mese precedente)
+  for (let i = paddingBefore - 1; i >= 0; i--) {
+    const d = new Date(year, month, -i);
+    days.push({ date: formatDate(d), isCurrentMonth: false });
+  }
+
+  // Giorni del mese
+  for (let i = 1; i <= daysInMonth; i++) {
+    const d = new Date(year, month, i);
+    days.push({ date: formatDate(d), isCurrentMonth: true });
+  }
+
+  // Padding dopo (giorni del mese successivo)
+  for (let i = 1; i <= paddingAfter; i++) {
+    const d = new Date(year, month + 1, i);
+    days.push({ date: formatDate(d), isCurrentMonth: false });
+  }
+
+  return days;
+}
+
+/**
+ * Determina il colore in base alla percentuale
+ */
+function getProgressColor(percent) {
+  if (percent >= 70) return '#22c55e'; // verde
+  if (percent >= 40) return '#eab308'; // giallo
+  return '#ef4444'; // rosso
+}
+
+/**
+ * Mini card per il progresso contestuale
+ */
+function MiniProgressCard({ title, icon, percent }) {
+  const color = getProgressColor(percent);
+
+  return (
+    <div className="dayview-mini-card">
+      <span className="dayview-mini-icon">{icon}</span>
+      <span className="dayview-mini-title">{title}</span>
+      <span className="dayview-mini-percent" style={{ color }}>
+        {percent}%
+      </span>
+    </div>
+  );
+}
+
+export function DayView({
+  date,
+  habits,
+  getCheckInForDate,
+  getProgressForDate,
+  getWeeklyProgressForDate,
+  getMonthlyProgressForDate,
+  onCheckIn,
+  onClose,
+  onSelectDate
+}) {
   const today = new Date().toISOString().split('T')[0];
   const isFuture = date > today;
   const isToday = date === today;
 
-  // Genera ultimi 30 giorni per il mini-calendario
-  const last30Days = useMemo(() => {
-    const days = [];
-    const todayDate = new Date();
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(todayDate);
-      d.setDate(todayDate.getDate() - i);
-      days.push(d.toISOString().split('T')[0]);
-    }
-    return days;
-  }, []);
+  // Mese visualizzato nel calendario (può essere diverso dalla data selezionata)
+  const [viewMonth, setViewMonth] = useState(() => {
+    const d = new Date(date);
+    return { year: d.getFullYear(), month: d.getMonth() };
+  });
 
-  // Formatta la data per il display (es: "Venerdì 7 Febbraio 2025")
+  // Usa costanti definite fuori dal componente: MONTH_NAMES, WEEK_DAYS, DAY_NAMES
+
+  // Genera giorni del calendario per il mese visualizzato
+  const calendarDays = useMemo(() => {
+    return getCalendarDays(viewMonth.year, viewMonth.month);
+  }, [viewMonth.year, viewMonth.month]);
+
+  // Progresso contestuale per la data selezionata
+  const dayProgress = useMemo(() => {
+    return getProgressForDate(date);
+  }, [date, getProgressForDate]);
+
+  const weeklyProgress = useMemo(() => {
+    return getWeeklyProgressForDate(date);
+  }, [date, getWeeklyProgressForDate]);
+
+  const monthlyProgress = useMemo(() => {
+    return getMonthlyProgressForDate(date);
+  }, [date, getMonthlyProgressForDate]);
+
+  // Formatta la data selezionata per il display
   const formattedDate = useMemo(() => {
     const d = new Date(date);
-    const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
-    const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
-                    'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-    return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+    return `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
   }, [date]);
 
   // Calcola lo stato di ogni abitudine per questa data
@@ -56,26 +162,29 @@ export function DayView({ date, habits, getCheckInForDate, onCheckIn, onClose, o
     });
   }, [habits, date, getCheckInForDate]);
 
-  // Calcola progresso totale del giorno (pesato con completamento parziale)
-  const dayProgress = useMemo(() => {
-    if (habits.length === 0) return { percent: 0, completed: 0, total: 0 };
+  // Handler per navigare tra i mesi
+  const handleMonthNavigate = (offset) => {
+    setViewMonth(current => {
+      let newMonth = current.month + offset;
+      let newYear = current.year;
 
-    let totalWeight = 0;
-    let weightedCompleted = 0;
-    let completedCount = 0;
-
-    habitsWithStatus.forEach(h => {
-      totalWeight += h.weight;
-      // Usa completamento parziale come nella dashboard principale
-      weightedCompleted += (h.completionPercent / 100) * h.weight;
-      if (h.isCompleted) {
-        completedCount++;
+      if (newMonth < 0) {
+        newMonth = 11;
+        newYear--;
+      } else if (newMonth > 11) {
+        newMonth = 0;
+        newYear++;
       }
-    });
 
-    const percent = totalWeight > 0 ? Math.round((weightedCompleted / totalWeight) * 100) : 0;
-    return { percent, completed: completedCount, total: habits.length };
-  }, [habitsWithStatus, habits.length]);
+      return { year: newYear, month: newMonth };
+    });
+  };
+
+  // Handler per selezionare un giorno dal calendario
+  const handleDayClick = (dayDate) => {
+    if (dayDate > today) return; // Non selezionare giorni futuri
+    onSelectDate(dayDate);
+  };
 
   // Handler per incrementare
   const handleIncrement = (habitId, currentValue) => {
@@ -96,27 +205,25 @@ export function DayView({ date, habits, getCheckInForDate, onCheckIn, onClose, o
 
   return (
     <div className="dayview-overlay" onClick={onClose}>
-      <div className="dayview-modal" onClick={e => e.stopPropagation()}>
-        {/* Header con navigazione */}
+      <div className="dayview-modal dayview-modal-calendar" onClick={e => e.stopPropagation()}>
+        {/* Header con navigazione mese */}
         <div className="dayview-header">
           <button
             className="dayview-nav-btn"
-            onClick={() => onNavigate(-1)}
-            title="Giorno precedente"
+            onClick={() => handleMonthNavigate(-1)}
+            title="Mese precedente"
           >
             ←
           </button>
 
-          <div className="dayview-date">
-            <h2>{formattedDate}</h2>
-            {isToday && <span className="dayview-today-badge">Oggi</span>}
+          <div className="dayview-month-title">
+            <h2>{MONTH_NAMES[viewMonth.month]} {viewMonth.year}</h2>
           </div>
 
           <button
             className="dayview-nav-btn"
-            onClick={() => onNavigate(1)}
-            disabled={isFuture}
-            title="Giorno successivo"
+            onClick={() => handleMonthNavigate(1)}
+            title="Mese successivo"
           >
             →
           </button>
@@ -124,20 +231,54 @@ export function DayView({ date, habits, getCheckInForDate, onCheckIn, onClose, o
           <button className="btn-close dayview-close" onClick={onClose}>×</button>
         </div>
 
-        {/* Mini-calendario per selezione rapida giorno */}
-        <div className="dayview-calendar-picker">
-          <div className="dayview-calendar-grid">
-            {last30Days.map(day => {
-              const isSelected = day === date;
-              const isDayToday = day === today;
+        {/* Report Cards contestuali */}
+        <div className="dayview-report-cards">
+          <MiniProgressCard
+            title={formattedDate}
+            icon="📅"
+            percent={dayProgress.percent}
+          />
+          <MiniProgressCard
+            title="Settimana"
+            icon="📆"
+            percent={weeklyProgress.percent}
+          />
+          <MiniProgressCard
+            title="Mese"
+            icon="📊"
+            percent={monthlyProgress.percent}
+          />
+        </div>
+
+        {/* Calendario mensile */}
+        <div className="dayview-calendar">
+          {/* Header giorni settimana */}
+          <div className="dayview-calendar-header">
+            {WEEK_DAYS.map((day, i) => (
+              <span key={i} className="dayview-weekday">{day}</span>
+            ))}
+          </div>
+
+          {/* Griglia giorni */}
+          <div className="dayview-calendar-grid-monthly">
+            {calendarDays.map((day, i) => {
+              const isSelected = day.date === date;
+              const isDayToday = day.date === today;
+              const isDayFuture = day.date > today;
+
               return (
                 <button
-                  key={day}
-                  className={`dayview-calendar-day ${isSelected ? 'selected' : ''} ${isDayToday ? 'today' : ''}`}
-                  onClick={() => onSelectDate(day)}
-                  title={new Date(day).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })}
+                  key={i}
+                  className={`dayview-calendar-day-monthly
+                    ${isSelected ? 'selected' : ''}
+                    ${isDayToday ? 'today' : ''}
+                    ${!day.isCurrentMonth ? 'other-month' : ''}
+                    ${isDayFuture ? 'future' : ''}`}
+                  onClick={() => handleDayClick(day.date)}
+                  disabled={isDayFuture}
+                  title={day.date}
                 >
-                  {new Date(day).getDate()}
+                  {new Date(day.date).getDate()}
                 </button>
               );
             })}
@@ -151,20 +292,12 @@ export function DayView({ date, habits, getCheckInForDate, onCheckIn, onClose, o
           </div>
         )}
 
-        {/* Progresso del giorno */}
-        <div className="dayview-progress">
-          <div className="dayview-progress-circle" style={{
-            color: dayProgress.percent >= 70 ? '#22c55e' :
-                   dayProgress.percent >= 40 ? '#eab308' : '#ef4444'
-          }}>
-            {dayProgress.percent}%
-          </div>
-          <div className="dayview-progress-info">
-            <span className="dayview-progress-label">Progresso del giorno</span>
-            <span className="dayview-progress-detail">
-              {dayProgress.completed}/{dayProgress.total} completate
-            </span>
-          </div>
+        {/* Dettaglio giorno selezionato */}
+        <div className="dayview-selected-info">
+          <h3>{formattedDate} {isToday && <span className="dayview-today-badge">Oggi</span>}</h3>
+          <span className="dayview-selected-stats">
+            {dayProgress.completed}/{dayProgress.total} completate
+          </span>
         </div>
 
         {/* Lista abitudini */}

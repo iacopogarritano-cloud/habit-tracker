@@ -8,6 +8,7 @@ import { useHabitStore } from './hooks/useHabitStore';
 import { HabitForm } from './components/HabitForm';
 import { HabitDetail } from './components/HabitDetail';
 import { DayView } from './components/DayView';
+import { ReportCards } from './components/ReportCards';
 import { getCheckIn } from './utils/storage';
 import './App.css';
 
@@ -18,6 +19,8 @@ function App() {
     isLoading,
     error,
     progress,
+    weeklyProgress, // US-018
+    monthlyProgress, // US-018
     today,
     addHabit,
     updateHabit,
@@ -27,6 +30,10 @@ function App() {
     getStats,
     getLastNDays,
     getCategory, // US-016
+    // Contextual Progress (US-019)
+    getProgressForDate,
+    getWeeklyProgressForDate,
+    getMonthlyProgressForDate,
     _rawData,
   } = useHabitStore();
 
@@ -51,15 +58,6 @@ function App() {
       habit.name.toLowerCase().includes(query)
     );
   }, [habits, searchQuery]);
-
-  // Handler per navigare tra i giorni nella DayView (DEVE essere prima di early return)
-  const handleDateNavigate = useCallback((offset) => {
-    setSelectedDate(current => {
-      const d = new Date(current);
-      d.setDate(d.getDate() + offset);
-      return d.toISOString().split('T')[0];
-    });
-  }, []);
 
   // Funzione per ottenere check-in per una data specifica (DEVE essere prima di early return)
   const getCheckInForDate = useCallback((habitId, date) => {
@@ -139,21 +137,12 @@ function App() {
         </div>
       )}
 
-      {/* Dashboard progresso pesato (US-001) */}
-      <section className="progress-dashboard">
-        <div className="progress-card">
-          <div className="progress-percent" style={{
-            color: progress.percent >= 70 ? '#22c55e' :
-                   progress.percent >= 40 ? '#eab308' : '#ef4444'
-          }}>
-            {progress.percent}%
-          </div>
-          <div className="progress-label">Progresso Pesato</div>
-          <div className="progress-detail">
-            {progress.completed}/{progress.total} abitudini completate
-          </div>
-        </div>
-      </section>
+      {/* Dashboard progresso pesato (US-001, US-018) */}
+      <ReportCards
+        todayProgress={progress}
+        weeklyProgress={weeklyProgress}
+        monthlyProgress={monthlyProgress}
+      />
 
       {/* Form creazione/modifica abitudine (US-002, US-006) */}
       {showForm && (
@@ -206,15 +195,17 @@ function App() {
         />
       )}
 
-      {/* Modal day view (dashboard per data) */}
+      {/* Modal day view con calendario mensile (US-019) */}
       {selectedDate && (
         <DayView
           date={selectedDate}
           habits={habits}
           getCheckInForDate={getCheckInForDate}
+          getProgressForDate={getProgressForDate}
+          getWeeklyProgressForDate={getWeeklyProgressForDate}
+          getMonthlyProgressForDate={getMonthlyProgressForDate}
           onCheckIn={checkIn}
           onClose={() => setSelectedDate(null)}
-          onNavigate={handleDateNavigate}
           onSelectDate={setSelectedDate}
         />
       )}

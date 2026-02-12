@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   loadFromStorage,
-  saveToStorage,
+  // saveToStorage is used internally by other storage functions
   addHabit as addHabitToStorage,
   updateHabit as updateHabitInStorage,
   deleteHabit as deleteHabitFromStorage,
@@ -26,6 +26,13 @@ import {
   updateCategory as updateCategoryInStorage,
   deleteCategory as deleteCategoryFromStorage,
   getCategory as getCategoryFromStorage,
+  // Period progress (US-018)
+  getWeeklyProgress as getWeeklyProgressFromStorage,
+  getMonthlyProgress as getMonthlyProgressFromStorage,
+  // Contextual progress (US-019)
+  getWeightedProgressForDate,
+  getWeeklyProgressForDate as getWeeklyProgressForDateFromStorage,
+  getMonthlyProgressForDate as getMonthlyProgressForDateFromStorage,
 } from '../utils/storage';
 
 export function useHabitStore() {
@@ -190,6 +197,12 @@ export function useHabitStore() {
   // Progresso pesato giornaliero
   const progress = data ? getWeightedDailyProgress(data) : { percent: 0, completed: 0, total: 0 };
 
+  // Progresso pesato settimanale (US-018)
+  const weeklyProgress = data ? getWeeklyProgressFromStorage(data) : { percent: 0, daysWithData: 0, totalDays: 7, dailyBreakdown: [] };
+
+  // Progresso pesato mensile (US-018)
+  const monthlyProgress = data ? getMonthlyProgressFromStorage(data) : { percent: 0, daysWithData: 0, totalDays: 30, dailyBreakdown: [] };
+
   // Data di oggi
   const today = getTodayDate();
 
@@ -212,6 +225,39 @@ export function useHabitStore() {
   const clearError = useCallback(() => {
     setError(null);
   }, []);
+
+  // ============================================
+  // CONTEXTUAL PROGRESS (US-019)
+  // ============================================
+
+  /**
+   * Ottiene il progresso pesato per una data specifica
+   * @param {string} date - Data YYYY-MM-DD
+   */
+  const getProgressForDate = useCallback((date) => {
+    if (!data) return { percent: 0, completed: 0, total: 0, hasData: false };
+    return getWeightedProgressForDate(data, date);
+  }, [data]);
+
+  /**
+   * Ottiene il progresso settimanale per una data specifica
+   * Ultimi 7 giorni con la data come ultimo giorno
+   * @param {string} endDate - Data finale YYYY-MM-DD
+   */
+  const getWeeklyProgressForDate = useCallback((endDate) => {
+    if (!data) return { percent: 0, daysWithData: 0, totalDays: 7, dailyBreakdown: [] };
+    return getWeeklyProgressForDateFromStorage(data, endDate);
+  }, [data]);
+
+  /**
+   * Ottiene il progresso mensile per una data specifica
+   * Ultimi 30 giorni con la data come ultimo giorno
+   * @param {string} endDate - Data finale YYYY-MM-DD
+   */
+  const getMonthlyProgressForDate = useCallback((endDate) => {
+    if (!data) return { percent: 0, daysWithData: 0, totalDays: 30, dailyBreakdown: [] };
+    return getMonthlyProgressForDateFromStorage(data, endDate);
+  }, [data]);
 
   // ============================================
   // DEBUG FUNCTIONS (per testing streak)
@@ -283,6 +329,8 @@ export function useHabitStore() {
 
     // Progress
     progress,
+    weeklyProgress, // US-018
+    monthlyProgress, // US-018
 
     // Habit actions
     addHabit,
@@ -302,6 +350,11 @@ export function useHabitStore() {
     // Stats (US-008)
     getStats,
     getLastNDays,
+
+    // Contextual Progress (US-019)
+    getProgressForDate,
+    getWeeklyProgressForDate,
+    getMonthlyProgressForDate,
 
     // Utilities
     refresh,

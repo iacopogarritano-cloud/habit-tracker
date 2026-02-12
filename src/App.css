@@ -1543,3 +1543,297 @@ body {
   display: flex;
   gap: 4px;
 }
+
+/* ============================================
+   DAYVIEW CALENDARIO MENSILE - US-019
+   ============================================ */
+
+/* Modal più largo per calendario */
+.dayview-modal-calendar {
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Header mese */
+.dayview-month-title {
+  flex: 1;
+  text-align: center;
+}
+
+.dayview-month-title h2 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Mini Report Cards contestuali */
+.dayview-report-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.dayview-mini-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+}
+
+.dayview-mini-icon {
+  font-size: 14px;
+}
+
+.dayview-mini-title {
+  font-size: 0.65rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.dayview-mini-percent {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Calendario mensile */
+.dayview-calendar {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dayview-calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.dayview-weekday {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+.dayview-calendar-grid-monthly {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.dayview-calendar-day-monthly {
+  width: 100%;
+  aspect-ratio: 1;
+  border: none;
+  background: var(--color-card);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dayview-calendar-day-monthly:hover:not(.future):not(.other-month) {
+  background: var(--color-primary);
+  color: white;
+}
+
+.dayview-calendar-day-monthly.selected {
+  background: var(--color-primary);
+  color: white;
+  font-weight: bold;
+}
+
+.dayview-calendar-day-monthly.today {
+  border: 2px solid var(--color-primary);
+}
+
+.dayview-calendar-day-monthly.today.selected {
+  border-color: white;
+}
+
+.dayview-calendar-day-monthly.other-month {
+  color: var(--color-text-secondary);
+  opacity: 0.4;
+}
+
+.dayview-calendar-day-monthly.future {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Info giorno selezionato */
+.dayview-selected-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dayview-selected-info h3 {
+  font-size: 0.95rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dayview-selected-stats {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+/* Responsive per calendario mensile */
+@media (max-width: 400px) {
+  .dayview-modal-calendar {
+    max-width: 100%;
+    width: 100%;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+
+  .dayview-report-cards {
+    gap: 6px;
+    padding: 10px 12px;
+  }
+
+  .dayview-mini-card {
+    padding: 6px 2px;
+  }
+
+  .dayview-mini-percent {
+    font-size: 1.1rem;
+  }
+
+  .dayview-calendar-day-monthly {
+    font-size: 0.75rem;
+  }
+}
+
+/* ============================================
+   REPORT CARDS - US-018
+   ============================================ */
+
+.report-cards-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.report-card {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.report-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.report-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.report-card-icon {
+  font-size: 16px;
+}
+
+.report-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.report-card-percent {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.report-card-bar {
+  height: 6px;
+  background: var(--color-bg);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.report-card-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.report-card-subtitle {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+/* Responsive: stack verticalmente su schermi piccoli */
+@media (max-width: 480px) {
+  .report-cards-container {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .report-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+    padding: 12px 16px;
+  }
+
+  .report-card-header {
+    flex-direction: column;
+    margin-bottom: 0;
+    min-width: 70px;
+  }
+
+  .report-card-percent {
+    font-size: 28px;
+    margin-bottom: 0;
+    min-width: 70px;
+  }
+
+  .report-card-bar {
+    flex: 1;
+    margin-bottom: 0;
+  }
+
+  .report-card-subtitle {
+    min-width: 80px;
+    text-align: right;
+  }
+}

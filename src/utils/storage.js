@@ -109,7 +109,7 @@ function isStorageAvailable() {
     localStorage.setItem(test, test);
     localStorage.removeItem(test);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -519,6 +519,225 @@ export function getWeightedDailyProgress(data) {
 }
 
 // ============================================
+// PERIOD PROGRESS CALCULATIONS (US-018)
+// ============================================
+
+/**
+ * Calcola la percentuale di completamento per un'abitudine in una data specifica
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine
+ * @param {string} date - Data YYYY-MM-DD
+ * @returns {number} Percentuale 0-100
+ */
+export function getHabitCompletionPercentForDate(data, habitId, date) {
+  const habit = data.habits.find((h) => h.id === habitId);
+  if (!habit) return 0;
+
+  const checkIn = getCheckIn(data, habitId, date);
+  if (!checkIn) return 0;
+
+  return Math.min(100, (checkIn.value / habit.target) * 100);
+}
+
+/**
+ * Calcola il progresso pesato per una data specifica
+ * Formula: Σ(peso × completion%) / Σ pesi_totali
+ * @param {StorageData} data - Stato attuale
+ * @param {string} date - Data YYYY-MM-DD
+ * @returns {{ percent: number, completed: number, total: number, hasData: boolean }}
+ */
+export function getWeightedProgressForDate(data, date) {
+  if (data.habits.length === 0) {
+    return { percent: 0, completed: 0, total: 0, hasData: false };
+  }
+
+  let weightedSum = 0;
+  let totalWeight = 0;
+  let completedCount = 0;
+  let hasAnyCheckIn = false;
+
+  for (const habit of data.habits) {
+    // Salta abitudini create dopo questa data
+    const createdAt = habit.createdAt.split('T')[0];
+    if (createdAt > date) continue;
+
+    const completionPercent = getHabitCompletionPercentForDate(data, habit.id, date) / 100;
+
+    // Verifica se c'è almeno un check-in per questa data
+    const checkIn = getCheckIn(data, habit.id, date);
+    if (checkIn) hasAnyCheckIn = true;
+
+    weightedSum += habit.weight * completionPercent;
+    totalWeight += habit.weight;
+
+    if (completionPercent >= 1) {
+      completedCount++;
+    }
+  }
+
+  const percent = totalWeight > 0 ? (weightedSum / totalWeight) * 100 : 0;
+
+  return {
+    percent: Math.round(percent * 10) / 10,
+    completed: completedCount,
+    total: data.habits.filter(h => h.createdAt.split('T')[0] <= date).length,
+    hasData: hasAnyCheckIn,
+  };
+}
+
+/**
+ * Calcola il progresso pesato settimanale (media ultimi 7 giorni)
+ * Formula: Σ(daily_weighted_progress) / days_with_data
+ * @param {StorageData} data - Stato attuale
+ * @returns {{ percent: number, daysWithData: number, dailyBreakdown: Array<{ date: string, percent: number }> }}
+ */
+export function getWeeklyProgress(data) {
+  const days = getLastNDays(7);
+  const dailyBreakdown = [];
+  let totalPercent = 0;
+  let daysWithData = 0;
+
+  for (const date of days) {
+    const dayProgress = getWeightedProgressForDate(data, date);
+    dailyBreakdown.push({
+      date,
+      percent: dayProgress.percent,
+      hasData: dayProgress.hasData,
+    });
+
+    // Includi nel calcolo solo se ha dati
+    if (dayProgress.hasData || dayProgress.total > 0) {
+      totalPercent += dayProgress.percent;
+      daysWithData++;
+    }
+  }
+
+  const percent = daysWithData > 0 ? totalPercent / daysWithData : 0;
+
+  return {
+    percent: Math.round(percent * 10) / 10,
+    daysWithData,
+    totalDays: 7,
+    dailyBreakdown,
+  };
+}
+
+/**
+ * Calcola il progresso pesato mensile (media ultimi 30 giorni)
+ * Formula: Σ(daily_weighted_progress) / days_with_data
+ * @param {StorageData} data - Stato attuale
+ * @returns {{ percent: number, daysWithData: number, dailyBreakdown: Array<{ date: string, percent: number }> }}
+ */
+export function getMonthlyProgress(data) {
+  const days = getLastNDays(30);
+  const dailyBreakdown = [];
+  let totalPercent = 0;
+  let daysWithData = 0;
+
+  for (const date of days) {
+    const dayProgress = getWeightedProgressForDate(data, date);
+    dailyBreakdown.push({
+      date,
+      percent: dayProgress.percent,
+      hasData: dayProgress.hasData,
+    });
+
+    // Includi nel calcolo solo se ha dati
+    if (dayProgress.hasData || dayProgress.total > 0) {
+      totalPercent += dayProgress.percent;
+      daysWithData++;
+    }
+  }
+
+  const percent = daysWithData > 0 ? totalPercent / daysWithData : 0;
+
+  return {
+    percent: Math.round(percent * 10) / 10,
+    daysWithData,
+    totalDays: 30,
+    dailyBreakdown,
+  };
+}
+
+// ============================================
+// CONTEXTUAL PROGRESS CALCULATIONS (US-019)
+// ============================================
+
+/**
+ * Genera un array di N date che terminano con la data specificata
+ * @param {number} days - Numero di giorni
+ * @param {string} endDate - Data finale (formato YYYY-MM-DD)
+ * @returns {string[]} Array di date YYYY-MM-DD (dal più recente al più vecchio)
+ */
+export function getLastNDaysFromDate(days, endDate) {
+  const dates = [];
+  const end = new Date(endDate);
+
+  for (let i = 0; i < days; i++) {
+    const date = new Date(end);
+    date.setDate(end.getDate() - i);
+    dates.push(date.toISOString().split('T')[0]);
+  }
+
+  return dates;
+}
+
+/**
+ * Calcola il progresso pesato per N giorni che terminano con endDate
+ * Funzione interna per DRY (Don't Repeat Yourself)
+ * @private
+ * @param {StorageData} data - Stato attuale
+ * @param {string} endDate - Data finale (formato YYYY-MM-DD)
+ * @param {number} numDays - Numero di giorni (7 per settimana, 30 per mese)
+ * @returns {{ percent: number, daysWithData: number, totalDays: number, dailyBreakdown: Array }}
+ */
+function getPeriodProgressForDate(data, endDate, numDays) {
+  const days = getLastNDaysFromDate(numDays, endDate);
+  const dailyBreakdown = [];
+  let totalPercent = 0;
+  let daysWithData = 0;
+
+  for (const date of days) {
+    const dayProgress = getWeightedProgressForDate(data, date);
+    dailyBreakdown.push({
+      date,
+      percent: dayProgress.percent,
+      hasData: dayProgress.hasData,
+    });
+
+    if (dayProgress.hasData || dayProgress.total > 0) {
+      totalPercent += dayProgress.percent;
+      daysWithData++;
+    }
+  }
+
+  const percent = daysWithData > 0 ? totalPercent / daysWithData : 0;
+
+  return {
+    percent: Math.round(percent * 10) / 10,
+    daysWithData,
+    totalDays: numDays,
+    dailyBreakdown,
+  };
+}
+
+/**
+ * Calcola il progresso pesato settimanale per una data specifica
+ * Ultimi 7 giorni con endDate come ultimo giorno
+ */
+export function getWeeklyProgressForDate(data, endDate) {
+  return getPeriodProgressForDate(data, endDate, 7);
+}
+
+/**
+ * Calcola il progresso pesato mensile per una data specifica
+ * Ultimi 30 giorni con endDate come ultimo giorno
+ */
+export function getMonthlyProgressForDate(data, endDate) {
+  return getPeriodProgressForDate(data, endDate, 30);
+}
+
+// ============================================
 // STREAK & HISTORY CALCULATIONS (US-008)
 // ============================================
 
@@ -824,6 +1043,14 @@ export default {
   // Progress
   getHabitCompletionPercent,
   getWeightedDailyProgress,
+  // Period Progress (US-018)
+  getWeightedProgressForDate,
+  getWeeklyProgress,
+  getMonthlyProgress,
+  // Contextual Progress (US-019)
+  getLastNDaysFromDate,
+  getWeeklyProgressForDate,
+  getMonthlyProgressForDate,
   // Streak & History (US-008)
   getHabitHistory,
   calculateCurrentStreak,
