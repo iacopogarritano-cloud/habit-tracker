@@ -33,6 +33,10 @@ import {
   getWeightedProgressForDate,
   getWeeklyProgressForDate as getWeeklyProgressForDateFromStorage,
   getMonthlyProgressForDate as getMonthlyProgressForDateFromStorage,
+  // Fixed period progress (US-020)
+  getCalendarMonthProgress as getCalendarMonthProgressFromStorage,
+  getCalendarWeekProgress as getCalendarWeekProgressFromStorage,
+  getWeeksOfYear,
 } from '../utils/storage';
 
 export function useHabitStore() {
@@ -355,6 +359,11 @@ export function useHabitStore() {
     getProgressForDate,
     getWeeklyProgressForDate,
     getMonthlyProgressForDate,
+
+    // Fixed Period Progress (US-020)
+    getCalendarMonthProgress: (year, month) => data ? getCalendarMonthProgressFromStorage(data, year, month) : null,
+    getCalendarWeekProgress: (mondayDate) => data ? getCalendarWeekProgressFromStorage(data, mondayDate) : null,
+    getWeeksOfYear,
 
     // Utilities
     refresh,

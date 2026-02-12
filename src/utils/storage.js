@@ -738,6 +738,218 @@ export function getMonthlyProgressForDate(data, endDate) {
 }
 
 // ============================================
+// FIXED PERIOD PROGRESS CALCULATIONS (US-020)
+// ============================================
+
+/**
+ * Genera tutte le date di un mese specifico
+ * @param {number} year - Anno (es. 2026)
+ * @param {number} month - Mese 1-12 (1 = Gennaio)
+ * @returns {string[]} Array di date YYYY-MM-DD
+ */
+export function getMonthDates(year, month) {
+  const dates = [];
+  // JavaScript usa mesi 0-indexed, quindi month-1
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month - 1, day);
+    dates.push(date.toISOString().split('T')[0]);
+  }
+
+  return dates;
+}
+
+/**
+ * Genera tutte le date di una settimana specifica (Lunedì-Domenica)
+ * @param {string} startDate - Data del Lunedì (YYYY-MM-DD)
+ * @returns {string[]} Array di 7 date YYYY-MM-DD (Lun-Dom)
+ */
+export function getWeekDates(startDate) {
+  const dates = [];
+  const start = new Date(startDate);
+
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + i);
+    dates.push(date.toISOString().split('T')[0]);
+  }
+
+  return dates;
+}
+
+/**
+ * Calcola il progresso pesato per un mese specifico (US-020)
+ * @param {StorageData} data - Stato attuale
+ * @param {number} year - Anno
+ * @param {number} month - Mese 1-12
+ * @returns {{ percent: number, daysWithData: number, totalDays: number, dailyBreakdown: Array }}
+ */
+export function getCalendarMonthProgress(data, year, month) {
+  const dates = getMonthDates(year, month);
+  const today = getTodayDate();
+  const dailyBreakdown = [];
+  let totalPercent = 0;
+  let daysWithData = 0;
+
+  for (const date of dates) {
+    // Salta date future
+    if (date > today) {
+      dailyBreakdown.push({ date, percent: null, hasData: false, isFuture: true });
+      continue;
+    }
+
+    const dayProgress = getWeightedProgressForDate(data, date);
+    dailyBreakdown.push({
+      date,
+      percent: dayProgress.percent,
+      hasData: dayProgress.hasData,
+      isFuture: false,
+    });
+
+    if (dayProgress.hasData || dayProgress.total > 0) {
+      totalPercent += dayProgress.percent;
+      daysWithData++;
+    }
+  }
+
+  const percent = daysWithData > 0 ? totalPercent / daysWithData : 0;
+
+  return {
+    percent: Math.round(percent * 10) / 10,
+    daysWithData,
+    totalDays: dates.filter(d => d <= today).length,
+    dailyBreakdown,
+    year,
+    month,
+  };
+}
+
+/**
+ * Calcola il progresso pesato per una settimana specifica (Lun-Dom) (US-020)
+ * @param {StorageData} data - Stato attuale
+ * @param {string} mondayDate - Data del Lunedì (YYYY-MM-DD)
+ * @returns {{ percent: number, daysWithData: number, totalDays: number, dailyBreakdown: Array }}
+ */
+export function getCalendarWeekProgress(data, mondayDate) {
+  const dates = getWeekDates(mondayDate);
+  const today = getTodayDate();
+  const dailyBreakdown = [];
+  let totalPercent = 0;
+  let daysWithData = 0;
+
+  for (const date of dates) {
+    // Salta date future
+    if (date > today) {
+      dailyBreakdown.push({ date, percent: null, hasData: false, isFuture: true });
+      continue;
+    }
+
+    const dayProgress = getWeightedProgressForDate(data, date);
+    dailyBreakdown.push({
+      date,
+      percent: dayProgress.percent,
+      hasData: dayProgress.hasData,
+      isFuture: false,
+    });
+
+    if (dayProgress.hasData || dayProgress.total > 0) {
+      totalPercent += dayProgress.percent;
+      daysWithData++;
+    }
+  }
+
+  const percent = daysWithData > 0 ? totalPercent / daysWithData : 0;
+
+  return {
+    percent: Math.round(percent * 10) / 10,
+    daysWithData,
+    totalDays: dates.filter(d => d <= today).length,
+    dailyBreakdown,
+    startDate: mondayDate,
+    endDate: dates[6],
+  };
+}
+
+/**
+ * Ottiene il Lunedì di una settimana dato un anno e numero settimana ISO
+ * @param {number} year - Anno
+ * @param {number} week - Numero settimana ISO (1-53)
+ * @returns {string} Data del Lunedì YYYY-MM-DD
+ */
+export function getMondayOfWeek(year, week) {
+  // Primo Gennaio dell'anno
+  const jan1 = new Date(year, 0, 1);
+  // Giorno della settimana (0=Dom, 1=Lun, ...)
+  const jan1Day = jan1.getDay();
+  // Calcola offset per arrivare al primo Lunedì
+  const daysToFirstMonday = jan1Day <= 1 ? 1 - jan1Day : 8 - jan1Day;
+  // Primo Lunedì dell'anno
+  const firstMonday = new Date(year, 0, 1 + daysToFirstMonday);
+  // Aggiungi (week-1) * 7 giorni
+  const targetMonday = new Date(firstMonday);
+  targetMonday.setDate(firstMonday.getDate() + (week - 1) * 7);
+
+  return targetMonday.toISOString().split('T')[0];
+}
+
+/**
+ * Ottiene il numero della settimana ISO da una data
+ * @param {string} dateStr - Data YYYY-MM-DD
+ * @returns {{ year: number, week: number }}
+ */
+export function getWeekNumber(dateStr) {
+  const date = new Date(dateStr);
+  date.setHours(0, 0, 0, 0);
+  // Giovedì della stessa settimana determina l'anno della settimana
+  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+  // Prima settimana dell'anno contiene il primo Giovedì
+  const week1 = new Date(date.getFullYear(), 0, 4);
+  // Calcola numero settimana
+  const weekNum = 1 + Math.round(((date - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+
+  return { year: date.getFullYear(), week: weekNum };
+}
+
+/**
+ * Genera lista di settimane per un anno (per picker)
+ * @param {number} year - Anno
+ * @returns {Array<{ week: number, monday: string, label: string }>}
+ */
+export function getWeeksOfYear(year) {
+  const weeks = [];
+  const today = getTodayDate();
+
+  for (let week = 1; week <= 53; week++) {
+    const monday = getMondayOfWeek(year, week);
+    // Se il Lunedì è dell'anno successivo, fermati
+    if (new Date(monday).getFullYear() > year) break;
+    // Se la settimana è nel futuro, fermati
+    if (monday > today) break;
+
+    const sundayDate = new Date(monday);
+    sundayDate.setDate(sundayDate.getDate() + 6);
+    const sunday = sundayDate.toISOString().split('T')[0];
+
+    // Formatta label (es: "3-9 Feb")
+    const monDate = new Date(monday);
+    const sunDate = new Date(sunday);
+    const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+
+    let label;
+    if (monDate.getMonth() === sunDate.getMonth()) {
+      label = `${monDate.getDate()}-${sunDate.getDate()} ${monthNames[monDate.getMonth()]}`;
+    } else {
+      label = `${monDate.getDate()} ${monthNames[monDate.getMonth()]} - ${sunDate.getDate()} ${monthNames[sunDate.getMonth()]}`;
+    }
+
+    weeks.push({ week, monday, sunday, label });
+  }
+
+  return weeks.reverse(); // Più recenti prima
+}
+
+// ============================================
 // STREAK & HISTORY CALCULATIONS (US-008)
 // ============================================
 
@@ -1051,6 +1263,14 @@ export default {
   getLastNDaysFromDate,
   getWeeklyProgressForDate,
   getMonthlyProgressForDate,
+  // Fixed Period Progress (US-020)
+  getMonthDates,
+  getWeekDates,
+  getCalendarMonthProgress,
+  getCalendarWeekProgress,
+  getMondayOfWeek,
+  getWeekNumber,
+  getWeeksOfYear,
   // Streak & History (US-008)
   getHabitHistory,
   calculateCurrentStreak,
