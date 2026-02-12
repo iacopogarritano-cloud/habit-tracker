@@ -5,9 +5,11 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useHabitStore } from './hooks/useHabitStore';
+import { useTheme } from './hooks/useTheme';
 import { HabitForm } from './components/HabitForm';
 import { HabitDetail } from './components/HabitDetail';
 import { DayView } from './components/DayView';
+import { ReportView } from './components/ReportView';
 import { ReportCards } from './components/ReportCards';
 import { getCheckIn } from './utils/storage';
 import './App.css';
@@ -34,8 +36,14 @@ function App() {
     getProgressForDate,
     getWeeklyProgressForDate,
     getMonthlyProgressForDate,
+    // Fixed Period Progress (US-020)
+    getCalendarMonthProgress,
+    getCalendarWeekProgress,
     _rawData,
   } = useHabitStore();
+
+  // Theme (US-010)
+  const { isDark, toggleTheme } = useTheme();
 
   // State per mostrare/nascondere il form
   const [showForm, setShowForm] = useState(false);
@@ -49,6 +57,8 @@ function App() {
   const [selectedDate, setSelectedDate] = useState(null);
   // State per ricerca abitudini (US-009)
   const [searchQuery, setSearchQuery] = useState('');
+  // State per report view (US-020)
+  const [showReportView, setShowReportView] = useState(false);
 
   // Filtra abitudini in base alla ricerca (US-009)
   const filteredHabits = useMemo(() => {
@@ -117,9 +127,25 @@ function App() {
 
   return (
     <div className="app">
-      {/* Header con data cliccabile */}
+      {/* Header con data cliccabile e theme toggle */}
       <header className="app-header">
-        <h1>Habit Tracker</h1>
+        <div className="app-header-row">
+          <h1>Habit Tracker</h1>
+          <button
+            className="theme-toggle"
+            onClick={() => setShowReportView(true)}
+            title="Report periodi"
+          >
+            📊
+          </button>
+          <button
+            className="theme-toggle"
+            onClick={toggleTheme}
+            title={isDark ? 'Passa a tema chiaro' : 'Passa a tema scuro'}
+          >
+            {isDark ? '☀️' : '🌙'}
+          </button>
+        </div>
         <button
           className="today-date-btn"
           onClick={() => setSelectedDate(today)}
@@ -207,6 +233,15 @@ function App() {
           onCheckIn={checkIn}
           onClose={() => setSelectedDate(null)}
           onSelectDate={setSelectedDate}
+        />
+      )}
+
+      {/* Modal report view (US-020) */}
+      {showReportView && (
+        <ReportView
+          onClose={() => setShowReportView(false)}
+          getCalendarMonthProgress={getCalendarMonthProgress}
+          getCalendarWeekProgress={getCalendarWeekProgress}
         />
       )}
 
