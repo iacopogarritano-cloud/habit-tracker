@@ -946,7 +946,7 @@ export function getWeeksOfYear(year) {
     weeks.push({ week, monday, sunday, label });
   }
 
-  return weeks.reverse(); // Più recenti prima
+  return weeks; // Ordine cronologico: prima settimana in alto
 }
 
 // ============================================

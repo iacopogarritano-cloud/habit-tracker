@@ -29,7 +29,8 @@ function getAvailableMonths(year) {
   const months = [];
   const maxMonth = year === currentYear ? currentMonth : 12;
 
-  for (let m = maxMonth; m >= 1; m--) {
+  // Ordine cronologico: Gennaio in alto, poi Febbraio, etc.
+  for (let m = 1; m <= maxMonth; m++) {
     months.push({ month: m, label: MONTH_NAMES[m - 1] });
   }
 
@@ -78,10 +79,10 @@ export function ReportView({ onClose, getCalendarMonthProgress, getCalendarWeekP
     return null;
   }, [viewType, selectedYear, selectedMonth, selectedWeekMonday, getCalendarMonthProgress, getCalendarWeekProgress]);
 
-  // Anni disponibili (ultimo anno + corrente)
+  // Anni disponibili (ordine cronologico: anno precedente, poi corrente)
   const availableYears = useMemo(() => {
     const currentYear = today.getFullYear();
-    return [currentYear, currentYear - 1];
+    return [currentYear - 1, currentYear];
   }, []);
 
   // Trova label settimana selezionata
