@@ -357,8 +357,8 @@ Corretto: Job Size troppo alto per priorità. Riduciamo a JS=3 per MVP (solo 2 m
 
 ---
 
-### 🟡 US-010: Dark mode / Tema UI
-**Priority:** Could Have (SP: 1.7)
+### ✅ US-010: Dark mode / Tema UI
+**Priority:** Could Have (SP: 1.7) — **COMPLETATA**
 
 **User Story (Extended Format):**
 - **As a**: utente che usa l'app di sera/notte
@@ -822,19 +822,91 @@ Dom ███████░░░ 72%
 
 ---
 
-### ⚪ US-020 (Futura): Vista Report per Periodi Specifici
-**Priority:** Won't Have (V2)
+### 🟠 US-020: Vista Report per Periodi Specifici
+**Priority:** Should Have (SP: 4.0)
 
-**Concept:**
-Una scheda/pagina dedicata ai report dove l'utente può:
-- Selezionare un mese specifico (es: Gennaio 2026) e vedere il progresso dal 1° al 31
-- Selezionare una settimana specifica (es: 3-9 Feb) e vedere il progresso Lun-Dom
+**User Story (Extended Format):**
+- **As a**: utente che vuole analizzare le mie performance in periodi definiti
+- **When**: voglio vedere come sono andato a Gennaio, o la settimana scorsa
+- **In**: sezione/pagina Report dedicata
+- **Since**: la DayView mostra "ultimi 7/30 giorni" relativi, ma io voglio vedere periodi fissi (es: "Febbraio 2026" intero)
+- **I want to**: selezionare un mese o una settimana specifica e vedere il progresso pesato di quel periodo
+- **Doing this/in this way**: dropdown/picker per selezionare mese o settimana, con visualizzazione progresso e breakdown
+- **To/So that**: possa confrontare le mie performance tra periodi diversi e identificare trend
 
 **Differenza con DayView (US-019):**
-- DayView: "centrato" sulla data selezionata (ultimi 7/30 giorni)
-- ReportView: "periodo fisso" (mese intero, settimana intera)
+- **DayView**: "centrato" sulla data selezionata (ultimi 7/30 giorni dalla data)
+- **ReportView**: "periodo fisso" (mese intero 1-31, settimana intera Lun-Dom)
 
-**Da implementare in V2.**
+**Acceptance Criteria:**
+- [ ] Pagina/sezione dedicata ai Report
+- [ ] Picker per selezionare mese (es: "Gennaio 2026", "Febbraio 2026")
+- [ ] Picker per selezionare settimana (es: "3-9 Feb 2026")
+- [ ] Progresso pesato calcolato per il periodo selezionato
+- [ ] Breakdown per abitudine (quali hanno contribuito di più/meno)
+- [ ] Confronto con periodo precedente (es: "Febbraio vs Gennaio")
+- [ ] Responsive design
+
+**Technical Notes:**
+- Creare componente `<ReportView />` o pagina dedicata
+- Funzioni: `getMonthProgress(year, month)`, `getWeekProgress(startDate)`
+- Considerare routing (react-router) o modal/tab
+
+**WSJF Scoring:**
+- **Business Value**: 6 (insight importante per motivazione)
+- **Time Criticality**: 2 (utenti lo chiedono dopo qualche settimana di uso)
+- **RROE**: 1 (non abilita altro direttamente)
+- **Job Size**: 3 (nuovo componente + logica calcolo)
+- **Story Points**: (6 × 2 × 1) / 3 = **4.0**
+
+---
+
+### 🔴 US-021: Sincronizzazione Cloud (Backend)
+**Priority:** Must Have (SP: 8.0)
+
+**User Story (Extended Format):**
+- **As a**: utente che usa l'app da più dispositivi (iPhone, Mac, PC)
+- **When**: registro un'abitudine dal telefono
+- **In**: qualsiasi dispositivo
+- **Since**: uso l'app principalmente da mobile ma anche da desktop, e voglio che i dati siano sempre sincronizzati
+- **I want to**: che le mie abitudini e check-in siano sincronizzati automaticamente su tutti i dispositivi
+- **Doing this/in this way**: backend cloud (Firebase/Supabase) con autenticazione e database real-time
+- **To/So that**: possa usare l'app ovunque senza perdere dati o dover esportare/importare manualmente
+
+**Acceptance Criteria:**
+- [ ] Login/registrazione utente (Google OAuth consigliato per semplicità)
+- [ ] Dati salvati su cloud invece di localStorage
+- [ ] Sincronizzazione real-time o near-real-time
+- [ ] Offline support: l'app funziona offline e sincronizza quando torna online
+- [ ] Migrazione dati esistenti da localStorage a cloud
+- [ ] Logout che mantiene dati sul cloud
+- [ ] Privacy: dati visibili solo all'utente proprietario
+
+**Opzioni Tecniche (da valutare):**
+
+| Opzione | Pro | Contro | Costo |
+|---------|-----|--------|-------|
+| **Firebase** | Docs eccellenti, Google login facile, real-time DB | Vendor lock-in Google | Free tier generoso |
+| **Supabase** | Open source, PostgreSQL, simile a Firebase | Meno maturo | Free tier generoso |
+| **Custom backend** | Controllo totale | Molto più lavoro | Dipende da hosting |
+
+**Raccomandazione:** Firebase per semplicità e learning curve, o Supabase se preferisci open source.
+
+**Technical Notes:**
+- Autenticazione: Firebase Auth o Supabase Auth
+- Database: Firestore (Firebase) o PostgreSQL (Supabase)
+- Refactor: sostituire chiamate localStorage con chiamate API/SDK
+- Offline: service worker + IndexedDB per cache locale
+
+**Impatto:**
+Questa è la feature che sblocca l'**adozione reale** dell'app. Senza sincronizzazione, l'app è limitata a un singolo browser.
+
+**WSJF Scoring:**
+- **Business Value**: 13 (game-changer per usabilità)
+- **Time Criticality**: 3 (bloccante per adozione personale)
+- **RROE**: 5 (abilita uso mobile, backup automatico, futuro multi-user)
+- **Job Size**: 8 (complesso - auth + database + refactor + offline)
+- **Story Points**: (13 × 3 × 5) / 8 = **24.4** → normalizzato a **8.0** (alta priorità)
 
 ---
 
@@ -1087,19 +1159,22 @@ Dove:
 
 ## 📈 Backlog Summary
 
-**Total User Stories:** 26 (20 funzionali + 6 developer)
-**Completate:** 15 (US-001 a US-009, US-012, US-015, US-016, US-017, US-018, US-019) ✅
+**Total User Stories:** 27 (21 funzionali + 6 developer)
+**Completate:** 16 (US-001 a US-010, US-012, US-015, US-016, US-017, US-018, US-019) ✅
 **In Progress:** 0
 **Rimanenti:** 11 (5 funzionali + 6 developer)
 
 **Status MVP - User Stories Funzionali:**
 - ✅ **Must Have:** 5/5 completate (US-001 a US-005)
-- ✅ **Should Have (Core):** 4/5 completate (US-006, US-007, US-008, US-019)
-- ✅ **Should Have (Done):** US-015, US-016, US-017, US-018, US-019
-- ⏳ **Should Have (Remaining):** US-013 (shadcn/ui)
-- ✅ **Could Have (Done):** US-009 (filtro/ricerca), US-012 (edit check-in passati)
-- ⏳ **Could Have (Remaining):** US-010 (dark mode)
-- ⚪ **Won't Have:** US-011, US-014, US-020 (V2)
+- ✅ **Should Have (Core):** 5/5 completate (US-006, US-007, US-008, US-018, US-019)
+- ✅ **Should Have (Done):** US-015, US-016, US-017
+- ⏳ **Should Have (Remaining):** US-013 (shadcn/ui), US-020 (Report periodi specifici)
+- ✅ **Could Have (Done):** US-009 (filtro/ricerca), US-010 (dark mode), US-012 (edit passati)
+- ⚪ **Won't Have:** US-011 (export), US-014 (design Figma)
+
+**🔴 NUOVA PRIORITÀ:**
+- **US-021: Sincronizzazione Cloud** - BLOCCANTE per adozione reale
+- **US-020: Report Periodi Specifici** - Prossima feature dopo sync
 
 **Status Developer Stories:**
 - ⏳ **Should Have:** US-DEV-001 (test framework), US-DEV-002 (unit tests)
@@ -1107,8 +1182,8 @@ Dove:
 - ⚪ **Won't Have:** US-DEV-005 (CI/CD), US-DEV-006 (Error Boundaries)
 
 **MVP Core: COMPLETATO! 🎉**
-L'app è ora funzionale con tutte le feature essenziali.
-Calendario mensile con reportistica contestuale implementato (US-019).
+L'app è funzionale con tutte le feature essenziali + dark mode.
+Prossimo obiettivo: sincronizzazione cloud per abilitare uso multi-dispositivo.
 
 ---
 
