@@ -283,14 +283,46 @@
 
 ---
 
+## Developer Stories (Completate)
+
+### US-DEV-001: Setup Test Framework (Vitest)
+**Priority:** Should Have (SP: 4.0) — **COMPLETATA**
+
+**Acceptance Criteria:** Tutti completati
+- [x] Vitest configurato nel progetto
+- [x] React Testing Library installata
+- [x] Script `npm test` funzionante
+- [x] Script `npm run test:watch` per development
+- [x] Almeno 1 test di esempio (4 test per generateId/getTodayDate)
+- [x] Coverage report configurato
+
+**WSJF:** BV=6, TC=3, RROE=2, JS=3 → SP=4.0
+
+---
+
+### US-DEV-004: ESLint + Prettier Configuration
+**Priority:** Could Have (SP: 2.5) — **COMPLETATA**
+
+**Acceptance Criteria:** Tutti completati
+- [x] ESLint configurato con plugin React
+- [x] Prettier configurato
+- [x] Script `npm run lint` funzionante
+- [x] Integrazione con eslint-config-prettier
+- [x] Nessun warning nel codebase attuale
+
+**WSJF:** BV=4, TC=2, RROE=1, JS=2 → SP=2.5
+
+---
+
 ## Summary
 
-**Total Completate:** 17 User Stories
+**Total Completate:** 19 User Stories (17 funzionali + 2 developer)
 - Must Have: 5/5 (US-001 → US-005)
-- Should Have: 9 (US-006, US-007, US-008, US-015, US-016, US-017, US-018, US-019, US-020)
-- Could Have: 3 (US-009, US-010, US-012)
+- Should Have: 9 funzionali + 1 dev (US-DEV-001)
+- Could Have: 3 funzionali + 1 dev (US-DEV-004)
 
 **MVP Core + Report: COMPLETATO**
+**Developer Tooling: ESLint/Prettier + Vitest**
 
 ---
 

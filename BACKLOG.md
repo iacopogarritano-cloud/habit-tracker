@@ -125,22 +125,6 @@ Story Points = (Business Value × Time Criticality × RROE) / Job Size
 
 ## Developer Stories
 
-### US-DEV-001: Setup Test Framework (Vitest)
-**Priority:** Should Have (SP: 4.0)
-**Target:** Developer
-
-**Acceptance Criteria:**
-- [ ] Vitest configurato nel progetto
-- [ ] React Testing Library installata
-- [ ] Script `npm test` funzionante
-- [ ] Script `npm run test:watch` per development
-- [ ] Almeno 1 test di esempio
-- [ ] Coverage report configurato
-
-**WSJF:** BV=6, TC=3, RROE=2, JS=3 → SP=4.0
-
----
-
 ### US-DEV-002: Unit Tests per Storage Functions
 **Priority:** Should Have (SP: 3.0)
 **Target:** Developer
@@ -169,21 +153,6 @@ Story Points = (Business Value × Time Criticality × RROE) / Job Size
 - [ ] Test per interazioni click/input
 
 **WSJF:** BV=4, TC=1, RROE=1, JS=4 → SP=2.0
-
----
-
-### US-DEV-004: ESLint + Prettier Configuration
-**Priority:** Could Have (SP: 2.5)
-**Target:** Developer
-
-**Acceptance Criteria:**
-- [ ] ESLint configurato con plugin React
-- [ ] Prettier configurato
-- [ ] Script `npm run lint` funzionante
-- [ ] Integrazione con VSCode
-- [ ] Nessun warning nel codebase attuale
-
-**WSJF:** BV=4, TC=2, RROE=1, JS=2 → SP=2.5
 
 ---
 
@@ -221,8 +190,8 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 ## Backlog Summary
 
 **Total User Stories:** 27 (21 funzionali + 6 developer)
-**Completate:** 17 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
-**Rimanenti:** 10 (4 funzionali + 6 developer)
+**Completate:** 19 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
+**Rimanenti:** 8 (4 funzionali + 4 developer)
 
 **Status:**
 - Must Have: 5/5 completate + **US-021 (Cloud Sync) da fare**
@@ -231,8 +200,8 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 - Won't Have: US-011, US-014
 
 **Developer Stories:**
-- Should Have: US-DEV-001, US-DEV-002
-- Could Have: US-DEV-003, US-DEV-004
+- Should Have: US-DEV-002 (US-DEV-001 ✅)
+- Could Have: US-DEV-003 (US-DEV-004 ✅)
 - Won't Have: US-DEV-005, US-DEV-006
 
 **MVP Core + Report: COMPLETATO**
