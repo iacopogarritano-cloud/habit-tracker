@@ -3,16 +3,16 @@
  * US-002: Form creazione abitudine con peso
  */
 
-import { useState, useCallback, useMemo } from 'react';
-import { useHabitStore } from './hooks/useHabitStore';
-import { useTheme } from './hooks/useTheme';
-import { HabitForm } from './components/HabitForm';
-import { HabitDetail } from './components/HabitDetail';
-import { DayView } from './components/DayView';
-import { ReportView } from './components/ReportView';
-import { ReportCards } from './components/ReportCards';
-import { getCheckIn } from './utils/storage';
-import './App.css';
+import { useState, useCallback, useMemo } from 'react'
+import { useHabitStore } from './hooks/useHabitStore'
+import { useTheme } from './hooks/useTheme'
+import { HabitForm } from './components/HabitForm'
+import { HabitDetail } from './components/HabitDetail'
+import { DayView } from './components/DayView'
+import { ReportView } from './components/ReportView'
+import { ReportCards } from './components/ReportCards'
+import { getCheckIn } from './utils/storage'
+import './App.css'
 
 function App() {
   const {
@@ -40,90 +40,91 @@ function App() {
     getCalendarMonthProgress,
     getCalendarWeekProgress,
     _rawData,
-  } = useHabitStore();
+  } = useHabitStore()
 
   // Theme (US-010)
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme } = useTheme()
 
   // State per mostrare/nascondere il form
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(false)
   // State per editing
-  const [editingHabit, setEditingHabit] = useState(null);
+  const [editingHabit, setEditingHabit] = useState(null)
   // State per delete confirmation
-  const [deletingHabit, setDeletingHabit] = useState(null);
+  const [deletingHabit, setDeletingHabit] = useState(null)
   // State per detail view (US-008)
-  const [selectedHabit, setSelectedHabit] = useState(null);
+  const [selectedHabit, setSelectedHabit] = useState(null)
   // State per day view (dashboard per data)
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null)
   // State per ricerca abitudini (US-009)
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('')
   // State per report view (US-020)
-  const [showReportView, setShowReportView] = useState(false);
+  const [showReportView, setShowReportView] = useState(false)
 
   // Filtra abitudini in base alla ricerca (US-009)
   const filteredHabits = useMemo(() => {
-    if (!searchQuery.trim()) return habits;
-    const query = searchQuery.toLowerCase().trim();
-    return habits.filter(habit =>
-      habit.name.toLowerCase().includes(query)
-    );
-  }, [habits, searchQuery]);
+    if (!searchQuery.trim()) return habits
+    const query = searchQuery.toLowerCase().trim()
+    return habits.filter((habit) => habit.name.toLowerCase().includes(query))
+  }, [habits, searchQuery])
 
   // Funzione per ottenere check-in per una data specifica (DEVE essere prima di early return)
-  const getCheckInForDate = useCallback((habitId, date) => {
-    if (!_rawData) return null;
-    return getCheckIn(_rawData, habitId, date);
-  }, [_rawData]);
+  const getCheckInForDate = useCallback(
+    (habitId, date) => {
+      if (!_rawData) return null
+      return getCheckIn(_rawData, habitId, date)
+    },
+    [_rawData]
+  )
 
   // Loading state
   if (isLoading) {
-    return <div className="app-loading">Caricamento...</div>;
+    return <div className="app-loading">Caricamento...</div>
   }
 
   // Handler per creare/modificare abitudine
   const handleSubmitHabit = (habitData) => {
     if (editingHabit) {
       // Modifica abitudine esistente
-      updateHabit(editingHabit.id, habitData);
-      setEditingHabit(null);
+      updateHabit(editingHabit.id, habitData)
+      setEditingHabit(null)
     } else {
       // Crea nuova abitudine
-      addHabit(habitData);
+      addHabit(habitData)
     }
-    setShowForm(false);
-  };
+    setShowForm(false)
+  }
 
   // Handler per iniziare modifica
   const handleEditHabit = (habit) => {
-    setEditingHabit(habit);
-    setShowForm(true);
-  };
+    setEditingHabit(habit)
+    setShowForm(true)
+  }
 
   // Handler per annullare form
   const handleCancelForm = () => {
-    setShowForm(false);
-    setEditingHabit(null);
-  };
+    setShowForm(false)
+    setEditingHabit(null)
+  }
 
   // Handler per confermare eliminazione
   const handleConfirmDelete = () => {
     if (deletingHabit) {
-      deleteHabit(deletingHabit.id);
-      setDeletingHabit(null);
+      deleteHabit(deletingHabit.id)
+      setDeletingHabit(null)
     }
-  };
+  }
 
   // Handler per incrementare
   const handleIncrement = (habitId, currentValue) => {
-    checkIn(habitId, currentValue + 1);
-  };
+    checkIn(habitId, currentValue + 1)
+  }
 
   // Handler per decrementare
   const handleDecrement = (habitId, currentValue) => {
     if (currentValue > 0) {
-      checkIn(habitId, currentValue - 1);
+      checkIn(habitId, currentValue - 1)
     }
-  };
+  }
 
   return (
     <div className="app">
@@ -157,11 +158,7 @@ function App() {
       </header>
 
       {/* Error display */}
-      {error && (
-        <div className="error-banner">
-          {error}
-        </div>
-      )}
+      {error && <div className="error-banner">{error}</div>}
 
       {/* Dashboard progresso pesato (US-001, US-018) */}
       <ReportCards
@@ -193,16 +190,10 @@ function App() {
               Questa azione è irreversibile e perderai tutto lo storico.
             </p>
             <div className="modal-actions">
-              <button
-                className="btn-cancel"
-                onClick={() => setDeletingHabit(null)}
-              >
+              <button className="btn-cancel" onClick={() => setDeletingHabit(null)}>
                 Annulla
               </button>
-              <button
-                className="btn-danger"
-                onClick={handleConfirmDelete}
-              >
+              <button className="btn-danger" onClick={handleConfirmDelete}>
                 Elimina
               </button>
             </div>
@@ -281,7 +272,8 @@ function App() {
         {/* Conteggio risultati filtrati */}
         {searchQuery && (
           <div className="search-results-count">
-            {filteredHabits.length} {filteredHabits.length === 1 ? 'abitudine trovata' : 'abitudini trovate'}
+            {filteredHabits.length}{' '}
+            {filteredHabits.length === 1 ? 'abitudine trovata' : 'abitudini trovate'}
           </div>
         )}
 
@@ -293,22 +285,19 @@ function App() {
         ) : filteredHabits.length === 0 ? (
           <div className="empty-state">
             <p>Nessuna abitudine corrisponde a "{searchQuery}"</p>
-            <button
-              className="btn-clear-search"
-              onClick={() => setSearchQuery('')}
-            >
+            <button className="btn-clear-search" onClick={() => setSearchQuery('')}>
               Cancella ricerca
             </button>
           </div>
         ) : (
           <ul className="habit-list">
             {filteredHabits.map((habit) => {
-              const todayCheckIn = getTodayCheckIn(habit.id);
-              const currentValue = todayCheckIn?.value || 0;
-              const completionPercent = Math.min(100, (currentValue / habit.target) * 100);
-              const isCompleted = currentValue >= habit.target;
-              const stats = getStats(habit.id);
-              const category = getCategory(habit.categoryId); // US-016
+              const todayCheckIn = getTodayCheckIn(habit.id)
+              const currentValue = todayCheckIn?.value || 0
+              const completionPercent = Math.min(100, (currentValue / habit.target) * 100)
+              const isCompleted = currentValue >= habit.target
+              const stats = getStats(habit.id)
+              const category = getCategory(habit.categoryId) // US-016
 
               return (
                 <li
@@ -341,11 +330,12 @@ function App() {
                       className="progress-bar"
                       style={{
                         width: `${completionPercent}%`,
-                        backgroundColor: habit.color || 'var(--color-primary)'
+                        backgroundColor: habit.color || 'var(--color-primary)',
                       }}
                     />
                     <span className="progress-text">
-                      {currentValue}/{habit.target}{habit.unit ? ` ${habit.unit}` : ''}
+                      {currentValue}/{habit.target}
+                      {habit.unit ? ` ${habit.unit}` : ''}
                     </span>
                   </div>
 
@@ -393,7 +383,7 @@ function App() {
                     </button>
                   </div>
                 </li>
-              );
+              )
             })}
           </ul>
         )}
@@ -405,13 +395,14 @@ function App() {
           <summary>Debug Info</summary>
           <pre>{JSON.stringify({ habits: habits.length, progress }, null, 2)}</pre>
           <p style={{ marginTop: '8px', fontSize: '11px', color: '#888' }}>
-            Per testare streak: apri DevTools (F12) → Console → esegui:<br/>
+            Per testare streak: apri DevTools (F12) → Console → esegui:
+            <br />
             <code>localStorage.setItem('habit-tracker-test', 'true')</code>
           </p>
         </details>
       </footer>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

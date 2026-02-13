@@ -8,10 +8,10 @@
    ============================================ */
 
 :root {
-  --color-primary: #4CAF50;
-  --color-primary-dark: #388E3C;
-  --color-secondary: #2196F3;
-  --color-accent: #FF9800;
+  --color-primary: #4caf50;
+  --color-primary-dark: #388e3c;
+  --color-secondary: #2196f3;
+  --color-accent: #ff9800;
   --color-danger: #ef4444;
   --color-success: #22c55e;
   --color-warning: #eab308;
@@ -223,7 +223,9 @@ body {
   font-size: 14px;
   background: var(--color-card);
   color: var(--color-text);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .search-input:focus {
@@ -606,8 +608,8 @@ body {
   margin-top: 2px;
 }
 
-.form-group input[type="text"],
-.form-group input[type="number"] {
+.form-group input[type='text'],
+.form-group input[type='number'] {
   width: 100%;
   padding: 12px;
   border: 1px solid var(--color-border);
@@ -920,7 +922,7 @@ body {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
 }
 
@@ -1159,7 +1161,9 @@ body {
 
 .calendar-day.clickable {
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
 }
 
 .calendar-day.clickable:hover {
@@ -1788,7 +1792,9 @@ body {
   padding: 16px;
   text-align: center;
   box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
 }
 
 .report-card:hover {

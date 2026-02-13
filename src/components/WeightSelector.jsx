@@ -3,18 +3,18 @@
  * US-002: Componente riutilizzabile per assegnare importanza alle abitudini
  */
 
-import { useState } from 'react';
+import { useState } from 'react'
 
 export function WeightSelector({ value = 3, onChange, disabled = false }) {
-  const [hoverValue, setHoverValue] = useState(null);
+  const [hoverValue, setHoverValue] = useState(null)
 
-  const displayValue = hoverValue !== null ? hoverValue : value;
+  const displayValue = hoverValue !== null ? hoverValue : value
 
   const handleClick = (weight) => {
     if (!disabled && onChange) {
-      onChange(weight);
+      onChange(weight)
     }
-  };
+  }
 
   const getWeightLabel = (weight) => {
     const labels = {
@@ -23,9 +23,9 @@ export function WeightSelector({ value = 3, onChange, disabled = false }) {
       3: 'Media',
       4: 'Alta',
       5: 'Massima',
-    };
-    return labels[weight] || '';
-  };
+    }
+    return labels[weight] || ''
+  }
 
   return (
     <div className="weight-selector">
@@ -49,7 +49,7 @@ export function WeightSelector({ value = 3, onChange, disabled = false }) {
         {getWeightLabel(displayValue)} ({displayValue}/5)
       </span>
     </div>
-  );
+  )
 }
 
-export default WeightSelector;
+export default WeightSelector

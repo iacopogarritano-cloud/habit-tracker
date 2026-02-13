@@ -4,14 +4,14 @@
  * US-015: Unità di misura personalizzabili
  */
 
-import { useState } from 'react';
-import { WeightSelector } from './WeightSelector';
+import { useState } from 'react'
+import { WeightSelector } from './WeightSelector'
 
 const HABIT_TYPES = [
   { value: 'boolean', label: 'Si/No', description: 'Fatto o non fatto' },
   { value: 'count', label: 'Conteggio', description: 'Quante volte (es. 3 bicchieri)' },
   { value: 'duration', label: 'Durata', description: 'Quanti minuti (es. 30 min)' },
-];
+]
 
 // Unità di misura organizzate per categoria (US-015)
 const UNIT_CATEGORIES = [
@@ -72,14 +72,14 @@ const UNIT_CATEGORIES = [
       { value: 'task', label: 'task', short: 'task' },
     ],
   },
-];
+]
 
 // Default units per type
 const DEFAULT_UNITS = {
   boolean: '',
   count: 'volte',
   duration: 'min',
-};
+}
 
 const DEFAULT_FORM = {
   name: '',
@@ -89,7 +89,7 @@ const DEFAULT_FORM = {
   color: '#4CAF50',
   unit: '',
   categoryId: '', // US-016
-};
+}
 
 export function HabitForm({ onSubmit, onCancel, initialData = null, categories = [] }) {
   const [form, setForm] = useState(() => {
@@ -99,56 +99,56 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
         ...initialData,
         unit: initialData.unit || DEFAULT_UNITS[initialData.type] || '',
         categoryId: initialData.categoryId || '', // US-016
-      };
+      }
     }
-    return DEFAULT_FORM;
-  });
-  const [errors, setErrors] = useState({});
+    return DEFAULT_FORM
+  })
+  const [errors, setErrors] = useState({})
 
-  const isEdit = initialData !== null;
+  const isEdit = initialData !== null
 
   const handleChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value }))
     // Clear error when user types
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: null }));
+      setErrors((prev) => ({ ...prev, [field]: null }))
     }
-  };
+  }
 
   const handleTypeChange = (type) => {
-    handleChange('type', type);
+    handleChange('type', type)
     // Set default unit for the type
-    handleChange('unit', DEFAULT_UNITS[type]);
+    handleChange('unit', DEFAULT_UNITS[type])
     if (type === 'boolean') {
-      handleChange('target', 1);
+      handleChange('target', 1)
     }
-  };
+  }
 
   const validate = () => {
-    const newErrors = {};
+    const newErrors = {}
 
     if (!form.name.trim()) {
-      newErrors.name = 'Il nome è obbligatorio';
+      newErrors.name = 'Il nome è obbligatorio'
     } else if (form.name.length > 50) {
-      newErrors.name = 'Max 50 caratteri';
+      newErrors.name = 'Max 50 caratteri'
     }
 
     if (form.type !== 'boolean' && form.target < 1) {
-      newErrors.target = 'Il target deve essere almeno 1';
+      newErrors.target = 'Il target deve essere almeno 1'
     }
 
     if (form.weight < 1 || form.weight > 5) {
-      newErrors.weight = 'Il peso deve essere tra 1 e 5';
+      newErrors.weight = 'Il peso deve essere tra 1 e 5'
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    if (!validate()) return;
+    if (!validate()) return
 
     // For boolean type, target is always 1 and no unit
     const habitData = {
@@ -157,28 +157,26 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
       weight: Number(form.weight),
       unit: form.type === 'boolean' ? '' : form.unit,
       categoryId: form.categoryId || null, // US-016
-    };
+    }
 
-    onSubmit(habitData);
-  };
+    onSubmit(habitData)
+  }
 
   // Calculate impact preview
-  const impactPercent = form.weight > 0 ? Math.round((form.weight / 15) * 100) : 0;
+  const impactPercent = form.weight > 0 ? Math.round((form.weight / 15) * 100) : 0
 
   // Get current unit label for display
   const getCurrentUnitLabel = () => {
     for (const cat of UNIT_CATEGORIES) {
-      const found = cat.units.find((u) => u.value === form.unit);
-      if (found) return found.label;
+      const found = cat.units.find((u) => u.value === form.unit)
+      if (found) return found.label
     }
-    return form.unit || 'volte';
-  };
+    return form.unit || 'volte'
+  }
 
   return (
     <form className="habit-form" onSubmit={handleSubmit}>
-      <h3 className="form-title">
-        {isEdit ? 'Modifica Abitudine' : 'Nuova Abitudine'}
-      </h3>
+      <h3 className="form-title">{isEdit ? 'Modifica Abitudine' : 'Nuova Abitudine'}</h3>
 
       {/* Nome */}
       <div className="form-group">
@@ -278,10 +276,7 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
           Importanza
           <span className="label-hint">Quanto conta per te questa abitudine?</span>
         </label>
-        <WeightSelector
-          value={form.weight}
-          onChange={(weight) => handleChange('weight', weight)}
-        />
+        <WeightSelector value={form.weight} onChange={(weight) => handleChange('weight', weight)} />
         {errors.weight && <span className="form-error">{errors.weight}</span>}
         <p className="impact-preview">
           Impatto sul progresso: ~{impactPercent}% (se hai 3 abitudini di peso medio)
@@ -292,18 +287,16 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
       <div className="form-group">
         <label htmlFor="habit-color">Colore (opzionale)</label>
         <div className="color-picker">
-          {['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0', '#00BCD4'].map(
-            (color) => (
-              <button
-                key={color}
-                type="button"
-                className={`color-option ${form.color === color ? 'active' : ''}`}
-                style={{ backgroundColor: color }}
-                onClick={() => handleChange('color', color)}
-                aria-label={`Colore ${color}`}
-              />
-            )
-          )}
+          {['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0', '#00BCD4'].map((color) => (
+            <button
+              key={color}
+              type="button"
+              className={`color-option ${form.color === color ? 'active' : ''}`}
+              style={{ backgroundColor: color }}
+              onClick={() => handleChange('color', color)}
+              aria-label={`Colore ${color}`}
+            />
+          ))}
         </div>
       </div>
 
@@ -317,7 +310,7 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
         </button>
       </div>
     </form>
-  );
+  )
 }
 
-export default HabitForm;
+export default HabitForm

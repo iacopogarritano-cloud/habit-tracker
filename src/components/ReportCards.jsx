@@ -11,16 +11,16 @@
  * Verde >= 70%, Giallo 40-69%, Rosso < 40%
  */
 function getProgressColor(percent) {
-  if (percent >= 70) return '#22c55e'; // verde
-  if (percent >= 40) return '#eab308'; // giallo
-  return '#ef4444'; // rosso
+  if (percent >= 70) return '#22c55e' // verde
+  if (percent >= 40) return '#eab308' // giallo
+  return '#ef4444' // rosso
 }
 
 /**
  * Card singola per il progresso
  */
 function ProgressCard({ title, icon, percent, subtitle }) {
-  const color = getProgressColor(percent);
+  const color = getProgressColor(percent)
 
   return (
     <div className="report-card">
@@ -36,25 +36,19 @@ function ProgressCard({ title, icon, percent, subtitle }) {
           className="report-card-bar-fill"
           style={{
             width: `${Math.min(100, percent)}%`,
-            backgroundColor: color
+            backgroundColor: color,
           }}
         />
       </div>
-      {subtitle && (
-        <div className="report-card-subtitle">{subtitle}</div>
-      )}
+      {subtitle && <div className="report-card-subtitle">{subtitle}</div>}
     </div>
-  );
+  )
 }
 
 /**
  * Componente principale con le tre card
  */
-export function ReportCards({
-  todayProgress,
-  weeklyProgress,
-  monthlyProgress
-}) {
+export function ReportCards({ todayProgress, weeklyProgress, monthlyProgress }) {
   return (
     <div className="report-cards-container">
       <ProgressCard
@@ -76,7 +70,7 @@ export function ReportCards({
         subtitle={`${monthlyProgress.daysWithData}/${monthlyProgress.totalDays} giorni`}
       />
     </div>
-  );
+  )
 }
 
-export default ReportCards;
+export default ReportCards
