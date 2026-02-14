@@ -1,8 +1,9 @@
-# PRD - Habit Tracker App
+# PRD - Weighbit App
 
 ## Executive Summary
 
-**Prodotto:** Habit Tracker - App per monitoraggio e visualizzazione abitudini personali con **weighted prioritization**
+**Prodotto:** Weighbit (ex Habit Tracker) - App per monitoraggio e visualizzazione abitudini personali con **weighted prioritization**
+**Tagline:** "Weighted Habit" - Non tutte le abitudini hanno lo stesso peso
 **Target User:** Professionisti e studenti che vogliono migliorare produttività e benessere tracciando abitudini in modo significativo
 **Problema Chiave:**
 - **52% degli utenti abbandona app habit tracking entro 30 giorni** (retention crisis)

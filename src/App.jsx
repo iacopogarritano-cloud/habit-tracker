@@ -1,5 +1,5 @@
 /**
- * Habit Tracker - MVP
+ * Weighbit - Weighted Habit Tracker
  * US-002: Form creazione abitudine con peso
  * US-022: Undo/Annulla Azione
  */
@@ -8,12 +8,15 @@ import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useHabitStore } from './hooks/useHabitStore'
 import { useTheme } from './hooks/useTheme'
 import { useUndoStack } from './hooks/useUndoStack'
+import { useAuth } from './contexts/AuthContext'
 import { HabitForm } from './components/HabitForm'
 import { HabitDetail } from './components/HabitDetail'
 import { DayView } from './components/DayView'
 import { ReportView } from './components/ReportView'
 import { ReportCards } from './components/ReportCards'
 import { ToastContainer } from './components/Toast'
+import LoginButton from './components/LoginButton'
+import UserMenu from './components/UserMenu'
 import { getCheckIn } from './utils/storage'
 import './App.css'
 
@@ -50,6 +53,9 @@ function App() {
 
   // Theme (US-010)
   const { isDark, toggleTheme } = useTheme()
+
+  // Auth (US-021)
+  const { isAuthenticated } = useAuth()
 
   // Undo stack (US-022)
   const undoStack = useUndoStack(10)
@@ -231,21 +237,25 @@ function App() {
       {/* Header con data cliccabile e theme toggle */}
       <header className="app-header">
         <div className="app-header-row">
-          <h1>Habit Tracker</h1>
-          <button
-            className="theme-toggle"
-            onClick={() => setShowReportView(true)}
-            title="Report periodi"
-          >
-            📊
-          </button>
-          <button
-            className="theme-toggle"
-            onClick={toggleTheme}
-            title={isDark ? 'Passa a tema chiaro' : 'Passa a tema scuro'}
-          >
-            {isDark ? '☀️' : '🌙'}
-          </button>
+          <h1>Weighbit</h1>
+          <div className="header-actions">
+            <button
+              className="theme-toggle"
+              onClick={() => setShowReportView(true)}
+              title="Report periodi"
+            >
+              📊
+            </button>
+            <button
+              className="theme-toggle"
+              onClick={toggleTheme}
+              title={isDark ? 'Passa a tema chiaro' : 'Passa a tema scuro'}
+            >
+              {isDark ? '☀️' : '🌙'}
+            </button>
+            {/* Auth UI (US-021) */}
+            {isAuthenticated ? <UserMenu /> : <LoginButton />}
+          </div>
         </div>
         <button
           className="today-date-btn"

@@ -119,6 +119,24 @@ body {
   margin-bottom: 8px;
 }
 
+/* Header actions container (US-021) */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Login button styling override */
+.header-actions .login-button {
+  font-size: 13px;
+  padding: 8px 12px;
+}
+
+.header-actions .login-button svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* ============================================
    ERROR BANNER
    ============================================ */

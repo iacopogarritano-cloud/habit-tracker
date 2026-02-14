@@ -1,6 +1,9 @@
-# Development Journey - Habit Tracker
+# Development Journey - Weighbit
 
 > **Product Philosophy:** Vision-first, code-second. Building a portfolio project that demonstrates PM thinking, not just development skills.
+>
+> **App Name:** Weighbit (renamed from "Habit Tracker" on Feb 14, 2026)
+> **Tagline:** "Weighted Habit" - Non tutte le abitudini hanno lo stesso peso
 
 ---
 

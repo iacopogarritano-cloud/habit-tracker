@@ -1,12 +1,25 @@
 /**
  * useHabitStore - Custom React Hook
- * Gestisce lo stato delle abitudini con persistenza localStorage
+ * Gestisce lo stato delle abitudini con persistenza localStorage + Cloud Sync
+ *
+ * US-021: Integrazione con Supabase via syncEngine
  *
  * Uso:
- * const { habits, addHabit, checkIn, progress, error } = useHabitStore();
+ * const { habits, addHabit, checkIn, progress, error, isSyncing } = useHabitStore();
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import {
+  fullSync,
+  syncHabitToCloud,
+  deleteHabitFromCloud,
+  syncCheckInToCloud,
+  syncCategoryToCloud,
+  onConnectivityChange,
+  processOfflineQueue,
+  uploadLocalDataToCloud,
+} from '../utils/syncEngine'
 import {
   loadFromStorage,
   saveToStorage,
@@ -40,20 +53,101 @@ import {
 } from '../utils/storage'
 
 export function useHabitStore() {
+  // Auth context (US-021)
+  const { user, isAuthenticated } = useAuth()
+  const userId = user?.id
+
   // Stato principale
   const [data, setData] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [isSyncing, setIsSyncing] = useState(false)
+
+  // Ref per tracciare se abbiamo già fatto la migrazione iniziale
+  const hasMigratedRef = useRef(false)
 
   // Carica dati all'avvio (pattern standard per init da storage)
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const { data: loadedData, error: loadError } = loadFromStorage()
     setData(loadedData)
     setError(loadError)
     setIsLoading(false)
   }, [])
-  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // ============================================
+  // CLOUD SYNC (US-021)
+  // ============================================
+
+  /**
+   * Effetto: Sync quando l'utente fa login
+   * - Se primo login: upload dati locali su cloud
+   * - Altrimenti: fullSync (merge cloud + local)
+   */
+  useEffect(() => {
+    if (!isAuthenticated || !userId || !data || isLoading) return
+
+    const performSync = async () => {
+      setIsSyncing(true)
+      console.log('[useHabitStore] Avvio sync per utente:', userId)
+
+      try {
+        // Controlla se ci sono dati locali da migrare (primo login)
+        const hasLocalData = data.habits.length > 0 && !hasMigratedRef.current
+
+        if (hasLocalData) {
+          console.log('[useHabitStore] Primo login - upload dati locali')
+          await uploadLocalDataToCloud(userId, data)
+          hasMigratedRef.current = true
+        }
+
+        // Full sync: scarica da cloud e merge
+        const { data: syncedData, error: syncError } = await fullSync(userId, data)
+
+        if (syncError) {
+          console.warn('[useHabitStore] Sync error:', syncError)
+        } else if (syncedData) {
+          setData(syncedData)
+          // Salva anche in localStorage come cache
+          saveToStorage(syncedData)
+        }
+      } catch (err) {
+        console.error('[useHabitStore] Sync failed:', err)
+        setError(err.message)
+      } finally {
+        setIsSyncing(false)
+      }
+    }
+
+    performSync()
+  }, [isAuthenticated, userId, isLoading]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Effetto: Listener per online/offline
+   * Quando torna online, processa la coda offline
+   */
+  useEffect(() => {
+    if (!userId) return
+
+    const cleanup = onConnectivityChange(async (online) => {
+      if (online && userId) {
+        console.log('[useHabitStore] Tornato online, processo coda...')
+        setIsSyncing(true)
+        try {
+          await processOfflineQueue(userId)
+          // Refresh dati da cloud
+          const { data: syncedData } = await fullSync(userId, data)
+          if (syncedData) {
+            setData(syncedData)
+            saveToStorage(syncedData)
+          }
+        } finally {
+          setIsSyncing(false)
+        }
+      }
+    })
+
+    return cleanup
+  }, [userId, data])
 
   // ============================================
   // HABIT OPERATIONS
@@ -70,9 +164,17 @@ export function useHabitStore() {
       const { data: newData, habit, error: saveError } = addHabitToStorage(data, habitData)
       setData(newData)
       if (saveError) setError(saveError)
+
+      // Cloud sync (US-021)
+      if (habit && userId) {
+        syncHabitToCloud(userId, habit).catch((err) =>
+          console.error('[useHabitStore] Sync addHabit failed:', err)
+        )
+      }
+
       return habit
     },
-    [data]
+    [data, userId]
   )
 
   /**
@@ -87,8 +189,18 @@ export function useHabitStore() {
       const { data: newData, error: saveError } = updateHabitInStorage(data, habitId, updates)
       setData(newData)
       if (saveError) setError(saveError)
+
+      // Cloud sync (US-021)
+      if (userId) {
+        const updatedHabit = newData.habits.find((h) => h.id === habitId)
+        if (updatedHabit) {
+          syncHabitToCloud(userId, updatedHabit).catch((err) =>
+            console.error('[useHabitStore] Sync updateHabit failed:', err)
+          )
+        }
+      }
     },
-    [data]
+    [data, userId]
   )
 
   /**
@@ -102,8 +214,15 @@ export function useHabitStore() {
       const { data: newData, error: saveError } = deleteHabitFromStorage(data, habitId)
       setData(newData)
       if (saveError) setError(saveError)
+
+      // Cloud sync (US-021)
+      if (userId) {
+        deleteHabitFromCloud(userId, habitId).catch((err) =>
+          console.error('[useHabitStore] Sync deleteHabit failed:', err)
+        )
+      }
     },
-    [data]
+    [data, userId]
   )
 
   // ============================================
@@ -127,9 +246,17 @@ export function useHabitStore() {
       } = recordCheckIn(data, habitId, value, date)
       setData(newData)
       if (saveError) setError(saveError)
+
+      // Cloud sync (US-021)
+      if (newCheckIn && userId) {
+        syncCheckInToCloud(userId, newCheckIn).catch((err) =>
+          console.error('[useHabitStore] Sync checkIn failed:', err)
+        )
+      }
+
       return newCheckIn
     },
-    [data]
+    [data, userId]
   )
 
   /**
@@ -172,9 +299,17 @@ export function useHabitStore() {
       const { data: newData, category, error: saveError } = addCategoryToStorage(data, categoryData)
       setData(newData)
       if (saveError) setError(saveError)
+
+      // Cloud sync (US-021)
+      if (category && userId) {
+        syncCategoryToCloud(userId, category).catch((err) =>
+          console.error('[useHabitStore] Sync addCategory failed:', err)
+        )
+      }
+
       return category
     },
-    [data]
+    [data, userId]
   )
 
   /**
@@ -189,8 +324,18 @@ export function useHabitStore() {
       const { data: newData, error: saveError } = updateCategoryInStorage(data, categoryId, updates)
       setData(newData)
       if (saveError) setError(saveError)
+
+      // Cloud sync (US-021)
+      if (userId) {
+        const updatedCategory = newData.categories.find((c) => c.id === categoryId)
+        if (updatedCategory) {
+          syncCategoryToCloud(userId, updatedCategory).catch((err) =>
+            console.error('[useHabitStore] Sync updateCategory failed:', err)
+          )
+        }
+      }
     },
-    [data]
+    [data, userId]
   )
 
   /**
@@ -429,6 +574,7 @@ export function useHabitStore() {
     habits,
     categories, // US-016
     isLoading,
+    isSyncing, // US-021
     error,
     today,
 
