@@ -1,16 +1,19 @@
 /**
  * Habit Tracker - MVP
  * US-002: Form creazione abitudine con peso
+ * US-022: Undo/Annulla Azione
  */
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useHabitStore } from './hooks/useHabitStore'
 import { useTheme } from './hooks/useTheme'
+import { useUndoStack } from './hooks/useUndoStack'
 import { HabitForm } from './components/HabitForm'
 import { HabitDetail } from './components/HabitDetail'
 import { DayView } from './components/DayView'
 import { ReportView } from './components/ReportView'
 import { ReportCards } from './components/ReportCards'
+import { ToastContainer } from './components/Toast'
 import { getCheckIn } from './utils/storage'
 import './App.css'
 
@@ -39,11 +42,17 @@ function App() {
     // Fixed Period Progress (US-020)
     getCalendarMonthProgress,
     getCalendarWeekProgress,
+    // Undo support (US-022)
+    getSnapshot,
+    restoreFromSnapshot,
     _rawData,
   } = useHabitStore()
 
   // Theme (US-010)
   const { isDark, toggleTheme } = useTheme()
+
+  // Undo stack (US-022)
+  const undoStack = useUndoStack(10)
 
   // State per mostrare/nascondere il form
   const [showForm, setShowForm] = useState(false)
@@ -59,6 +68,72 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   // State per report view (US-020)
   const [showReportView, setShowReportView] = useState(false)
+
+  // State per toast notifications (US-022)
+  const [toasts, setToasts] = useState([])
+
+  // Genera ID unico per toast
+  const generateToastId = useCallback(() => {
+    return `toast-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+  }, [])
+
+  // Aggiunge un toast
+  const addToast = useCallback(
+    (message, type = 'info', canUndo = false, duration = 5000) => {
+      const id = generateToastId()
+      setToasts((prev) => [...prev, { id, message, type, canUndo, duration }])
+      return id
+    },
+    [generateToastId]
+  )
+
+  // Rimuove un toast
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id))
+  }, [])
+
+  // Esegue undo dall'ultimo toast
+  const handleUndoFromToast = useCallback(
+    (toastId) => {
+      const entry = undoStack.pop()
+      if (entry) {
+        const success = restoreFromSnapshot(entry.snapshot)
+        if (success) {
+          removeToast(toastId)
+          addToast('Azione annullata', 'success', false, 3000)
+        }
+      }
+    },
+    [undoStack, restoreFromSnapshot, removeToast, addToast]
+  )
+
+  // Keyboard listener per CTRL+Z / Cmd+Z (US-022)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // CTRL+Z (Windows/Linux) o Cmd+Z (Mac)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        // Non interferire con input fields
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+          return
+        }
+
+        e.preventDefault()
+
+        if (undoStack.canUndo) {
+          const entry = undoStack.pop()
+          if (entry) {
+            const success = restoreFromSnapshot(entry.snapshot)
+            if (success) {
+              addToast(`Annullato: ${entry.description}`, 'success', false, 3000)
+            }
+          }
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [undoStack, restoreFromSnapshot, addToast])
 
   // Filtra abitudini in base alla ricerca (US-009)
   const filteredHabits = useMemo(() => {
@@ -81,12 +156,24 @@ function App() {
     return <div className="app-loading">Caricamento...</div>
   }
 
-  // Handler per creare/modificare abitudine
+  // Handler per creare/modificare abitudine (US-022: con undo support per edit)
   const handleSubmitHabit = (habitData) => {
     if (editingHabit) {
+      // Salva snapshot PRIMA di modificare
+      const snapshot = getSnapshot()
+      const habitName = editingHabit.name
+
       // Modifica abitudine esistente
       updateHabit(editingHabit.id, habitData)
       setEditingHabit(null)
+
+      // Aggiungi allo stack undo
+      if (snapshot) {
+        undoStack.push(snapshot, 'updateHabit', `Modificata "${habitName}"`)
+      }
+
+      // Mostra toast con possibilità di annullare
+      addToast(`Abitudine "${habitData.name}" modificata`, 'info', true, 5000)
     } else {
       // Crea nuova abitudine
       addHabit(habitData)
@@ -106,11 +193,24 @@ function App() {
     setEditingHabit(null)
   }
 
-  // Handler per confermare eliminazione
+  // Handler per confermare eliminazione (US-022: con undo support)
   const handleConfirmDelete = () => {
     if (deletingHabit) {
+      // Salva snapshot PRIMA di eliminare
+      const snapshot = getSnapshot()
+      const habitName = deletingHabit.name
+
+      // Esegui eliminazione
       deleteHabit(deletingHabit.id)
       setDeletingHabit(null)
+
+      // Aggiungi allo stack undo
+      if (snapshot) {
+        undoStack.push(snapshot, 'deleteHabit', `Eliminata "${habitName}"`)
+      }
+
+      // Mostra toast con possibilità di annullare
+      addToast(`Abitudine "${habitName}" eliminata`, 'warning', true, 6000)
     }
   }
 
@@ -325,19 +425,45 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="habit-progress">
+                  {/* US-025: Progress bar trascinabile per count/duration */}
+                  {habit.type === 'boolean' ? (
+                    <div className="habit-progress">
+                      <div
+                        className="progress-bar"
+                        style={{
+                          width: `${completionPercent}%`,
+                          backgroundColor: habit.color || 'var(--color-primary)',
+                        }}
+                      />
+                      <span className="progress-text">
+                        {currentValue}/{habit.target}
+                      </span>
+                    </div>
+                  ) : (
                     <div
-                      className="progress-bar"
-                      style={{
-                        width: `${completionPercent}%`,
-                        backgroundColor: habit.color || 'var(--color-primary)',
-                      }}
-                    />
-                    <span className="progress-text">
-                      {currentValue}/{habit.target}
-                      {habit.unit ? ` ${habit.unit}` : ''}
-                    </span>
-                  </div>
+                      className="habit-progress habit-progress-slider"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="range"
+                        min="0"
+                        max={habit.target}
+                        value={currentValue}
+                        onChange={(e) => checkIn(habit.id, parseInt(e.target.value, 10))}
+                        className="progress-slider"
+                        aria-label={`Progresso ${habit.name}`}
+                        aria-valuetext={`${currentValue} di ${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`}
+                        style={{
+                          '--progress-color': habit.color || 'var(--color-primary)',
+                          '--progress-percent': `${completionPercent}%`,
+                        }}
+                      />
+                      <span className="progress-text">
+                        {currentValue}/{habit.target}
+                        {habit.unit ? ` ${habit.unit}` : ''}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="habit-actions" onClick={(e) => e.stopPropagation()}>
                     {habit.type === 'boolean' ? (
@@ -350,11 +476,20 @@ function App() {
                         ✓
                       </button>
                     ) : (
-                      /* +/- buttons per count/duration - ordine: +, - */
+                      /* US-024: Max button + US-026: +/- con limit */
                       <>
+                        <button
+                          onClick={() => checkIn(habit.id, habit.target)}
+                          className="btn-complete-max"
+                          disabled={currentValue >= habit.target}
+                          title="Completa al massimo"
+                        >
+                          ✓✓
+                        </button>
                         <button
                           onClick={() => handleIncrement(habit.id, currentValue)}
                           className="btn-increment"
+                          disabled={currentValue >= habit.target}
                         >
                           +
                         </button>
@@ -401,6 +536,13 @@ function App() {
           </p>
         </details>
       </footer>
+
+      {/* Toast notifications (US-022) */}
+      <ToastContainer
+        toasts={toasts}
+        onRemoveToast={removeToast}
+        onUndo={handleUndoFromToast}
+      />
     </div>
   )
 }

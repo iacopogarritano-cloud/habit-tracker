@@ -349,10 +349,20 @@ export function DayView({
                           ✓
                         </button>
                       ) : (
+                        /* US-024: Max button + US-026: +/- con limit */
                         <>
+                          <button
+                            onClick={() => onCheckIn(habit.id, habit.target, date)}
+                            className="btn-complete-max"
+                            disabled={habit.currentValue >= habit.target}
+                            title="Completa al massimo"
+                          >
+                            ✓✓
+                          </button>
                           <button
                             onClick={() => handleIncrement(habit.id, habit.currentValue)}
                             className="btn-increment"
+                            disabled={habit.currentValue >= habit.target}
                           >
                             +
                           </button>

@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   loadFromStorage,
-  // saveToStorage is used internally by other storage functions
+  saveToStorage,
   addHabit as addHabitToStorage,
   updateHabit as updateHabitInStorage,
   deleteHabit as deleteHabitFromStorage,
@@ -259,6 +259,44 @@ export function useHabitStore() {
     if (loadError) setError(loadError)
   }, [])
 
+  // ============================================
+  // UNDO SUPPORT (US-022)
+  // ============================================
+
+  /**
+   * Ottiene uno snapshot dei dati correnti (per undo)
+   * @returns {Object | null} Copia profonda dei dati
+   */
+  const getSnapshot = useCallback(() => {
+    if (!data) return null
+    return JSON.parse(JSON.stringify(data))
+  }, [data])
+
+  /**
+   * Ripristina lo stato da uno snapshot (undo)
+   * @param {Object} snapshot - Snapshot dei dati da ripristinare
+   * @returns {boolean} true se ripristino riuscito
+   */
+  const restoreFromSnapshot = useCallback((snapshot) => {
+    if (!snapshot) return false
+
+    try {
+      // Salva in localStorage
+      const { error: saveError } = saveToStorage(snapshot)
+      if (saveError) {
+        setError(saveError)
+        return false
+      }
+
+      // Aggiorna stato React
+      setData(snapshot)
+      return true
+    } catch (err) {
+      setError(err.message)
+      return false
+    }
+  }, [])
+
   /**
    * Pulisce l'errore
    */
@@ -437,6 +475,10 @@ export function useHabitStore() {
     // Debug (per testing streak)
     debugGenerateHistory,
     debugClearHistory,
+
+    // Undo support (US-022)
+    getSnapshot,
+    restoreFromSnapshot,
 
     // Raw data (per debug)
     _rawData: data,

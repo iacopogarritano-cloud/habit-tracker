@@ -29,6 +29,108 @@ Story Points = (Business Value × Time Criticality × RROE) / Job Size
 
 ## User Stories Attive
 
+### US-022: Undo/Annulla Azione
+**Priority:** Must Have (SP: 10.0)
+
+**User Story (Extended Format):**
+- **As a**: utente che usa l'app quotidianamente
+- **When**: cancello per sbaglio un'abitudine o modifico qualcosa erroneamente
+- **In**: qualsiasi schermata dell'app
+- **Since**: gli errori capitano e perdere dati configurati è frustrante
+- **I want to**: poter annullare l'ultima azione (CTRL+Z o pulsante)
+- **To/So that**: non perda per sempre abitudini o check-in inseriti per errore
+
+**Acceptance Criteria:**
+- [ ] CTRL+Z (o Cmd+Z su Mac) annulla l'ultima azione distruttiva
+- [ ] Toast notification con pulsante "Annulla" dopo azioni distruttive (delete, modifica)
+- [ ] Storico undo per almeno l'ultima azione (opzionale: ultime 5 azioni)
+- [ ] Azioni coperte: eliminazione abitudine, eliminazione check-in, modifica abitudine
+- [ ] Feedback visivo chiaro quando l'undo ha successo
+
+**Technical Notes:**
+- Implementare pattern Command/Memento per storico azioni
+- Salvare snapshot prima di ogni azione distruttiva
+- Toast con auto-dismiss dopo ~5 secondi + pulsante "Annulla"
+- Keyboard listener globale per CTRL/Cmd+Z
+
+**WSJF:** BV=8, TC=5, RROE=2, JS=3 → SP=10.0
+
+---
+
+### US-024: Pulsante "Completa al Massimo"
+**Priority:** Must Have (SP: 8.0)
+
+**User Story (Extended Format):**
+- **As a**: utente che traccia abitudini con target alto (es. 7h sonno, 30 min studio)
+- **When**: voglio segnare un'abitudine come completata
+- **In**: dashboard principale e DayView
+- **Since**: premere "+" 30 volte per 30 minuti di studio è impraticabile
+- **I want to**: un pulsante che completa l'abitudine al target in un click
+- **To/So that**: possa tracciare velocemente senza frustrazione
+
+**Acceptance Criteria:**
+- [ ] Nuovo pulsante "✓✓" accanto a +/- per abitudini count/duration
+- [ ] Click → setta valore al target dell'abitudine
+- [ ] Se già al massimo, il pulsante è disabilitato
+- [ ] Presente sia in dashboard che in DayView
+- [ ] Posizione: PRIMA del "+" (a sinistra, primo pulsante)
+
+**Technical Notes:**
+- Aggiungere `handleCompleteMax(habitId, target)` in App.jsx
+- Nuovo pulsante con classe `.btn-complete-max`
+- Disabilitato se `currentValue >= target`
+
+**WSJF:** BV=8, TC=5, RROE=2, JS=2 → SP=8.0
+
+---
+
+### US-025: Barra di Progresso Trascinabile (Slider)
+**Priority:** Should Have (SP: 5.0)
+
+**User Story (Extended Format):**
+- **As a**: utente mobile che vuole un input più intuitivo
+- **When**: voglio settare un valore specifico (es. ho dormito 6h su 7)
+- **In**: dashboard principale
+- **Since**: il touch è più naturale di premere bottoni multipli
+- **I want to**: trascinare la barra di progresso per settare il valore
+- **To/So that**: possa inserire valori parziali con un gesto fluido
+
+**Acceptance Criteria:**
+- [ ] Progress bar trascinabile con touch/mouse
+- [ ] Valore si aggiorna in tempo reale durante il drag
+- [ ] Funziona su mobile (touch) e desktop (mouse)
+- [ ] Non interferisce con click sulla card (che apre dettaglio)
+- [ ] Step discreti (numeri interi, non decimali)
+
+**Technical Notes:**
+- Usare `<input type="range">` stilizzato come progress bar
+- `stopPropagation()` per evitare apertura modal
+- CSS custom per thumb e track
+
+**WSJF:** BV=5, TC=3, RROE=2, JS=3 → SP=5.0
+
+---
+
+### US-026: Fix Overflow Pulsante "+" (Bug)
+**Priority:** Must Have (SP: 3.0)
+
+**Problema:** Il pulsante "+" permette di andare oltre il target (es. 8h su 7h target)
+
+**Soluzione:** Disabilitare "+" quando `currentValue >= target`
+
+**Acceptance Criteria:**
+- [ ] Pulsante "+" disabilitato quando valore >= target
+- [ ] Stesso comportamento in dashboard e DayView
+- [ ] Visivamente grigio/opaco come il "-" quando disabilitato
+
+**Technical Notes:**
+- Aggiungere `disabled={currentValue >= habit.target}` al pulsante "+"
+- Riutilizzare stile `.btn-decrement:disabled`
+
+**WSJF:** BV=5, TC=5, RROE=1, JS=1 → SP=3.0
+
+---
+
 ### US-021: Sincronizzazione Cloud (Backend)
 **Priority:** Must Have (SP: 8.0)
 
@@ -189,13 +291,13 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
 ## Backlog Summary
 
-**Total User Stories:** 27 (21 funzionali + 6 developer)
-**Completate:** 19 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
-**Rimanenti:** 8 (4 funzionali + 4 developer)
+**Total User Stories:** 31 (25 funzionali + 6 developer)
+**Completate:** 20 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
+**Rimanenti:** 11 (7 funzionali + 4 developer)
 
 **Status:**
-- Must Have: 5/5 completate + **US-021 (Cloud Sync) da fare**
-- Should Have: 9/10 completate (manca US-013 shadcn/ui)
+- Must Have: US-022 ✅ (Undo), **US-024 (Max)**, **US-026 (Fix +)**, US-021 (Cloud Sync)
+- Should Have: US-013 (shadcn/ui), **US-025 (Slider)**
 - Could Have: 3/3 completate
 - Won't Have: US-011, US-014
 
@@ -205,7 +307,7 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 - Won't Have: US-DEV-005, US-DEV-006
 
 **MVP Core + Report: COMPLETATO**
-Prossimo obiettivo: **US-021 Sincronizzazione Cloud**
+**Prossimo obiettivo:** US-026 (Fix +) → US-024 (Max) → US-025 (Slider) → US-021 (Cloud Sync)
 
 ---
 
