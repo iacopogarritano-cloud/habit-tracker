@@ -314,14 +314,60 @@
 
 ---
 
+## UX Improvements (Sessione 17 - 2026-02-14)
+
+### US-022: Undo/Annulla Azione
+**Priority:** Must Have (SP: 10.0) — **COMPLETATA**
+
+**Implementazione:**
+- Sistema undo completo con stack (ultime 10 azioni)
+- CTRL+Z / Cmd+Z keyboard shortcut
+- Toast notifications con pulsante "Annulla"
+- Supporta: delete habit, edit habit
+- Nuovi file: useUndoStack.js, Toast.jsx, Toast.css
+
+---
+
+### US-024: Pulsante "Completa al Massimo"
+**Priority:** Must Have (SP: 8.0) — **COMPLETATA**
+
+**Implementazione:**
+- Pulsante "✓✓" per completare al target in un click
+- Posizionato a sinistra del "+" (primo pulsante)
+- Implementato in Dashboard e DayView
+- Disabilitato quando già al target
+
+---
+
+### US-025: Barra di Progresso Trascinabile (Slider)
+**Priority:** Should Have (SP: 5.0) — **COMPLETATA**
+
+**Implementazione:**
+- Progress bar ora è uno slider interattivo
+- Supporta touch (mobile) e mouse (desktop)
+- Accessibile con aria-labels
+- Solo per abitudini count/duration
+
+---
+
+### US-026: Fix Overflow Pulsante "+" (Bug)
+**Priority:** Must Have (SP: 3.0) — **COMPLETATA**
+
+**Implementazione:**
+- "+" non permette più di superare il target
+- Pulsante disabilitato quando valore >= target
+- Stesso comportamento in Dashboard e DayView
+
+---
+
 ## Summary
 
-**Total Completate:** 19 User Stories (17 funzionali + 2 developer)
-- Must Have: 5/5 (US-001 → US-005)
-- Should Have: 9 funzionali + 1 dev (US-DEV-001)
+**Total Completate:** 23 User Stories (21 funzionali + 2 developer)
+- Must Have: 8 (US-001 → US-005, US-022, US-024, US-026)
+- Should Have: 11 funzionali + 1 dev (US-DEV-001)
 - Could Have: 3 funzionali + 1 dev (US-DEV-004)
 
-**MVP Core + Report: COMPLETATO**
+**MVP Core + Report + UX: COMPLETATO**
 **Developer Tooling: ESLint/Prettier + Vitest**
 
 ---
