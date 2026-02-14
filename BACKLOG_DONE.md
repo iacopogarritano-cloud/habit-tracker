@@ -93,6 +93,38 @@
 
 ---
 
+### US-021: Sincronizzazione Cloud (Backend)
+**Priority:** Must Have (SP: 8.0) — **COMPLETATA** (2026-02-14)
+
+**User Story (Extended Format):**
+- **As a**: utente che usa l'app da più dispositivi (iPhone, Mac, PC)
+- **When**: registro un'abitudine dal telefono
+- **In**: qualsiasi dispositivo
+- **Since**: uso l'app principalmente da mobile ma anche da desktop
+- **I want to**: che le mie abitudini siano sincronizzate automaticamente su tutti i dispositivi
+- **Doing this/in this way**: backend cloud (Supabase) con autenticazione e database PostgreSQL
+- **To/So that**: possa usare l'app ovunque senza perdere dati
+
+**Acceptance Criteria:** Tutti completati
+- [x] Login/registrazione utente (Google OAuth)
+- [x] Dati salvati su cloud (Supabase PostgreSQL)
+- [x] Sincronizzazione automatica al login
+- [x] Offline support: funziona offline e sincronizza quando torna online
+- [x] Migrazione dati esistenti da localStorage a cloud (primo login)
+- [x] Logout che mantiene dati sul cloud
+- [x] Privacy: dati visibili solo all'utente proprietario (RLS)
+
+**Implementazione Tecnica:**
+- **Backend:** Supabase (PostgreSQL + Auth + RLS)
+- **Auth:** Google OAuth via Supabase Auth
+- **Architettura:** Offline-first con localStorage come cache
+- **Sync Strategy:** Last-write-wins con `updated_at` timestamp
+- **Nuovi file:** AuthContext.jsx, syncEngine.js, LoginButton.jsx, UserMenu.jsx, supabase.js
+
+**WSJF:** BV=13, TC=3, RROE=5, JS=8 → SP=8.0
+
+---
+
 ## Should Have (Completate)
 
 ### US-006: CRUD abitudine - Modificare abitudine esistente
@@ -362,12 +394,12 @@
 
 ## Summary
 
-**Total Completate:** 23 User Stories (21 funzionali + 2 developer)
-- Must Have: 8 (US-001 → US-005, US-022, US-024, US-026)
+**Total Completate:** 24 User Stories (22 funzionali + 2 developer)
+- Must Have: 9 (US-001 → US-005, US-021, US-022, US-024, US-026)
 - Should Have: 11 funzionali + 1 dev (US-DEV-001)
 - Could Have: 3 funzionali + 1 dev (US-DEV-004)
 
-**MVP Core + Report + UX: COMPLETATO**
+**MVP Core + Report + UX + Cloud Sync: COMPLETATO**
 **Developer Tooling: ESLint/Prettier + Vitest**
 
 ---

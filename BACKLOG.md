@@ -1,7 +1,7 @@
 # Product Backlog - Habit Tracker MVP
 
 > **Framework:** WSJF (Weighted Shortest Job First)
-> **Last Updated:** 2026-02-14
+> **Last Updated:** 2026-02-14 (US-021 completata)
 > **MVP Target:** Q1 2026
 
 ---
@@ -28,49 +28,6 @@ Story Points = (Business Value × Time Criticality × RROE) / Job Size
 ---
 
 ## User Stories Attive
-
-### US-021: Sincronizzazione Cloud (Backend)
-**Priority:** Must Have (SP: 8.0)
-
-**User Story (Extended Format):**
-- **As a**: utente che usa l'app da più dispositivi (iPhone, Mac, PC)
-- **When**: registro un'abitudine dal telefono
-- **In**: qualsiasi dispositivo
-- **Since**: uso l'app principalmente da mobile ma anche da desktop
-- **I want to**: che le mie abitudini siano sincronizzate automaticamente su tutti i dispositivi
-- **Doing this/in this way**: backend cloud (Firebase/Supabase) con autenticazione e database real-time
-- **To/So that**: possa usare l'app ovunque senza perdere dati
-
-**Acceptance Criteria:**
-- [ ] Login/registrazione utente (Google OAuth consigliato)
-- [ ] Dati salvati su cloud invece di localStorage
-- [ ] Sincronizzazione real-time o near-real-time
-- [ ] Offline support: funziona offline e sincronizza quando torna online
-- [ ] Migrazione dati esistenti da localStorage a cloud
-- [ ] Logout che mantiene dati sul cloud
-- [ ] Privacy: dati visibili solo all'utente proprietario
-
-**Opzioni Tecniche:**
-
-| Opzione | Pro | Contro | Costo |
-|---------|-----|--------|-------|
-| **Firebase** | Docs eccellenti, Google login facile | Vendor lock-in | Free tier generoso |
-| **Supabase** | Open source, PostgreSQL | Meno maturo | Free tier generoso |
-| **Custom backend** | Controllo totale | Molto più lavoro | Dipende |
-
-**Raccomandazione:** Firebase per semplicità, o Supabase se preferisci open source.
-
-**Technical Notes:**
-- Autenticazione: Firebase Auth o Supabase Auth
-- Database: Firestore (Firebase) o PostgreSQL (Supabase)
-- Refactor: sostituire chiamate localStorage con chiamate API/SDK
-- Offline: service worker + IndexedDB per cache locale
-
-**Impatto:** Questa feature sblocca l'**adozione reale** dell'app.
-
-**WSJF:** BV=13, TC=3, RROE=5, JS=8 → SP=8.0
-
----
 
 ### US-013: Polish UI con shadcn/ui
 **Priority:** Should Have (SP: 4.0)
@@ -190,11 +147,11 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 ## Backlog Summary
 
 **Total User Stories:** 31 (25 funzionali + 6 developer)
-**Completate:** 23 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
-**Rimanenti:** 8 (4 funzionali + 4 developer)
+**Completate:** 24 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
+**Rimanenti:** 7 (3 funzionali + 4 developer)
 
 **Status:**
-- Must Have: US-021 (Cloud Sync)
+- Must Have: ✅ US-021 (Cloud Sync) - COMPLETATA
 - Should Have: US-013 (shadcn/ui)
 - Could Have: 3/3 completate
 - Won't Have: US-011, US-014
@@ -204,8 +161,8 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 - Could Have: US-DEV-003 (US-DEV-004 ✅)
 - Won't Have: US-DEV-005, US-DEV-006
 
-**MVP Core + Report + UX: COMPLETATO**
-**Prossimo obiettivo:** US-021 (Cloud Sync)
+**MVP Core + Report + UX + Cloud Sync: COMPLETATO**
+**Prossimo obiettivo:** US-013 (shadcn/ui Polish)
 
 ---
 
