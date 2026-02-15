@@ -17,6 +17,7 @@ import { ReportCards } from './components/ReportCards'
 import { ToastContainer } from './components/Toast'
 import LoginButton from './components/LoginButton'
 import UserMenu from './components/UserMenu'
+import LoginPage from './components/LoginPage'
 import { getCheckIn } from './utils/storage'
 import './App.css'
 
@@ -55,7 +56,7 @@ function App() {
   const { isDark, toggleTheme } = useTheme()
 
   // Auth (US-021)
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
 
   // Undo stack (US-022)
   const undoStack = useUndoStack(10)
@@ -158,8 +159,13 @@ function App() {
   )
 
   // Loading state
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return <div className="app-loading">Caricamento...</div>
+  }
+
+  // Auth gate: se non sei loggato, mostra la pagina di login
+  if (!isAuthenticated) {
+    return <LoginPage />
   }
 
   // Handler per creare/modificare abitudine (US-022: con undo support per edit)

@@ -2280,3 +2280,92 @@ body {
     min-width: 80px;
   }
 }
+
+/* ============================================
+   LOGIN PAGE
+   ============================================ */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--color-bg);
+}
+
+.login-card {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: 48px 32px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+
+.login-header {
+  margin-bottom: 24px;
+}
+
+.login-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 8px 0;
+}
+
+.login-tagline {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.login-description {
+  margin-bottom: 32px;
+}
+
+.login-description p {
+  font-size: 1.1rem;
+  color: var(--color-text);
+  margin: 0 0 8px 0;
+  line-height: 1.6;
+}
+
+.login-actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.login-footer {
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+.login-footer p {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.login-loading {
+  font-size: 1.1rem;
+  color: var(--color-text-secondary);
+  padding: 48px 0;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 32px 24px;
+  }
+
+  .login-title {
+    font-size: 2rem;
+  }
+
+  .login-description p {
+    font-size: 1rem;
+  }
+}
