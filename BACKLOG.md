@@ -1,7 +1,7 @@
 # Product Backlog - Habit Tracker MVP
 
 > **Framework:** WSJF (Weighted Shortest Job First)
-> **Last Updated:** 2026-02-14 (US-021 completata)
+> **Last Updated:** 2026-02-15 (US-V2-006 aggiunta)
 > **MVP Target:** Q1 2026
 
 ---
@@ -129,9 +129,44 @@ Story Points = (Business Value × Time Criticality × RROE) / Job Size
 
 ---
 
-## V2 Roadmap - Multi-Timeframe
+## V2 Roadmap
 
 > **Note:** Out-of-scope per MVP.
+
+### US-V2-005: Login con Email/Password
+**Priority:** V2 - Nice to Have
+
+**User Story:**
+- **As a**: utente senza account Google
+- **I want to**: registrarmi e accedere con email e password
+- **So that**: possa usare l'app senza dipendere da Google
+
+**Technical Notes:**
+- Supabase supporta email/password nativamente
+- Richiede setup SMTP per email di verifica
+- Implementare: registrazione, login, password reset, email verification
+- Più complesso di OAuth (gestione password, sicurezza, UI aggiuntiva)
+
+**Decision:** V2 - Implementare solo se gli utenti lo richiedono. Google OAuth copre la maggior parte dei casi d'uso.
+
+---
+
+### US-V2-006: Dominio Custom (invece di Vercel)
+**Priority:** V2 - Nice to Have
+
+**User Story:**
+- **As a**: utente che condivide l'app
+- **I want to**: accedere all'app tramite un dominio personalizzato (es. weighbit.app)
+- **So that**: l'URL sia professionale e facile da ricordare
+
+**Technical Notes:**
+- Attualmente l'app è hostata su Vercel con URL auto-generato
+- Per MVP l'URL Vercel è sufficiente
+- Opzioni: dominio personalizzato su Vercel (~10-15$/anno) o hosting alternativo
+
+**Decision:** V2 - L'URL Vercel funziona per MVP. Dominio custom quando l'app ha utenti reali.
+
+---
 
 ### Sistema Multi-Timeframe (V2)
 Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.

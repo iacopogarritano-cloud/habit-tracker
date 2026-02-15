@@ -43,6 +43,7 @@ function App() {
     getProgressForDate,
     getWeeklyProgressForDate,
     getMonthlyProgressForDate,
+    getHabitsForDate, // Historical habits (soft delete)
     // Fixed Period Progress (US-020)
     getCalendarMonthProgress,
     getCalendarWeekProgress,
@@ -73,8 +74,12 @@ function App() {
   const [selectedDate, setSelectedDate] = useState(null)
   // State per ricerca abitudini (US-009)
   const [searchQuery, setSearchQuery] = useState('')
+  // State per filtro categoria
+  const [categoryFilter, setCategoryFilter] = useState('')
   // State per report view (US-020)
   const [showReportView, setShowReportView] = useState(false)
+  // State per conferma reset giornata
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
 
   // State per toast notifications (US-022)
   const [toasts, setToasts] = useState([])
@@ -102,8 +107,10 @@ function App() {
   // Esegue undo dall'ultimo toast
   const handleUndoFromToast = useCallback(
     (toastId) => {
-      const entry = undoStack.pop()
+      // NOTA: peek() PRIMA di pop() perché pop() è asincrono e restituirebbe null
+      const entry = undoStack.peek()
       if (entry) {
+        undoStack.pop()
         const success = restoreFromSnapshot(entry.snapshot)
         if (success) {
           removeToast(toastId)
@@ -127,8 +134,10 @@ function App() {
         e.preventDefault()
 
         if (undoStack.canUndo) {
-          const entry = undoStack.pop()
+          // NOTA: peek() PRIMA di pop() perché pop() è asincrono e restituirebbe null
+          const entry = undoStack.peek()
           if (entry) {
+            undoStack.pop()
             const success = restoreFromSnapshot(entry.snapshot)
             if (success) {
               addToast(`Annullato: ${entry.description}`, 'success', false, 3000)
@@ -142,12 +151,23 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [undoStack, restoreFromSnapshot, addToast])
 
-  // Filtra abitudini in base alla ricerca (US-009)
+  // Filtra abitudini in base a ricerca e categoria
   const filteredHabits = useMemo(() => {
-    if (!searchQuery.trim()) return habits
-    const query = searchQuery.toLowerCase().trim()
-    return habits.filter((habit) => habit.name.toLowerCase().includes(query))
-  }, [habits, searchQuery])
+    let result = habits
+
+    // Filtro per categoria
+    if (categoryFilter) {
+      result = result.filter((habit) => habit.categoryId === categoryFilter)
+    }
+
+    // Filtro per ricerca
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      result = result.filter((habit) => habit.name.toLowerCase().includes(query))
+    }
+
+    return result
+  }, [habits, searchQuery, categoryFilter])
 
   // Funzione per ottenere check-in per una data specifica (DEVE essere prima di early return)
   const getCheckInForDate = useCallback(
@@ -236,6 +256,32 @@ function App() {
     if (currentValue > 0) {
       checkIn(habitId, currentValue - 1)
     }
+  }
+
+  // Handler per reset giornata (con undo support)
+  const handleResetDay = () => {
+    // Salva snapshot PRIMA di resettare
+    const snapshot = getSnapshot()
+
+    // Conta quante abitudini hanno check-in > 0
+    let resetCount = 0
+    habits.forEach((habit) => {
+      const todayCheckIn = getTodayCheckIn(habit.id)
+      if (todayCheckIn && todayCheckIn.value > 0) {
+        checkIn(habit.id, 0)
+        resetCount++
+      }
+    })
+
+    // Salva nello stack undo
+    if (resetCount > 0) {
+      undoStack.push(snapshot, 'resetDay', `Reset ${resetCount} abitudini`)
+      addToast(`Reset completato (${resetCount} abitudini)`, 'warning', true, 6000)
+    } else {
+      addToast('Nessuna abitudine da resettare', 'info', false, 3000)
+    }
+
+    setShowResetConfirm(false)
   }
 
   return (
@@ -332,7 +378,7 @@ function App() {
       {selectedDate && (
         <DayView
           date={selectedDate}
-          habits={habits}
+          habits={getHabitsForDate(selectedDate)}
           getCheckInForDate={getCheckInForDate}
           getProgressForDate={getProgressForDate}
           getWeeklyProgressForDate={getWeeklyProgressForDate}
@@ -352,44 +398,101 @@ function App() {
         />
       )}
 
+      {/* Modal conferma reset giornata */}
+      {showResetConfirm && (
+        <div className="modal-overlay" onClick={() => setShowResetConfirm(false)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <h3>Reset giornata</h3>
+            <p>Vuoi azzerare tutti i progressi di oggi?</p>
+            <p className="confirm-hint">Potrai annullare con il pulsante "Annulla" o Ctrl+Z</p>
+            <div className="confirm-actions">
+              <button className="btn-cancel" onClick={() => setShowResetConfirm(false)}>
+                No, annulla
+              </button>
+              <button className="btn-danger" onClick={handleResetDay}>
+                Sì, resetta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Lista abitudini (US-003) */}
       <section className="habits-section">
         <div className="section-header">
           <h2>Le tue abitudini</h2>
-          {!showForm && (
-            <button onClick={() => setShowForm(true)} className="btn-add">
-              + Aggiungi
-            </button>
-          )}
+          <div className="section-header-actions">
+            {!showForm && habits.length > 0 && (
+              <button
+                onClick={() => setShowResetConfirm(true)}
+                className="btn-reset"
+                title="Azzera tutti i progressi di oggi"
+              >
+                🔄 Reset
+              </button>
+            )}
+            {!showForm && (
+              <button onClick={() => setShowForm(true)} className="btn-add">
+                + Aggiungi
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Barra di ricerca (US-009) */}
+        {/* Barra di ricerca e filtri */}
         {habits.length > 0 && (
-          <div className="search-bar">
-            <input
-              type="text"
-              placeholder="Cerca abitudine..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-            {searchQuery && (
-              <button
-                className="search-clear"
-                onClick={() => setSearchQuery('')}
-                title="Cancella ricerca"
+          <div className="filters-bar">
+            <div className="search-bar">
+              <input
+                type="text"
+                placeholder="Cerca abitudine..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
+              {searchQuery && (
+                <button
+                  className="search-clear"
+                  onClick={() => setSearchQuery('')}
+                  title="Cancella ricerca"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            {/* Filtro categoria */}
+            {categories.length > 0 && (
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="category-filter"
               >
-                ×
-              </button>
+                <option value="">Tutte le categorie</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.icon} {cat.name}
+                  </option>
+                ))}
+              </select>
             )}
           </div>
         )}
 
         {/* Conteggio risultati filtrati */}
-        {searchQuery && (
+        {(searchQuery || categoryFilter) && (
           <div className="search-results-count">
             {filteredHabits.length}{' '}
             {filteredHabits.length === 1 ? 'abitudine trovata' : 'abitudini trovate'}
+            {categoryFilter && (
+              <button
+                className="btn-clear-filter"
+                onClick={() => setCategoryFilter('')}
+                title="Rimuovi filtro"
+              >
+                ×
+              </button>
+            )}
           </div>
         )}
 
@@ -400,9 +503,19 @@ function App() {
           </div>
         ) : filteredHabits.length === 0 ? (
           <div className="empty-state">
-            <p>Nessuna abitudine corrisponde a "{searchQuery}"</p>
-            <button className="btn-clear-search" onClick={() => setSearchQuery('')}>
-              Cancella ricerca
+            <p>
+              Nessuna abitudine trovata
+              {searchQuery && ` per "${searchQuery}"`}
+              {categoryFilter && ` in questa categoria`}
+            </p>
+            <button
+              className="btn-clear-search"
+              onClick={() => {
+                setSearchQuery('')
+                setCategoryFilter('')
+              }}
+            >
+              Rimuovi filtri
             </button>
           </div>
         ) : (

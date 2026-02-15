@@ -32,13 +32,14 @@ const SCHEMA_VERSION = 1
  * @typedef {Object} Habit
  * @property {string} id - UUID
  * @property {string} name - Nome abitudine
- * @property {'boolean' | 'count' | 'duration'} type - Tipo di metrica
+ * @property {'boolean' | 'count'} type - Tipo di metrica ('duration' deprecato, trattato come 'count')
  * @property {number} target - Target giornaliero (1 per boolean)
  * @property {number} weight - Peso/importanza 1-5 (default: 3)
  * @property {'daily'} timeframe - Solo 'daily' per MVP
  * @property {string} createdAt - ISO date string
  * @property {string} [color] - Colore HEX opzionale
  * @property {string} [categoryId] - ID categoria (opzionale, US-016)
+ * @property {string} [deletedAt] - ISO date string quando eliminata (soft delete per storico)
  */
 
 /**
@@ -300,20 +301,60 @@ export function updateHabit(data, habitId, updates) {
 }
 
 /**
- * Elimina un'abitudine e tutti i suoi check-in
+ * Elimina un'abitudine (soft delete - mantiene storico)
+ * Imposta deletedAt invece di rimuovere, conserva i check-in per lo storico
  * @param {StorageData} data - Stato attuale
  * @param {string} habitId - ID abitudine da eliminare
  * @returns {{ data: StorageData, error: string | null }}
  */
 export function deleteHabit(data, habitId) {
+  const deletedAt = new Date().toISOString()
+
   const newData = {
     ...data,
-    habits: data.habits.filter((h) => h.id !== habitId),
-    checkIns: data.checkIns.filter((c) => c.habitId !== habitId),
+    habits: data.habits.map((h) =>
+      h.id === habitId ? { ...h, deletedAt } : h
+    ),
+    // NON eliminiamo più i check-in - servono per lo storico
   }
 
   const { error } = saveToStorage(newData)
   return { data: newData, error }
+}
+
+/**
+ * Ottiene solo le abitudini attive (non eliminate)
+ * @param {StorageData} data - Stato attuale
+ * @returns {Habit[]} Abitudini senza deletedAt
+ */
+export function getActiveHabits(data) {
+  return data.habits.filter((h) => !h.deletedAt)
+}
+
+/**
+ * Ottiene le abitudini che esistevano in una data specifica
+ * Include abitudini che:
+ * - Erano state create prima o in quella data (createdAt <= date)
+ * - NON erano state eliminate, OPPURE erano state eliminate DOPO quella data
+ * @param {StorageData} data - Stato attuale
+ * @param {string} date - Data YYYY-MM-DD
+ * @returns {Habit[]} Abitudini valide per quella data
+ */
+export function getHabitsForDate(data, date) {
+  return data.habits.filter((habit) => {
+    // Data di creazione (solo parte YYYY-MM-DD)
+    const createdAt = habit.createdAt.split('T')[0]
+
+    // Se creata dopo questa data, non esisteva ancora
+    if (createdAt > date) return false
+
+    // Se non è stata eliminata, è valida
+    if (!habit.deletedAt) return true
+
+    // Se è stata eliminata, verifica se era DOPO questa data
+    const deletedAt = habit.deletedAt.split('T')[0]
+    return deletedAt > date
+  })
 }
 
 // ============================================
@@ -536,12 +577,16 @@ export function getHabitCompletionPercentForDate(data, habitId, date) {
 /**
  * Calcola il progresso pesato per una data specifica
  * Formula: Σ(peso × completion%) / Σ pesi_totali
+ * Usa getHabitsForDate per includere abitudini storiche (anche eliminate dopo quella data)
  * @param {StorageData} data - Stato attuale
  * @param {string} date - Data YYYY-MM-DD
  * @returns {{ percent: number, completed: number, total: number, hasData: boolean }}
  */
 export function getWeightedProgressForDate(data, date) {
-  if (data.habits.length === 0) {
+  // Ottiene le abitudini che esistevano in quella data (include soft-deleted)
+  const habitsForDate = getHabitsForDate(data, date)
+
+  if (habitsForDate.length === 0) {
     return { percent: 0, completed: 0, total: 0, hasData: false }
   }
 
@@ -550,11 +595,7 @@ export function getWeightedProgressForDate(data, date) {
   let completedCount = 0
   let hasAnyCheckIn = false
 
-  for (const habit of data.habits) {
-    // Salta abitudini create dopo questa data
-    const createdAt = habit.createdAt.split('T')[0]
-    if (createdAt > date) continue
-
+  for (const habit of habitsForDate) {
     const completionPercent = getHabitCompletionPercentForDate(data, habit.id, date) / 100
 
     // Verifica se c'è almeno un check-in per questa data
@@ -574,7 +615,7 @@ export function getWeightedProgressForDate(data, date) {
   return {
     percent: Math.round(percent * 10) / 10,
     completed: completedCount,
-    total: data.habits.filter((h) => h.createdAt.split('T')[0] <= date).length,
+    total: habitsForDate.length,
     hasData: hasAnyCheckIn,
   }
 }
@@ -1255,6 +1296,8 @@ export default {
   addHabit,
   updateHabit,
   deleteHabit,
+  getActiveHabits,
+  getHabitsForDate,
   // Check-ins
   recordCheckIn,
   getCheckIn,

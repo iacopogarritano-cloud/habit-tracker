@@ -50,6 +50,9 @@ import {
   getCalendarMonthProgress as getCalendarMonthProgressFromStorage,
   getCalendarWeekProgress as getCalendarWeekProgressFromStorage,
   getWeeksOfYear,
+  // Historical habits (soft delete)
+  getActiveHabits,
+  getHabitsForDate as getHabitsForDateFromStorage,
 } from '../utils/storage'
 
 export function useHabitStore() {
@@ -369,8 +372,8 @@ export function useHabitStore() {
   // DERIVED STATE
   // ============================================
 
-  // Lista abitudini ordinata per peso (decrescente)
-  const habits = data?.habits?.slice().sort((a, b) => b.weight - a.weight) || []
+  // Lista abitudini ATTIVE (escluse eliminate) ordinata per peso (decrescente)
+  const habits = data ? getActiveHabits(data).sort((a, b) => b.weight - a.weight) : []
 
   // Lista categorie (US-016)
   const categories = data?.categories || []
@@ -491,6 +494,20 @@ export function useHabitStore() {
     [data]
   )
 
+  /**
+   * Ottiene le abitudini che esistevano in una data specifica (per storico)
+   * Include abitudini che sono state successivamente eliminate
+   * @param {string} date - Data YYYY-MM-DD
+   * @returns {Habit[]} Abitudini ordinate per peso
+   */
+  const getHabitsForDate = useCallback(
+    (date) => {
+      if (!data) return []
+      return getHabitsForDateFromStorage(data, date).sort((a, b) => b.weight - a.weight)
+    },
+    [data]
+  )
+
   // ============================================
   // DEBUG FUNCTIONS (per testing streak)
   // ============================================
@@ -606,6 +623,7 @@ export function useHabitStore() {
     getProgressForDate,
     getWeeklyProgressForDate,
     getMonthlyProgressForDate,
+    getHabitsForDate, // Historical habits (soft delete)
 
     // Fixed Period Progress (US-020)
     getCalendarMonthProgress: (year, month) =>
