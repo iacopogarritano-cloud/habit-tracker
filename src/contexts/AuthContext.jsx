@@ -21,7 +21,7 @@
  */
 
 import { createContext, useContext, useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 // 1. Crea il Context (contenitore vuoto)
 const AuthContext = createContext(null)
@@ -31,10 +31,18 @@ export function AuthProvider({ children }) {
   // Stato dell'utente
   const [user, setUser] = useState(null)
   const [session, setSession] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
+  // Se Supabase non è configurato, partiamo già con isLoading=false
+  const [isLoading, setIsLoading] = useState(isSupabaseConfigured)
+  // Flag costante: true se mancano le variabili d'ambiente Supabase
+  const configError = !isSupabaseConfigured
 
   // Al mount: controlla se esiste già una sessione
   useEffect(() => {
+    // Se Supabase non è configurato, non fare nulla (isLoading è già false)
+    if (!isSupabaseConfigured || !supabase) {
+      return
+    }
+
     // Prende la sessione corrente (se l'utente era già loggato)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
@@ -57,6 +65,11 @@ export function AuthProvider({ children }) {
 
   // Login con Google OAuth
   const signInWithGoogle = async () => {
+    if (!supabase) {
+      console.error('Supabase non configurato')
+      return
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -73,6 +86,11 @@ export function AuthProvider({ children }) {
 
   // Logout
   const signOut = async () => {
+    if (!supabase) {
+      console.error('Supabase non configurato')
+      return
+    }
+
     const { error } = await supabase.auth.signOut()
 
     if (error) {
@@ -88,6 +106,7 @@ export function AuthProvider({ children }) {
     session,
     isLoading,
     isAuthenticated: !!user,
+    configError, // true se mancano le variabili d'ambiente Supabase
     signInWithGoogle,
     signOut,
   }

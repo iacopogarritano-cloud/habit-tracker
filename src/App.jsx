@@ -57,7 +57,7 @@ function App() {
   const { isDark, toggleTheme } = useTheme()
 
   // Auth (US-021)
-  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const { isAuthenticated, isLoading: authLoading, configError } = useAuth()
 
   // Undo stack (US-022)
   const undoStack = useUndoStack(10)
@@ -181,6 +181,21 @@ function App() {
   // Loading state
   if (isLoading || authLoading) {
     return <div className="app-loading">Caricamento...</div>
+  }
+
+  // Errore configurazione: mancano le variabili d'ambiente Supabase
+  if (configError) {
+    return (
+      <div className="app-loading">
+        <h2>⚠️ Configurazione mancante</h2>
+        <p>Le variabili d'ambiente Supabase non sono configurate.</p>
+        <p style={{ fontSize: '14px', color: '#888', marginTop: '16px' }}>
+          Aggiungi VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY
+          <br />
+          nelle Environment Variables di Vercel.
+        </p>
+      </div>
+    )
   }
 
   // Auth gate: se non sei loggato, mostra la pagina di login

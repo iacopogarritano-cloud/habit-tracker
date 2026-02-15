@@ -11,7 +11,7 @@
  * Conflict resolution: Last-write-wins (basato su updated_at)
  */
 
-import { supabase } from '../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 // ============================================
 // CONSTANTS
@@ -99,6 +99,11 @@ export function clearOfflineQueue() {
  * @returns {Promise<{ success: boolean, processed: number, errors: string[] }>}
  */
 export async function processOfflineQueue(userId) {
+  // Guard: se Supabase non è configurato, non fare nulla
+  if (!isSupabaseConfigured || !supabase) {
+    return { success: false, processed: 0, errors: ['Supabase non configurato'] }
+  }
+
   const queue = getOfflineQueue()
   if (queue.length === 0) {
     return { success: true, processed: 0, errors: [] }
@@ -147,6 +152,11 @@ export async function processOfflineQueue(userId) {
  * @returns {Promise<{ data: Array, error: string | null }>}
  */
 export async function fetchHabitsFromCloud(userId) {
+  // Guard: se Supabase non è configurato
+  if (!isSupabaseConfigured || !supabase) {
+    return { data: [], error: 'Supabase non configurato' }
+  }
+
   try {
     const { data, error } = await supabase
       .from('habits')
@@ -173,6 +183,11 @@ export async function fetchHabitsFromCloud(userId) {
  * @returns {Promise<{ success: boolean, error: string | null }>}
  */
 export async function syncHabitToCloud(userId, habit) {
+  // Guard: se Supabase non è configurato
+  if (!isSupabaseConfigured || !supabase) {
+    return { success: false, error: 'Supabase non configurato' }
+  }
+
   if (!isOnline()) {
     addToOfflineQueue('insert', 'habits', transformHabitToCloud(habit))
     return { success: true, error: null, offline: true }
@@ -245,6 +260,11 @@ export async function deleteHabitFromCloud(userId, habitId) {
  * @returns {Promise<{ data: Array, error: string | null }>}
  */
 export async function fetchCheckInsFromCloud(userId) {
+  // Guard: se Supabase non è configurato
+  if (!isSupabaseConfigured || !supabase) {
+    return { data: [], error: 'Supabase non configurato' }
+  }
+
   try {
     const { data, error } = await supabase
       .from('check_ins')
@@ -269,6 +289,11 @@ export async function fetchCheckInsFromCloud(userId) {
  * @returns {Promise<{ success: boolean, error: string | null }>}
  */
 export async function syncCheckInToCloud(userId, checkIn) {
+  // Guard: se Supabase non è configurato
+  if (!isSupabaseConfigured || !supabase) {
+    return { success: false, error: 'Supabase non configurato' }
+  }
+
   if (!isOnline()) {
     addToOfflineQueue('insert', 'check_ins', transformCheckInToCloud(checkIn))
     return { success: true, error: null, offline: true }
@@ -302,6 +327,11 @@ export async function syncCheckInToCloud(userId, checkIn) {
  * @returns {Promise<{ data: Array, error: string | null }>}
  */
 export async function fetchCategoriesFromCloud(userId) {
+  // Guard: se Supabase non è configurato
+  if (!isSupabaseConfigured || !supabase) {
+    return { data: [], error: 'Supabase non configurato' }
+  }
+
   try {
     const { data, error } = await supabase
       .from('categories')
@@ -326,6 +356,11 @@ export async function fetchCategoriesFromCloud(userId) {
  * @returns {Promise<{ success: boolean, error: string | null }>}
  */
 export async function syncCategoryToCloud(userId, category) {
+  // Guard: se Supabase non è configurato
+  if (!isSupabaseConfigured || !supabase) {
+    return { success: false, error: 'Supabase non configurato' }
+  }
+
   if (!isOnline()) {
     addToOfflineQueue('insert', 'categories', transformCategoryToCloud(category))
     return { success: true, error: null, offline: true }

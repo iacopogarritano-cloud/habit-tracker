@@ -17,26 +17,24 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Validazione: assicuriamoci che le variabili esistano
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Mancano le variabili VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY in .env.local'
-  )
-}
+// Flag per sapere se Supabase è configurato correttamente
+export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey)
 
-// Crea il client Supabase
+// Crea il client Supabase solo se configurato
 // Questo oggetto ci permette di:
 // - Fare login/logout (supabase.auth)
 // - Leggere/scrivere dati (supabase.from('tabella'))
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    // Salva la sessione in localStorage (persiste tra refresh)
-    persistSession: true,
-    // Rinnova automaticamente il token prima che scada
-    autoRefreshToken: true,
-    // Rileva la sessione dall'URL (per OAuth redirect)
-    detectSessionInUrl: true,
-  },
-})
+export const supabase = isSupabaseConfigured
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        // Salva la sessione in localStorage (persiste tra refresh)
+        persistSession: true,
+        // Rinnova automaticamente il token prima che scada
+        autoRefreshToken: true,
+        // Rileva la sessione dall'URL (per OAuth redirect)
+        detectSessionInUrl: true,
+      },
+    })
+  : null
 
 export default supabase
