@@ -405,3 +405,46 @@
 ---
 
 > **Nota:** Questo file è un archivio. Per le user stories attive, vedere [BACKLOG.md](./BACKLOG.md)
+
+---
+
+## US-V2-001: Supporto Abitudini Settimanali ✅ (2026-02-20)
+
+**Priority:** V2 → anticipata
+**Effort:** L
+**WSJF:** Alto (richiesta utente, completa il sistema di habit tracking)
+
+**User Story:**
+- **As a**: utente che vuole tracciare abitudini periodiche
+- **I want to**: creare abitudini con target settimanale (es. "Correre 3 volte a settimana")
+- **So that**: il tracciamento rifletta la mia frequenza reale, non quotidiana
+
+**Acceptance Criteria:**
+- [x] Selettore Frequenza nel form (Ogni giorno / Settimanale / Mensile)
+- [x] Settimana = lunedì-domenica (ISO week), reset automatico ogni lunedì
+- [x] Boolean settimanale: conta i giorni fatti nella settimana vs target (max 7)
+- [x] Conteggio settimanale: somma valori nella settimana vs target
+- [x] Progress card mostra "2/3 questa sett." o "5/15 km questa sett."
+- [x] Badge "sett." sulla card
+- [x] Peso e formula progresso invariati
+
+---
+
+## US-V2-002: Supporto Abitudini Mensili ✅ (2026-02-20)
+
+**Priority:** V2 → anticipata
+**Effort:** M (implementato insieme a US-V2-001)
+
+**User Story:**
+- **As a**: utente che vuole tracciare abitudini mensili
+- **I want to**: creare abitudini con target mensile (es. "Leggere 4 libri al mese")
+- **So that**: possa tracciare obiettivi su scala mensile
+
+**Acceptance Criteria:**
+- [x] Mese = 1° giorno → ultimo giorno del mese, reset automatico ogni 1°
+- [x] Boolean mensile: conta i giorni fatti nel mese vs target (max 31)
+- [x] Conteggio mensile: somma valori nel mese vs target
+- [x] Progress card mostra "2/4 questo mese" o "10/50 km questo mese"
+- [x] Badge "mese" sulla card
+- [x] Migration: habit esistenti mantengono timeframe:'daily'
+- [x] Migration: type:'duration' convertito in 'count' automaticamente

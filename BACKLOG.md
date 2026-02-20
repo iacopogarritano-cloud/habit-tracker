@@ -172,8 +172,8 @@ Story Points = (Business Value × Time Criticality × RROE) / Job Size
 Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
 **User Stories V2:**
-- US-V2-001: Supporto abitudini settimanali
-- US-V2-002: Supporto abitudini mensili
+- ✅ US-V2-001: Supporto abitudini settimanali → COMPLETATA (2026-02-20)
+- ✅ US-V2-002: Supporto abitudini mensili → COMPLETATA (2026-02-20)
 - US-V2-003: Dashboard punteggio multi-timeframe
 - US-V2-004: Vista heatmap completamento (stile GitHub)
 
@@ -181,8 +181,8 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
 ## Backlog Summary
 
-**Total User Stories:** 31 (25 funzionali + 6 developer)
-**Completate:** 24 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
+**Total User Stories:** 33 (27 funzionali + 6 developer)
+**Completate:** 26 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
 **Rimanenti:** 7 (3 funzionali + 4 developer)
 
 **Status:**
@@ -196,7 +196,7 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 - Could Have: US-DEV-003 (US-DEV-004 ✅)
 - Won't Have: US-DEV-005, US-DEV-006
 
-**MVP Core + Report + UX + Cloud Sync: COMPLETATO**
+**MVP Core + Report + UX + Cloud Sync + Multi-Timeframe: COMPLETATO**
 **Prossimo obiettivo:** US-013 (shadcn/ui Polish)
 
 ---
