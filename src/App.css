@@ -392,6 +392,18 @@ body {
   white-space: nowrap;
 }
 
+/* US-027: Badge timeframe (sett./mese) */
+.habit-timeframe-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background-color: var(--color-primary);
+  color: white;
+  opacity: 0.8;
+  text-transform: uppercase;
+}
+
 /* ============================================
    HABIT PROGRESS BAR
    ============================================ */

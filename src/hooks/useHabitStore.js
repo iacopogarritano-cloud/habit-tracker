@@ -53,6 +53,8 @@ import {
   // Historical habits (soft delete)
   getActiveHabits,
   getHabitsForDate as getHabitsForDateFromStorage,
+  // Period completion (US-027)
+  getPeriodCompletionForHabit,
 } from '../utils/storage'
 
 export function useHabitStore() {
@@ -509,6 +511,42 @@ export function useHabitStore() {
   )
 
   // ============================================
+  // PERIOD COMPLETION (US-027)
+  // ============================================
+
+  /**
+   * Ottiene il completamento di un'abitudine nel suo periodo
+   * Per daily: valore oggi vs target
+   * Per weekly/monthly: aggregato nel periodo corrente
+   * @param {string} habitId
+   * @param {string} [date] - Data di riferimento (default: oggi)
+   * @returns {{ currentValue: number, target: number, percent: number }}
+   */
+  const getPeriodCompletion = useCallback(
+    (habitId, date) => {
+      if (!data) return { currentValue: 0, target: 0, percent: 0 }
+      const habit = data.habits.find((h) => h.id === habitId)
+      if (!habit) return { currentValue: 0, target: 0, percent: 0 }
+      return getPeriodCompletionForHabit(data, habit, date)
+    },
+    [data]
+  )
+
+  /**
+   * Ottiene il check-in di un'abitudine per una data specifica
+   * @param {string} habitId
+   * @param {string} date - Data YYYY-MM-DD
+   * @returns {CheckIn | null}
+   */
+  const getCheckInForDate = useCallback(
+    (habitId, date) => {
+      if (!data) return null
+      return getCheckIn(data, habitId, date)
+    },
+    [data]
+  )
+
+  // ============================================
   // DEBUG FUNCTIONS (per testing streak)
   // ============================================
 
@@ -614,6 +652,10 @@ export function useHabitStore() {
     // Check-in actions
     checkIn,
     getTodayCheckIn,
+    getCheckInForDate,
+
+    // Period completion (US-027)
+    getPeriodCompletion,
 
     // Stats (US-008)
     getStats,

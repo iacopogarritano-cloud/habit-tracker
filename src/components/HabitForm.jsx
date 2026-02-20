@@ -9,8 +9,7 @@ import { WeightSelector } from './WeightSelector'
 
 const HABIT_TYPES = [
   { value: 'boolean', label: 'Si/No', description: 'Fatto o non fatto' },
-  { value: 'count', label: 'Conteggio', description: 'Quante volte (es. 3 bicchieri)' },
-  { value: 'duration', label: 'Durata', description: 'Quanti minuti (es. 30 min)' },
+  { value: 'count', label: 'Conteggio', description: 'Quantità (es. 3 bicchieri, 30 min)' },
 ]
 
 // Unità di misura organizzate per categoria (US-015)
@@ -74,11 +73,17 @@ const UNIT_CATEGORIES = [
   },
 ]
 
+// Opzioni frequenza (US-027)
+const TIMEFRAME_OPTIONS = [
+  { value: 'daily', label: 'Ogni giorno' },
+  { value: 'weekly', label: 'Settimanale' },
+  { value: 'monthly', label: 'Mensile' },
+]
+
 // Default units per type
 const DEFAULT_UNITS = {
   boolean: '',
   count: 'volte',
-  duration: 'min',
 }
 
 const DEFAULT_FORM = {
@@ -89,6 +94,7 @@ const DEFAULT_FORM = {
   color: '#4CAF50',
   unit: '',
   categoryId: '', // US-016
+  timeframe: 'daily', // US-027
 }
 
 export function HabitForm({ onSubmit, onCancel, initialData = null, categories = [] }) {
@@ -119,8 +125,23 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
     handleChange('type', type)
     // Set default unit for the type
     handleChange('unit', DEFAULT_UNITS[type])
-    if (type === 'boolean') {
+    if (type === 'boolean' && form.timeframe === 'daily') {
       handleChange('target', 1)
+    } else if (type === 'boolean' && form.timeframe === 'weekly') {
+      handleChange('target', 3)
+    } else if (type === 'boolean' && form.timeframe === 'monthly') {
+      handleChange('target', 10)
+    }
+  }
+
+  const handleTimeframeChange = (timeframe) => {
+    handleChange('timeframe', timeframe)
+    if (timeframe === 'daily') {
+      if (form.type === 'boolean') handleChange('target', 1)
+    } else if (timeframe === 'weekly') {
+      if (form.type === 'boolean') handleChange('target', 3)
+    } else if (timeframe === 'monthly') {
+      if (form.type === 'boolean') handleChange('target', 10)
     }
   }
 
@@ -133,8 +154,15 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
       newErrors.name = 'Max 50 caratteri'
     }
 
-    if (form.type !== 'boolean' && form.target < 1) {
+    const needsTarget = form.type !== 'boolean' || form.timeframe !== 'daily'
+    if (needsTarget && form.target < 1) {
       newErrors.target = 'Il target deve essere almeno 1'
+    }
+    if (form.timeframe === 'weekly' && form.type === 'boolean' && form.target > 7) {
+      newErrors.target = 'Max 7 giorni a settimana'
+    }
+    if (form.timeframe === 'monthly' && form.type === 'boolean' && form.target > 31) {
+      newErrors.target = 'Max 31 giorni al mese'
     }
 
     if (form.weight < 1 || form.weight > 5) {
@@ -150,12 +178,19 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
 
     if (!validate()) return
 
-    // For boolean type, target is always 1 and no unit
+    // Target logic:
+    // - boolean daily: sempre 1
+    // - boolean weekly/monthly: numero giorni per periodo
+    // - count/duration: numero target (giornaliero o di periodo)
+    const isDaily = form.timeframe === 'daily'
+    const target = form.type === 'boolean' && isDaily ? 1 : Number(form.target)
+
     const habitData = {
       ...form,
-      target: form.type === 'boolean' ? 1 : Number(form.target),
+      target,
       weight: Number(form.weight),
       unit: form.type === 'boolean' ? '' : form.unit,
+      timeframe: form.timeframe,
       categoryId: form.categoryId || null, // US-016
     }
 
@@ -231,17 +266,58 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
         </div>
       </div>
 
-      {/* Target e Unità (solo per count/duration) */}
+      {/* Frequenza (US-027) */}
+      <div className="form-group">
+        <label>Frequenza</label>
+        <div className="type-selector">
+          {TIMEFRAME_OPTIONS.map((tf) => (
+            <button
+              key={tf.value}
+              type="button"
+              className={`type-option ${form.timeframe === tf.value ? 'active' : ''}`}
+              onClick={() => handleTimeframeChange(tf.value)}
+            >
+              <span className="type-label">{tf.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Target per boolean settimanale/mensile (US-027) */}
+      {form.type === 'boolean' && form.timeframe !== 'daily' && (
+        <div className="form-group">
+          <label htmlFor="habit-target">
+            Quante volte {form.timeframe === 'weekly' ? 'a settimana' : 'al mese'}
+          </label>
+          <input
+            id="habit-target"
+            type="number"
+            min="1"
+            max={form.timeframe === 'weekly' ? 7 : 31}
+            value={form.target}
+            onChange={(e) => handleChange('target', e.target.value)}
+            className="target-input"
+          />
+          {errors.target && <span className="form-error">{errors.target}</span>}
+          <p className="target-preview">
+            Obiettivo: {form.target} volte {form.timeframe === 'weekly' ? 'a settimana' : 'al mese'}
+          </p>
+        </div>
+      )}
+
+      {/* Target e Unità per count/duration */}
       {form.type !== 'boolean' && (
         <>
           <div className="form-group">
-            <label htmlFor="habit-target">Target giornaliero</label>
+            <label htmlFor="habit-target">
+              Target {form.timeframe === 'daily' ? 'giornaliero' : form.timeframe === 'weekly' ? 'settimanale' : 'mensile'}
+            </label>
             <div className="target-with-unit">
               <input
                 id="habit-target"
                 type="number"
                 min="1"
-                max="999"
+                max="9999"
                 value={form.target}
                 onChange={(e) => handleChange('target', e.target.value)}
                 className="target-input"
@@ -264,7 +340,8 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
             </div>
             {errors.target && <span className="form-error">{errors.target}</span>}
             <p className="target-preview">
-              Obiettivo: {form.target} {getCurrentUnitLabel()} al giorno
+              Obiettivo: {form.target} {getCurrentUnitLabel()}{' '}
+              {form.timeframe === 'daily' ? 'al giorno' : form.timeframe === 'weekly' ? 'a settimana' : 'al mese'}
             </p>
           </div>
         </>

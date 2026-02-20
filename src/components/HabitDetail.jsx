@@ -115,23 +115,33 @@ export function HabitDetail({ habit, stats, lastNDays, onClose, onCheckIn }) {
         </div>
 
         {/* Stats Cards */}
-        <div className="habit-stats-grid">
-          <div className="stat-card">
-            <span className="stat-icon">🔥</span>
-            <span className="stat-value">{stats.currentStreak}</span>
-            <span className="stat-label">Streak attuale</span>
+        {(!habit.timeframe || habit.timeframe === 'daily') ? (
+          <div className="habit-stats-grid">
+            <div className="stat-card">
+              <span className="stat-icon">🔥</span>
+              <span className="stat-value">{stats.currentStreak}</span>
+              <span className="stat-label">Streak attuale</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-icon">🏆</span>
+              <span className="stat-value">{stats.longestStreak}</span>
+              <span className="stat-label">Record streak</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-icon">📊</span>
+              <span className="stat-value">{stats.completionRate}%</span>
+              <span className="stat-label">Ultimi 30 giorni</span>
+            </div>
           </div>
-          <div className="stat-card">
-            <span className="stat-icon">🏆</span>
-            <span className="stat-value">{stats.longestStreak}</span>
-            <span className="stat-label">Record streak</span>
+        ) : (
+          <div className="habit-stats-grid">
+            <div className="stat-card">
+              <span className="stat-icon">📊</span>
+              <span className="stat-value">{stats.completionRate}%</span>
+              <span className="stat-label">Ultimi 30 giorni</span>
+            </div>
           </div>
-          <div className="stat-card">
-            <span className="stat-icon">📊</span>
-            <span className="stat-value">{stats.completionRate}%</span>
-            <span className="stat-label">Ultimi 30 giorni</span>
-          </div>
-        </div>
+        )}
 
         {/* Mini-form per editing giorno (US-012) */}
         {editingDay && (
@@ -235,7 +245,12 @@ export function HabitDetail({ habit, stats, lastNDays, onClose, onCheckIn }) {
           </p>
           <p>
             <strong>Obiettivo:</strong> {habit.target}
-            {habit.unit ? ` ${habit.unit}` : ''} {habit.type !== 'boolean' ? 'al giorno' : ''}
+            {habit.unit ? ` ${habit.unit}` : ''}{' '}
+            {habit.timeframe === 'weekly'
+              ? (habit.type === 'boolean' ? 'volte a settimana' : 'a settimana')
+              : habit.timeframe === 'monthly'
+                ? (habit.type === 'boolean' ? 'volte al mese' : 'al mese')
+                : (habit.type !== 'boolean' ? 'al giorno' : '')}
           </p>
           <p>
             <strong>Peso:</strong> {'★'.repeat(habit.weight)}

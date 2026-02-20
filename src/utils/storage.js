@@ -33,9 +33,9 @@ const SCHEMA_VERSION = 1
  * @property {string} id - UUID
  * @property {string} name - Nome abitudine
  * @property {'boolean' | 'count'} type - Tipo di metrica ('duration' deprecato, trattato come 'count')
- * @property {number} target - Target giornaliero (1 per boolean)
+ * @property {number} target - Target: giornaliero per daily, giorni per boolean weekly/monthly, totale periodo per count weekly/monthly
  * @property {number} weight - Peso/importanza 1-5 (default: 3)
- * @property {'daily'} timeframe - Solo 'daily' per MVP
+ * @property {'daily' | 'weekly' | 'monthly'} timeframe - Frequenza: giornaliera, settimanale (Lun-Dom), mensile (1-ultimo)
  * @property {string} createdAt - ISO date string
  * @property {string} [color] - Colore HEX opzionale
  * @property {string} [categoryId] - ID categoria (opzionale, US-016)
@@ -101,6 +101,102 @@ export function getTodayDate() {
 }
 
 /**
+ * Restituisce Lunedì e Domenica della settimana ISO che contiene la data
+ * @param {string} dateStr - Data YYYY-MM-DD
+ * @returns {{ start: string, end: string }}
+ */
+export function getWeekBounds(dateStr) {
+  const date = new Date(dateStr + 'T00:00:00')
+  const day = date.getDay() // 0=Dom, 1=Lun...
+  const mondayOffset = day === 0 ? -6 : 1 - day
+
+  const monday = new Date(date)
+  monday.setDate(date.getDate() + mondayOffset)
+
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+
+  return {
+    start: monday.toISOString().split('T')[0],
+    end: sunday.toISOString().split('T')[0],
+  }
+}
+
+/**
+ * Restituisce primo e ultimo giorno del mese che contiene la data
+ * @param {string} dateStr - Data YYYY-MM-DD
+ * @returns {{ start: string, end: string }}
+ */
+export function getMonthBounds(dateStr) {
+  const date = new Date(dateStr + 'T00:00:00')
+  const year = date.getFullYear()
+  const month = date.getMonth()
+
+  const firstDay = new Date(year, month, 1)
+  const lastDay = new Date(year, month + 1, 0)
+
+  return {
+    start: firstDay.toISOString().split('T')[0],
+    end: lastDay.toISOString().split('T')[0],
+  }
+}
+
+/**
+ * Calcola il completamento di un'abitudine nel suo periodo
+ * - Daily: valore singolo giorno vs target (logica originale)
+ * - Weekly/monthly boolean: conta giorni con check-in >= 1 nel periodo
+ * - Weekly/monthly count/duration: somma valori nel periodo vs target
+ * @param {StorageData} data
+ * @param {Habit} habit
+ * @param {string} [date] - Data di riferimento (default: oggi)
+ * @returns {{ currentValue: number, target: number, percent: number }}
+ */
+export function getPeriodCompletionForHabit(data, habit, date = getTodayDate()) {
+  // Daily: logica originale
+  if (!habit.timeframe || habit.timeframe === 'daily') {
+    const checkIn = getCheckIn(data, habit.id, date)
+    const value = checkIn?.value || 0
+    return {
+      currentValue: value,
+      target: habit.target,
+      percent: Math.min(100, (value / habit.target) * 100),
+    }
+  }
+
+  // Weekly o Monthly: aggrega nel periodo
+  const bounds = habit.timeframe === 'weekly'
+    ? getWeekBounds(date)
+    : getMonthBounds(date)
+
+  const today = getTodayDate()
+  let currentValue = 0
+  const current = new Date(bounds.start + 'T00:00:00')
+  const end = new Date(bounds.end + 'T00:00:00')
+  const todayDate = new Date(today + 'T00:00:00')
+
+  while (current <= end && current <= todayDate) {
+    const dateStr = current.toISOString().split('T')[0]
+    const checkIn = getCheckIn(data, habit.id, dateStr)
+    if (checkIn && checkIn.value > 0) {
+      if (habit.type === 'boolean') {
+        // Boolean: conta i giorni fatti
+        currentValue++
+      } else {
+        // Count/duration: somma i valori
+        currentValue += checkIn.value
+      }
+    }
+    current.setDate(current.getDate() + 1)
+  }
+
+  return {
+    currentValue,
+    target: habit.target,
+    percent: Math.min(100, (currentValue / habit.target) * 100),
+  }
+}
+
+/**
  * Verifica se localStorage è disponibile
  * @returns {boolean}
  */
@@ -145,11 +241,16 @@ function migrateData(data) {
     console.log('[Storage] Migrazione: aggiunte categorie di default')
   }
 
-  // Version 1 → 2 migration (esempio per futuro)
-  // if (data.version === 1) {
-  //   data.habits = data.habits.map(h => ({ ...h, newField: 'default' }));
-  //   data.version = 2;
-  // }
+  // Assicura che tutte le abitudini abbiano timeframe (US-027 migration)
+  // Converte type 'duration' → 'count' (deprecato)
+  for (const habit of data.habits) {
+    if (!habit.timeframe) {
+      habit.timeframe = 'daily'
+    }
+    if (habit.type === 'duration') {
+      habit.type = 'count'
+    }
+  }
 
   return data
 }
@@ -258,7 +359,7 @@ export function createHabit(habitData) {
     type: habitData.type || 'boolean',
     target: habitData.target || 1,
     weight: habitData.weight ?? 3, // Default peso medio
-    timeframe: 'daily',
+    timeframe: habitData.timeframe || 'daily',
     createdAt: new Date().toISOString(),
     color: habitData.color || null,
     unit: habitData.unit || '', // US-015: unità di misura
@@ -453,12 +554,17 @@ export function recordCheckIn(data, habitId, value, date = getTodayDate()) {
   // Cerca check-in esistente per questa data
   const existingIndex = data.checkIns.findIndex((c) => c.habitId === habitId && c.date === date)
 
+  // Per daily: completato se raggiunge il target giornaliero
+  // Per weekly/monthly: completato se ha un valore positivo (fatto oggi)
+  const isDaily = !habit.timeframe || habit.timeframe === 'daily'
+  const completed = isDaily ? value >= habit.target : value >= 1
+
   const checkIn = {
     id: existingIndex >= 0 ? data.checkIns[existingIndex].id : generateId(),
     habitId,
     date,
     value,
-    completed: value >= habit.target,
+    completed,
     timestamp: new Date().toISOString(),
   }
 
@@ -513,10 +619,7 @@ export function getHabitCompletionPercent(data, habitId) {
   const habit = data.habits.find((h) => h.id === habitId)
   if (!habit) return 0
 
-  const checkIn = getCheckIn(data, habitId)
-  if (!checkIn) return 0
-
-  return Math.min(100, (checkIn.value / habit.target) * 100)
+  return getPeriodCompletionForHabit(data, habit).percent
 }
 
 /**
@@ -568,10 +671,7 @@ export function getHabitCompletionPercentForDate(data, habitId, date) {
   const habit = data.habits.find((h) => h.id === habitId)
   if (!habit) return 0
 
-  const checkIn = getCheckIn(data, habitId, date)
-  if (!checkIn) return 0
-
-  return Math.min(100, (checkIn.value / habit.target) * 100)
+  return getPeriodCompletionForHabit(data, habit, date).percent
 }
 
 /**
@@ -1291,6 +1391,10 @@ export default {
   generateId,
   getTodayDate,
   getLastNDays,
+  getWeekBounds,
+  getMonthBounds,
+  // Period Completion (US-027)
+  getPeriodCompletionForHabit,
   // Habits
   createHabit,
   addHabit,

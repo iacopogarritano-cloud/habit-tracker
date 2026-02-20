@@ -114,6 +114,7 @@ export function DayView({
   date,
   habits,
   getCheckInForDate,
+  getPeriodCompletion,
   getProgressForDate,
   getWeeklyProgressForDate,
   getMonthlyProgressForDate,
@@ -162,6 +163,20 @@ export function DayView({
     return habits.map((habit) => {
       const checkIn = getCheckInForDate(habit.id, date)
       const currentValue = checkIn?.value || 0
+      const isDaily = !habit.timeframe || habit.timeframe === 'daily'
+
+      if (!isDaily && getPeriodCompletion) {
+        // US-027: Per weekly/monthly, mostra progresso di periodo
+        const periodInfo = getPeriodCompletion(habit.id, date)
+        return {
+          ...habit,
+          currentValue, // valore del giorno per le azioni
+          isCompleted: periodInfo.currentValue >= habit.target,
+          completionPercent: periodInfo.percent,
+          periodInfo,
+        }
+      }
+
       const isCompleted = currentValue >= habit.target
       const completionPercent = Math.min(100, (currentValue / habit.target) * 100)
 
@@ -170,9 +185,10 @@ export function DayView({
         currentValue,
         isCompleted,
         completionPercent,
+        periodInfo: null,
       }
     })
-  }, [habits, date, getCheckInForDate])
+  }, [habits, date, getCheckInForDate, getPeriodCompletion])
 
   // Handler per navigare tra i mesi
   const handleMonthNavigate = (offset) => {
@@ -210,9 +226,9 @@ export function DayView({
     }
   }
 
-  // Handler per toggle boolean
-  const handleBooleanToggle = (habitId, isCompleted) => {
-    onCheckIn(habitId, isCompleted ? 0 : 1, date)
+  // Handler per toggle boolean (usa valore del giorno, non del periodo)
+  const handleBooleanToggle = (habitId, currentValue) => {
+    onCheckIn(habitId, currentValue >= 1 ? 0 : 1, date)
   }
 
   return (
@@ -333,8 +349,9 @@ export function DayView({
                       }}
                     />
                     <span className="dayview-progress-text">
-                      {habit.currentValue}/{habit.target}
-                      {habit.unit ? ` ${habit.unit}` : ''}
+                      {habit.periodInfo
+                        ? `${habit.periodInfo.currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''} ${habit.timeframe === 'weekly' ? 'sett.' : 'mese'}`
+                        : `${habit.currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`}
                     </span>
                   </div>
 
@@ -342,9 +359,9 @@ export function DayView({
                     <div className="dayview-habit-actions">
                       {habit.type === 'boolean' ? (
                         <button
-                          onClick={() => handleBooleanToggle(habit.id, habit.isCompleted)}
-                          className={`btn-check ${habit.isCompleted ? 'checked' : ''}`}
-                          title={habit.isCompleted ? 'Segna come non fatto' : 'Segna come fatto'}
+                          onClick={() => handleBooleanToggle(habit.id, habit.currentValue)}
+                          className={`btn-check ${habit.currentValue >= 1 ? 'checked' : ''}`}
+                          title={habit.currentValue >= 1 ? 'Segna come non fatto' : 'Segna come fatto'}
                         >
                           ✓
                         </button>
