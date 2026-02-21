@@ -457,9 +457,11 @@ export async function uploadLocalDataToCloud(userId, localData) {
   }
 
   try {
-    // Upload habits
+    // Upload habits (solo quelle attive - skip soft deleted)
     for (const habit of localData.habits) {
-      await syncHabitToCloud(userId, habit)
+      if (!habit.deletedAt) {
+        await syncHabitToCloud(userId, habit)
+      }
     }
 
     // Upload categories (escludi quelle di default che già esistono)
