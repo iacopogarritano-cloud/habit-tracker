@@ -215,7 +215,16 @@ function App() {
       // Mostra toast con possibilità di annullare
       addToast(`Abitudine "${habitData.name}" modificata`, 'info', true, 5000)
     } else {
-      // Crea nuova abitudine
+      // Crea nuova abitudine - controlla nome duplicato
+      const nameExists = habits.some(
+        (h) => h.name.trim().toLowerCase() === habitData.name.trim().toLowerCase()
+      )
+      if (nameExists) {
+        const confirmed = window.confirm(
+          `Esiste già un'abitudine chiamata "${habitData.name}".\nVuoi crearla comunque?`
+        )
+        if (!confirmed) return
+      }
       addHabit(habitData)
     }
     setShowForm(false)

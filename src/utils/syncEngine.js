@@ -604,10 +604,17 @@ function mergeData(localData, cloudData) {
   // In futuro si può implementare merge più sofisticato con timestamp
 
   // Habits: usa cloud, aggiungi local che non esistono su cloud
+  // IMPORTANTE: rispetta soft delete locale (deletedAt ha priorità sulla versione cloud)
   const cloudHabitIds = new Set(cloudData.habits.map((h) => h.id))
+  const localHabitMap = new Map(localData.habits.map((h) => [h.id, h]))
   const mergedHabits = [
-    ...cloudData.habits,
-    ...localData.habits.filter((h) => !cloudHabitIds.has(h.id)),
+    // Include habits dal cloud SOLO se non soft-deleted localmente
+    ...cloudData.habits.filter((cloudHabit) => {
+      const localHabit = localHabitMap.get(cloudHabit.id)
+      return !localHabit?.deletedAt
+    }),
+    // Include habits locali non in cloud, solo se non soft-deleted
+    ...localData.habits.filter((h) => !cloudHabitIds.has(h.id) && !h.deletedAt),
   ]
 
   // Check-ins: combina per chiave (habitId + date)
