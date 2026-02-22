@@ -19,6 +19,7 @@ import {
   onConnectivityChange,
   processOfflineQueue,
 } from '../utils/syncEngine'
+import { createDemoHabits } from '../utils/seedData'
 import {
   loadFromStorage,
   saveToStorage,
@@ -125,9 +126,25 @@ export function useHabitStore() {
         if (syncError) {
           console.warn('[useHabitStore] Sync error:', syncError)
         } else if (syncedData) {
-          setData(syncedData)
-          // Salva anche in localStorage come cache
-          saveToStorage(syncedData)
+          // US-029: primo login senza abitudini → crea demo
+          const SEED_KEY = `weighbit-seeded-${userId}`
+          let finalData = syncedData
+
+          if (syncedData.habits.length === 0 && !localStorage.getItem(SEED_KEY)) {
+            console.log('[useHabitStore] Primo login, creo abitudini demo...')
+            const demoHabits = createDemoHabits()
+            finalData = { ...syncedData, habits: demoHabits }
+            // Upload su cloud (fire-and-forget, non blocca la UI)
+            for (const habit of demoHabits) {
+              syncHabitToCloud(userId, habit).catch((err) =>
+                console.error('[useHabitStore] Sync demo habit failed:', err)
+              )
+            }
+            localStorage.setItem(SEED_KEY, 'true')
+          }
+
+          setData(finalData)
+          saveToStorage(finalData)
         }
       } catch (err) {
         console.error('[useHabitStore] Sync failed:', err)
