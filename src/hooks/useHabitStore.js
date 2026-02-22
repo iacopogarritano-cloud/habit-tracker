@@ -190,7 +190,7 @@ export function useHabitStore() {
     })
 
     return cleanup
-  }, [userId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId])
 
   // ============================================
   // HABIT OPERATIONS
