@@ -1,7 +1,7 @@
 # Product Backlog - User Stories Completate
 
 > **Archivio:** User stories completate dal backlog principale
-> **Ultima migrazione:** 2026-02-12
+> **Ultima migrazione:** 2026-02-22
 
 ---
 
@@ -10,6 +10,24 @@
 - **SP:** Story Points (WSJF)
 - **Framework:** WSJF (Weighted Shortest Job First)
 - **Formula:** `Story Points = (Business Value × Time Criticality × RROE) / Job Size`
+
+---
+
+## Bug Fix & UX (Completate - 2026-02-22)
+
+### US-028: Fix isolamento dati per utente
+**Priority:** Must Have (SP: 39.0) — **COMPLETATA 2026-02-22**
+- Aggiunta chiave `weighbit-current-user` in localStorage per tracciare il proprietario dei dati
+- Al login, se l'userId salvato ≠ userId corrente → dati locali scartati, download solo dal cloud
+- Rimossa logica `uploadLocalDataToCloud` + `hasMigratedRef` (non più necessari)
+- File: `src/hooks/useHabitStore.js`
+
+### US-029: Abitudini demo per nuovi utenti
+**Priority:** Could Have (SP: 2.5) — **COMPLETATA 2026-02-22**
+- Al primo login senza abitudini → creazione automatica di 3 demo (Esercizio fisico, Lettura, Meditazione)
+- Tipi e pesi diversi per mostrare le feature principali di Weighbit
+- Flag `weighbit-seeded-{userId}` in localStorage evita la ricreazione ai login successivi
+- File: `src/utils/seedData.js` (nuovo), `src/hooks/useHabitStore.js`
 
 ---
 

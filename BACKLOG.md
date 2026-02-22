@@ -182,13 +182,13 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 ## Backlog Summary
 
 **Total User Stories:** 33 (27 funzionali + 6 developer)
-**Completate:** 26 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
-**Rimanenti:** 7 (3 funzionali + 4 developer)
+**Completate:** 28 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
+**Rimanenti:** 5 (1 funzionale + 4 developer)
 
 **Status:**
-- Must Have: ✅ US-021 (Cloud Sync) - COMPLETATA
+- Must Have: ✅ US-021 (Cloud Sync), ✅ US-028 (Fix isolamento dati) - COMPLETATE
 - Should Have: US-013 (shadcn/ui)
-- Could Have: 3/3 completate
+- Could Have: ✅ tutte completate (incl. US-029 demo habits)
 - Won't Have: US-011, US-014
 
 **Developer Stories:**
