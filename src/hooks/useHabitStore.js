@@ -8,7 +8,7 @@
  * const { habits, addHabit, checkIn, progress, error, isSyncing } = useHabitStore();
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import {
   fullSync,
@@ -18,7 +18,6 @@ import {
   syncCategoryToCloud,
   onConnectivityChange,
   processOfflineQueue,
-  uploadLocalDataToCloud,
 } from '../utils/syncEngine'
 import {
   loadFromStorage,
@@ -68,9 +67,6 @@ export function useHabitStore() {
   const [error, setError] = useState(null)
   const [isSyncing, setIsSyncing] = useState(false)
 
-  // Ref per tracciare se abbiamo già fatto la migrazione iniziale
-  const hasMigratedRef = useRef(false)
-
   // Carica dati all'avvio (pattern standard per init da storage)
   useEffect(() => {
     const { data: loadedData, error: loadError } = loadFromStorage()
@@ -83,9 +79,13 @@ export function useHabitStore() {
   // CLOUD SYNC (US-021)
   // ============================================
 
+  // Chiave localStorage per tracciare l'utente corrente (US-028)
+  const CURRENT_USER_KEY = 'weighbit-current-user'
+
   /**
    * Effetto: Sync quando l'utente fa login
-   * - Se primo login: upload dati locali su cloud
+   * - Verifica che i dati locali appartengano all'utente corrente (US-028)
+   * - Se utente diverso: pulisce localStorage e scarica dal cloud
    * - Altrimenti: fullSync (merge cloud + local)
    */
   useEffect(() => {
@@ -96,17 +96,31 @@ export function useHabitStore() {
       console.log('[useHabitStore] Avvio sync per utente:', userId)
 
       try {
-        // Controlla se ci sono dati locali da migrare (primo login)
-        const hasLocalData = data.habits.length > 0 && !hasMigratedRef.current
+        const storedUserId = localStorage.getItem(CURRENT_USER_KEY)
+        let syncData = data
 
-        if (hasLocalData) {
-          console.log('[useHabitStore] Primo login - upload dati locali')
-          await uploadLocalDataToCloud(userId, data)
-          hasMigratedRef.current = true
+        if (storedUserId !== userId) {
+          // Utente diverso o primo accesso: i dati locali potrebbero appartenere ad altri
+          if (data.habits.length > 0) {
+            console.log('[useHabitStore] Dati locali di un altro utente, pulizia...')
+            const freshData = {
+              version: 1,
+              habits: [],
+              checkIns: [],
+              // Mantieni solo le categorie di default (quelle custom potrebbero essere di altri)
+              categories: data.categories.filter((c) => c.id.startsWith('cat-')),
+              lastUpdated: new Date().toISOString(),
+            }
+            saveToStorage(freshData)
+            setData(freshData)
+            syncData = freshData
+          }
+          // Segna questo browser come appartenente all'utente corrente
+          localStorage.setItem(CURRENT_USER_KEY, userId)
         }
 
         // Full sync: scarica da cloud e merge
-        const { data: syncedData, error: syncError } = await fullSync(userId, data)
+        const { data: syncedData, error: syncError } = await fullSync(userId, syncData)
 
         if (syncError) {
           console.warn('[useHabitStore] Sync error:', syncError)
