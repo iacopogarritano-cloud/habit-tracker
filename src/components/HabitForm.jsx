@@ -164,6 +164,9 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
     if (form.timeframe === 'monthly' && form.type === 'boolean' && form.target > 31) {
       newErrors.target = 'Max 31 giorni al mese'
     }
+    if (form.type !== 'boolean' && form.target > 9999) {
+      newErrors.target = 'Il target non può superare 9999'
+    }
 
     if (form.weight < 1 || form.weight > 5) {
       newErrors.weight = 'Il peso deve essere tra 1 e 5'
@@ -198,7 +201,9 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
   }
 
   // Calculate impact preview
-  const impactPercent = form.weight > 0 ? Math.round((form.weight / 15) * 100) : 0
+  // 15 = assunzione di 3 abitudini × peso massimo 5
+  const ASSUMED_TOTAL_WEIGHT = 15
+  const impactPercent = form.weight > 0 ? Math.round((form.weight / ASSUMED_TOTAL_WEIGHT) * 100) : 0
 
   // Get current unit label for display
   const getCurrentUnitLabel = () => {

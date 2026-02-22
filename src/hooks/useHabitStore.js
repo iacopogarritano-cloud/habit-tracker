@@ -8,7 +8,7 @@
  * const { habits, addHabit, checkIn, progress, error, isSyncing } = useHabitStore();
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import {
   fullSync,
@@ -71,6 +71,12 @@ export function useHabitStore() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isSyncing, setIsSyncing] = useState(false)
+
+  // Ref per accedere ai dati aggiornati nel listener online senza closure stantia
+  const dataRef = useRef(data)
+  useEffect(() => {
+    dataRef.current = data
+  }, [data])
 
   // Carica dati all'avvio (pattern standard per init da storage)
   useEffect(() => {
@@ -171,8 +177,8 @@ export function useHabitStore() {
         setIsSyncing(true)
         try {
           await processOfflineQueue(userId)
-          // Refresh dati da cloud
-          const { data: syncedData } = await fullSync(userId, data)
+          // Refresh dati da cloud - usa dataRef.current per evitare closure stantia
+          const { data: syncedData } = await fullSync(userId, dataRef.current)
           if (syncedData) {
             setData(syncedData)
             saveToStorage(syncedData)
@@ -184,7 +190,7 @@ export function useHabitStore() {
     })
 
     return cleanup
-  }, [userId, data])
+  }, [userId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ============================================
   // HABIT OPERATIONS

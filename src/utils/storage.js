@@ -168,11 +168,12 @@ export function getPeriodCompletionForHabit(data, habit, date = getTodayDate()) 
     ? getWeekBounds(date)
     : getMonthBounds(date)
 
-  const today = getTodayDate()
   let currentValue = 0
   const current = new Date(bounds.start + 'T00:00:00')
   const end = new Date(bounds.end + 'T00:00:00')
-  const todayDate = new Date(today + 'T00:00:00')
+  // Usa `date` come cap invece di una seconda chiamata a getTodayDate()
+  // evita race condition a mezzanotte e usa la stessa data di riferimento del periodo
+  const todayDate = new Date(date + 'T00:00:00')
 
   while (current <= end && current <= todayDate) {
     const dateStr = current.toISOString().split('T')[0]

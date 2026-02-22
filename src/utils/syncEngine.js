@@ -112,8 +112,10 @@ export async function processOfflineQueue(userId) {
   console.log('[SyncEngine] Processing offline queue:', queue.length, 'operazioni')
   const errors = []
   let processed = 0
+  const successfulIndices = new Set()
 
-  for (const operation of queue) {
+  for (let i = 0; i < queue.length; i++) {
+    const operation = queue[i]
     try {
       const { type, table, data } = operation
 
@@ -129,14 +131,19 @@ export async function processOfflineQueue(userId) {
           break
       }
       processed++
+      successfulIndices.add(i)
     } catch (error) {
       errors.push(`${operation.type} ${operation.table}: ${error.message}`)
     }
   }
 
-  // Svuota coda se tutto ok
-  if (errors.length === 0) {
+  if (successfulIndices.size === queue.length) {
+    // Tutto riuscito: svuota la coda
     clearOfflineQueue()
+  } else if (successfulIndices.size > 0) {
+    // Solo alcune riuscite: mantieni solo le operazioni fallite per il prossimo tentativo
+    const remainingQueue = queue.filter((_, i) => !successfulIndices.has(i))
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(remainingQueue))
   }
 
   return { success: errors.length === 0, processed, errors }
