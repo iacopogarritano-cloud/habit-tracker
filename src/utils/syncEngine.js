@@ -230,6 +230,11 @@ export async function syncHabitToCloud(userId, habit) {
  * @returns {Promise<{ success: boolean, error: string | null }>}
  */
 export async function deleteHabitFromCloud(userId, habitId) {
+  // Guard: se Supabase non è configurato
+  if (!isSupabaseConfigured || !supabase) {
+    return { success: false, error: 'Supabase non configurato' }
+  }
+
   if (!isOnline()) {
     addToOfflineQueue('delete', 'habits', { id: habitId })
     return { success: true, error: null, offline: true }

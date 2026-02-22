@@ -154,7 +154,7 @@ export function DayView({
 
   // Formatta la data selezionata per il display
   const formattedDate = useMemo(() => {
-    const d = new Date(date)
+    const d = new Date(date + 'T00:00:00') // evita parsing UTC che sfasa il giorno in timezone non-UTC
     return `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`
   }, [date])
 
@@ -283,14 +283,14 @@ export function DayView({
 
           {/* Griglia giorni */}
           <div className="dayview-calendar-grid-monthly">
-            {calendarDays.map((day, i) => {
+            {calendarDays.map((day) => {
               const isSelected = day.date === date
               const isDayToday = day.date === today
               const isDayFuture = day.date > today
 
               return (
                 <button
-                  key={i}
+                  key={day.date}
                   className={`dayview-calendar-day-monthly
                     ${isSelected ? 'selected' : ''}
                     ${isDayToday ? 'today' : ''}

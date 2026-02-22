@@ -629,7 +629,8 @@ export function getHabitCompletionPercent(data, habitId) {
  * @returns {{ percent: number, completed: number, total: number }}
  */
 export function getWeightedDailyProgress(data) {
-  if (data.habits.length === 0) {
+  const activeHabits = getActiveHabits(data)
+  if (activeHabits.length === 0) {
     return { percent: 0, completed: 0, total: 0 }
   }
 
@@ -637,7 +638,7 @@ export function getWeightedDailyProgress(data) {
   let totalWeight = 0
   let completedCount = 0
 
-  for (const habit of data.habits) {
+  for (const habit of activeHabits) {
     const completionPercent = getHabitCompletionPercent(data, habit.id) / 100
     weightedSum += habit.weight * completionPercent
     totalWeight += habit.weight
@@ -652,7 +653,7 @@ export function getWeightedDailyProgress(data) {
   return {
     percent: Math.round(percent * 10) / 10, // 1 decimal
     completed: completedCount,
-    total: data.habits.length,
+    total: activeHabits.length,
   }
 }
 

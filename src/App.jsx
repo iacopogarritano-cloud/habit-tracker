@@ -596,48 +596,31 @@ function App() {
                     </div>
                   </div>
 
-                  {/* Progress bar */}
-                  {habit.type === 'boolean' ? (
-                    <div className="habit-progress">
-                      <div
-                        className="progress-bar"
-                        style={{
-                          width: `${completionPercent}%`,
-                          backgroundColor: habit.color || 'var(--color-primary)',
-                        }}
-                      />
-                      <span className="progress-text">
-                        {isDaily
-                          ? `${currentValue}/${habit.target}`
-                          : `${periodInfo.currentValue}/${habit.target} ${periodLabel}`}
-                      </span>
-                    </div>
-                  ) : (
-                    <div
-                      className="habit-progress habit-progress-slider"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <input
-                        type="range"
-                        min="0"
-                        max={isDaily ? habit.target : Math.max(habit.target, currentValue)}
-                        value={currentValue}
-                        onChange={(e) => checkIn(habit.id, parseInt(e.target.value, 10))}
-                        className="progress-slider"
-                        aria-label={`Progresso ${habit.name}`}
-                        aria-valuetext={`${isDaily ? currentValue : periodInfo.currentValue} di ${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`}
-                        style={{
-                          '--progress-color': habit.color || 'var(--color-primary)',
-                          '--progress-percent': `${completionPercent}%`,
-                        }}
-                      />
-                      <span className="progress-text">
-                        {isDaily
-                          ? `${currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`
-                          : `${periodInfo.currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''} ${periodLabel}`}
-                      </span>
-                    </div>
-                  )}
+                  {/* Progress bar - slider per tutti i tipi (incluso boolean) */}
+                  <div
+                    className="habit-progress habit-progress-slider"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="range"
+                      min="0"
+                      max={isDaily ? habit.target : Math.max(habit.target, currentValue)}
+                      value={currentValue}
+                      onChange={(e) => checkIn(habit.id, parseInt(e.target.value, 10))}
+                      className="progress-slider"
+                      aria-label={`Progresso ${habit.name}`}
+                      aria-valuetext={`${isDaily ? currentValue : periodInfo.currentValue} di ${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`}
+                      style={{
+                        '--progress-color': habit.color || 'var(--color-primary)',
+                        '--progress-percent': `${completionPercent}%`,
+                      }}
+                    />
+                    <span className="progress-text">
+                      {isDaily
+                        ? `${currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`
+                        : `${periodInfo.currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''} ${periodLabel}`}
+                    </span>
+                  </div>
 
                   <div className="habit-actions" onClick={(e) => e.stopPropagation()}>
                     {habit.type === 'boolean' ? (
@@ -706,18 +689,20 @@ function App() {
         )}
       </section>
 
-      {/* Debug info */}
-      <footer className="debug-footer">
-        <details>
-          <summary>Debug Info</summary>
-          <pre>{JSON.stringify({ habits: habits.length, progress }, null, 2)}</pre>
-          <p style={{ marginTop: '8px', fontSize: '11px', color: '#888' }}>
-            Per testare streak: apri DevTools (F12) → Console → esegui:
-            <br />
-            <code>localStorage.setItem('habit-tracker-test', 'true')</code>
-          </p>
-        </details>
-      </footer>
+      {/* Debug info - solo in development */}
+      {import.meta.env.DEV && (
+        <footer className="debug-footer">
+          <details>
+            <summary>Debug Info</summary>
+            <pre>{JSON.stringify({ habits: habits.length, progress }, null, 2)}</pre>
+            <p style={{ marginTop: '8px', fontSize: '11px', color: '#888' }}>
+              Per testare streak: apri DevTools (F12) → Console → esegui:
+              <br />
+              <code>localStorage.setItem('habit-tracker-test', 'true')</code>
+            </p>
+          </details>
+        </footer>
+      )}
 
       {/* Toast notifications (US-022) */}
       <ToastContainer

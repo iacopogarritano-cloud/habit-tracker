@@ -49,7 +49,7 @@ export function HabitDetail({ habit, stats, lastNDays, onClose, onCheckIn }) {
 
   // Formatta la data per il tooltip (es: "Lun 5 Feb")
   const formatDateLabel = (dateStr) => {
-    const date = new Date(dateStr)
+    const date = new Date(dateStr + 'T00:00:00') // evita parsing UTC che sfasa il giorno in timezone non-UTC
     const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab']
     const months = [
       'Gen',

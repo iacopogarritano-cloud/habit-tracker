@@ -57,6 +57,10 @@ import {
   getPeriodCompletionForHabit,
 } from '../utils/storage'
 
+// Chiave localStorage per tracciare l'utente corrente (US-028)
+// Definita fuori dall'hook per evitare ricreazione ad ogni render
+const CURRENT_USER_KEY = 'weighbit-current-user'
+
 export function useHabitStore() {
   // Auth context (US-021)
   const { user, isAuthenticated } = useAuth()
@@ -80,9 +84,6 @@ export function useHabitStore() {
   // CLOUD SYNC (US-021)
   // ============================================
 
-  // Chiave localStorage per tracciare l'utente corrente (US-028)
-  const CURRENT_USER_KEY = 'weighbit-current-user'
-
   /**
    * Effetto: Sync quando l'utente fa login
    * - Verifica che i dati locali appartengano all'utente corrente (US-028)
@@ -101,23 +102,20 @@ export function useHabitStore() {
         let syncData = data
 
         if (storedUserId !== userId) {
-          // Utente diverso o primo accesso: i dati locali potrebbero appartenere ad altri
-          if (data.habits.length > 0) {
-            console.log('[useHabitStore] Dati locali di un altro utente, pulizia...')
-            const freshData = {
-              version: 1,
-              habits: [],
-              checkIns: [],
-              // Mantieni solo le categorie di default (quelle custom potrebbero essere di altri)
-              categories: data.categories.filter((c) => c.id.startsWith('cat-')),
-              lastUpdated: new Date().toISOString(),
-            }
-            saveToStorage(freshData)
-            setData(freshData)
-            syncData = freshData
+          // Utente diverso o primo accesso: pulisce SEMPRE i dati locali
+          // CURRENT_USER_KEY viene aggiornato solo dopo sync riuscito (sotto)
+          console.log('[useHabitStore] Cambio utente rilevato, pulizia dati locali...')
+          const freshData = {
+            version: 1,
+            habits: [],
+            checkIns: [],
+            // Mantieni solo le categorie di default (quelle custom potrebbero essere di altri)
+            categories: data.categories.filter((c) => c.id.startsWith('cat-')),
+            lastUpdated: new Date().toISOString(),
           }
-          // Segna questo browser come appartenente all'utente corrente
-          localStorage.setItem(CURRENT_USER_KEY, userId)
+          saveToStorage(freshData)
+          setData(freshData)
+          syncData = freshData
         }
 
         // Full sync: scarica da cloud e merge
@@ -126,6 +124,9 @@ export function useHabitStore() {
         if (syncError) {
           console.warn('[useHabitStore] Sync error:', syncError)
         } else if (syncedData) {
+          // Sync riuscito: ora è sicuro marcare questo browser come dell'utente corrente
+          localStorage.setItem(CURRENT_USER_KEY, userId)
+
           // US-029: primo login senza abitudini → crea demo
           const SEED_KEY = `weighbit-seeded-${userId}`
           let finalData = syncedData
