@@ -6,6 +6,8 @@
 
 import { useState } from 'react'
 import { WeightSelector } from './WeightSelector'
+import { Input } from './ui/input'
+import { Label } from './ui/label'
 
 const HABIT_TYPES = [
   { value: 'boolean', label: 'Si/No', description: 'Fatto o non fatto' },
@@ -220,8 +222,8 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
 
       {/* Nome */}
       <div className="form-group">
-        <label htmlFor="habit-name">Nome *</label>
-        <input
+        <Label htmlFor="habit-name">Nome *</Label>
+        <Input
           id="habit-name"
           type="text"
           value={form.name}
@@ -236,7 +238,7 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
       {/* Categoria (US-016) */}
       {categories.length > 0 && (
         <div className="form-group">
-          <label htmlFor="habit-category">Categoria</label>
+          <Label htmlFor="habit-category">Categoria</Label>
           <select
             id="habit-category"
             value={form.categoryId}
@@ -255,7 +257,7 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
 
       {/* Tipo */}
       <div className="form-group">
-        <label>Tipo di tracking</label>
+        <Label>Tipo di tracking</Label>
         <div className="type-selector">
           {HABIT_TYPES.map((type) => (
             <button
@@ -273,7 +275,7 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
 
       {/* Frequenza (US-027) */}
       <div className="form-group">
-        <label>Frequenza</label>
+        <Label>Frequenza</Label>
         <div className="type-selector">
           {TIMEFRAME_OPTIONS.map((tf) => (
             <button
@@ -291,10 +293,10 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
       {/* Target per boolean settimanale/mensile (US-027) */}
       {form.type === 'boolean' && form.timeframe !== 'daily' && (
         <div className="form-group">
-          <label htmlFor="habit-target">
+          <Label htmlFor="habit-target">
             Quante volte {form.timeframe === 'weekly' ? 'a settimana' : 'al mese'}
-          </label>
-          <input
+          </Label>
+          <Input
             id="habit-target"
             type="number"
             min="1"
@@ -314,11 +316,11 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
       {form.type !== 'boolean' && (
         <>
           <div className="form-group">
-            <label htmlFor="habit-target">
+            <Label htmlFor="habit-target">
               Target {form.timeframe === 'daily' ? 'giornaliero' : form.timeframe === 'weekly' ? 'settimanale' : 'mensile'}
-            </label>
+            </Label>
             <div className="target-with-unit">
-              <input
+              <Input
                 id="habit-target"
                 type="number"
                 min="1"
@@ -354,10 +356,10 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
 
       {/* Peso/Importanza */}
       <div className="form-group">
-        <label>
+        <Label>
           Importanza
           <span className="label-hint">Quanto conta per te questa abitudine?</span>
-        </label>
+        </Label>
         <WeightSelector value={form.weight} onChange={(weight) => handleChange('weight', weight)} />
         {errors.weight && <span className="form-error">{errors.weight}</span>}
         <p className="impact-preview">
@@ -367,7 +369,7 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
 
       {/* Colore (opzionale) */}
       <div className="form-group">
-        <label htmlFor="habit-color">Colore (opzionale)</label>
+        <Label htmlFor="habit-color">Colore (opzionale)</Label>
         <div className="color-picker">
           {['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0', '#00BCD4'].map((color) => (
             <button

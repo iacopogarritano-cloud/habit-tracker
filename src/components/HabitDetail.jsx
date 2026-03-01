@@ -13,7 +13,7 @@
 
 import { useState, useMemo } from 'react'
 
-export function HabitDetail({ habit, stats, lastNDays, onClose, onCheckIn }) {
+export function HabitDetail({ habit, stats, lastNDays, onCheckIn }) {
   // Stato per editing di un giorno specifico
   const [editingDay, setEditingDay] = useState(null)
   const [editValue, setEditValue] = useState(0)
@@ -103,16 +103,12 @@ export function HabitDetail({ habit, stats, lastNDays, onClose, onCheckIn }) {
   }
 
   return (
-    <div className="habit-detail-overlay" onClick={onClose}>
-      <div className="habit-detail-modal" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div className="habit-detail-header">
-          <div className="habit-detail-color" style={{ backgroundColor: habit.color }} />
-          <h2>{habit.name}</h2>
-          <button className="btn-close" onClick={onClose}>
-            ×
-          </button>
-        </div>
+    <div>
+      {/* Header — titolo centrato, padding destra per evitare overlap con X del Dialog */}
+      <div className="habit-detail-header" style={{ paddingRight: '32px', justifyContent: 'center' }}>
+        <div className="habit-detail-color" style={{ backgroundColor: habit.color }} />
+        <h2 style={{ textAlign: 'center' }}>{habit.name}</h2>
+      </div>
 
         {/* Stats Cards */}
         {(!habit.timeframe || habit.timeframe === 'daily') ? (
@@ -237,26 +233,25 @@ export function HabitDetail({ habit, stats, lastNDays, onClose, onCheckIn }) {
           </div>
         </div>
 
-        {/* Info abitudine */}
-        <div className="habit-info-section">
-          <p>
-            <strong>Tipo:</strong>{' '}
-            {habit.type === 'boolean' ? 'Sì/No' : habit.type === 'count' ? 'Contatore' : 'Durata'}
-          </p>
-          <p>
-            <strong>Obiettivo:</strong> {habit.target}
-            {habit.unit ? ` ${habit.unit}` : ''}{' '}
-            {habit.timeframe === 'weekly'
-              ? (habit.type === 'boolean' ? 'volte a settimana' : 'a settimana')
-              : habit.timeframe === 'monthly'
-                ? (habit.type === 'boolean' ? 'volte al mese' : 'al mese')
-                : (habit.type !== 'boolean' ? 'al giorno' : '')}
-          </p>
-          <p>
-            <strong>Peso:</strong> {'★'.repeat(habit.weight)}
-            {'☆'.repeat(5 - habit.weight)}
-          </p>
-        </div>
+      {/* Info abitudine */}
+      <div className="habit-info-section">
+        <p>
+          <strong>Tipo:</strong>{' '}
+          {habit.type === 'boolean' ? 'Sì/No' : habit.type === 'count' ? 'Contatore' : 'Durata'}
+        </p>
+        <p>
+          <strong>Obiettivo:</strong> {habit.target}
+          {habit.unit ? ` ${habit.unit}` : ''}{' '}
+          {habit.timeframe === 'weekly'
+            ? (habit.type === 'boolean' ? 'volte a settimana' : 'a settimana')
+            : habit.timeframe === 'monthly'
+              ? (habit.type === 'boolean' ? 'volte al mese' : 'al mese')
+              : (habit.type !== 'boolean' ? 'al giorno' : '')}
+        </p>
+        <p>
+          <strong>Peso:</strong> {'★'.repeat(habit.weight)}
+          {'☆'.repeat(5 - habit.weight)}
+        </p>
       </div>
     </div>
   )

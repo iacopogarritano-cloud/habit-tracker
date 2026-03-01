@@ -1668,9 +1668,7 @@ body {
 }
 
 .dayview-close {
-  position: absolute;
-  right: 16px;
-  top: 16px;
+  margin-left: 8px;
 }
 
 /* Mini-calendario per selezione rapida */
@@ -1965,6 +1963,11 @@ body {
 .dayview-calendar-day-monthly.other-month {
   color: var(--color-text-secondary);
   opacity: 0.4;
+}
+
+.dayview-calendar-day-monthly.other-month.selected {
+  opacity: 1;
+  color: white;
 }
 
 .dayview-calendar-day-monthly.future {
@@ -2348,6 +2351,7 @@ body {
   font-weight: 600;
   color: var(--color-text);
   min-width: 24px;
+  text-align: center;
 }
 
 .reportview-days.week-view .reportview-day-num {
@@ -2374,7 +2378,7 @@ body {
   font-size: 0.75rem;
   color: var(--color-text-secondary);
   min-width: 35px;
-  text-align: right;
+  text-align: center;
 }
 
 .reportview-days.week-view .reportview-day-percent {

@@ -21,6 +21,14 @@ import LoginPage from './components/LoginPage'
 import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
 import { Card, CardContent } from './components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from './components/ui/dialog'
 import './App.css'
 
 function App() {
@@ -365,37 +373,40 @@ function App() {
       )}
 
       {/* Modal conferma eliminazione (US-007) */}
-      {deletingHabit && (
-        <div className="modal-overlay" onClick={() => setDeletingHabit(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title">Eliminare abitudine?</h3>
-            <p className="modal-text">
-              Stai per eliminare "<strong>{deletingHabit.name}</strong>".
-              <br />
+      <Dialog open={!!deletingHabit} onOpenChange={(open) => !open && setDeletingHabit(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminare abitudine?</DialogTitle>
+            <DialogDescription>
+              Stai per eliminare &quot;<strong>{deletingHabit?.name}</strong>&quot;.
               Questa azione è irreversibile e perderai tutto lo storico.
-            </p>
-            <div className="modal-actions">
-              <Button variant="outline" onClick={() => setDeletingHabit(null)}>
-                Annulla
-              </Button>
-              <Button variant="destructive" onClick={handleConfirmDelete}>
-                Elimina
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingHabit(null)}>
+              Annulla
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>
+              Elimina
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal dettaglio abitudine (US-008, US-012) */}
-      {selectedHabit && (
-        <HabitDetail
-          habit={selectedHabit}
-          stats={getStats(selectedHabit.id)}
-          lastNDays={getLastNDays(30)}
-          onClose={() => setSelectedHabit(null)}
-          onCheckIn={checkIn}
-        />
-      )}
+      <Dialog open={!!selectedHabit} onOpenChange={(open) => !open && setSelectedHabit(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          {selectedHabit && (
+            <HabitDetail
+              habit={selectedHabit}
+              stats={getStats(selectedHabit.id)}
+              lastNDays={getLastNDays(30)}
+              onClose={() => setSelectedHabit(null)}
+              onCheckIn={checkIn}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Modal day view con calendario mensile (US-019) */}
       {selectedDate && (
@@ -423,23 +434,26 @@ function App() {
       )}
 
       {/* Modal conferma reset giornata */}
-      {showResetConfirm && (
-        <div className="modal-overlay" onClick={() => setShowResetConfirm(false)}>
-          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
-            <h3>Reset giornata</h3>
-            <p>Vuoi azzerare tutti i progressi di oggi?</p>
-            <p className="confirm-hint">Potrai annullare con il pulsante "Annulla" o Ctrl+Z</p>
-            <div className="confirm-actions">
-              <Button variant="outline" onClick={() => setShowResetConfirm(false)}>
-                No, annulla
-              </Button>
-              <Button variant="destructive" onClick={handleResetDay}>
-                Sì, resetta
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog open={showResetConfirm} onOpenChange={(open) => !open && setShowResetConfirm(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset giornata</DialogTitle>
+            <DialogDescription>
+              Vuoi azzerare tutti i progressi di oggi?
+              <br />
+              Potrai annullare con il pulsante &quot;Annulla&quot; o Ctrl+Z.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowResetConfirm(false)}>
+              No, annulla
+            </Button>
+            <Button variant="destructive" onClick={handleResetDay}>
+              Sì, resetta
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Lista abitudini (US-003) */}
       <section className="habits-section">

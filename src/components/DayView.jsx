@@ -60,8 +60,13 @@ function getCalendarDays(year, month) {
   const totalCells = Math.ceil((paddingBefore + daysInMonth) / 7) * 7
   const paddingAfter = totalCells - paddingBefore - daysInMonth
 
-  // Helper per formattare data
-  const formatDate = (d) => d.toISOString().split('T')[0]
+  // Helper per formattare data in locale — evita shift UTC che sfasa di 1 giorno
+  const formatDate = (d) => {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
 
   // Padding prima (giorni del mese precedente)
   for (let i = paddingBefore - 1; i >= 0; i--) {
