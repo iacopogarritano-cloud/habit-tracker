@@ -18,6 +18,9 @@ import { ToastContainer } from './components/Toast'
 import LoginButton from './components/LoginButton'
 import UserMenu from './components/UserMenu'
 import LoginPage from './components/LoginPage'
+import { Button } from './components/ui/button'
+import { Input } from './components/ui/input'
+import { Card, CardContent } from './components/ui/card'
 import './App.css'
 
 function App() {
@@ -308,32 +311,35 @@ function App() {
         <div className="app-header-row">
           <h1>Weighbit</h1>
           <div className="header-actions">
-            <button
-              className="theme-toggle"
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setShowReportView(true)}
               title="Report periodi"
             >
               📊
-            </button>
-            <button
-              className="theme-toggle"
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleTheme}
               title={isDark ? 'Passa a tema chiaro' : 'Passa a tema scuro'}
             >
               {isDark ? '☀️' : '🌙'}
-            </button>
+            </Button>
             {/* Auth UI (US-021) */}
             {isAuthenticated ? <UserMenu /> : <LoginButton />}
           </div>
         </div>
-        <button
+        <Button
+          variant="outline"
           className="today-date-btn"
           onClick={() => setSelectedDate(today)}
           title="Clicca per vedere il dettaglio del giorno"
         >
           <span className="calendar-icon">📅</span>
           <span>{today}</span>
-        </button>
+        </Button>
       </header>
 
       {/* Error display */}
@@ -369,12 +375,12 @@ function App() {
               Questa azione è irreversibile e perderai tutto lo storico.
             </p>
             <div className="modal-actions">
-              <button className="btn-cancel" onClick={() => setDeletingHabit(null)}>
+              <Button variant="outline" onClick={() => setDeletingHabit(null)}>
                 Annulla
-              </button>
-              <button className="btn-danger" onClick={handleConfirmDelete}>
+              </Button>
+              <Button variant="destructive" onClick={handleConfirmDelete}>
                 Elimina
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -424,12 +430,12 @@ function App() {
             <p>Vuoi azzerare tutti i progressi di oggi?</p>
             <p className="confirm-hint">Potrai annullare con il pulsante "Annulla" o Ctrl+Z</p>
             <div className="confirm-actions">
-              <button className="btn-cancel" onClick={() => setShowResetConfirm(false)}>
+              <Button variant="outline" onClick={() => setShowResetConfirm(false)}>
                 No, annulla
-              </button>
-              <button className="btn-danger" onClick={handleResetDay}>
+              </Button>
+              <Button variant="destructive" onClick={handleResetDay}>
                 Sì, resetta
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -441,18 +447,19 @@ function App() {
           <h2>Le tue abitudini</h2>
           <div className="section-header-actions">
             {!showForm && habits.length > 0 && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setShowResetConfirm(true)}
-                className="btn-reset"
                 title="Azzera tutti i progressi di oggi"
               >
                 🔄 Reset
-              </button>
+              </Button>
             )}
             {!showForm && (
-              <button onClick={() => setShowForm(true)} className="btn-add">
+              <Button size="sm" onClick={() => setShowForm(true)}>
                 + Aggiungi
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -461,7 +468,7 @@ function App() {
         {habits.length > 0 && (
           <div className="filters-bar">
             <div className="search-bar">
-              <input
+              <Input
                 type="text"
                 placeholder="Cerca abitudine..."
                 value={searchQuery}
@@ -526,15 +533,16 @@ function App() {
               {searchQuery && ` per "${searchQuery}"`}
               {categoryFilter && ` in questa categoria`}
             </p>
-            <button
-              className="btn-clear-search"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => {
                 setSearchQuery('')
                 setCategoryFilter('')
               }}
             >
               Rimuovi filtri
-            </button>
+            </Button>
           </div>
         ) : (
           <ul className="habit-list">
@@ -545,9 +553,6 @@ function App() {
 
               // US-027: Progresso di periodo per weekly/monthly
               const periodInfo = !isDaily ? getPeriodCompletion(habit.id) : null
-              const completionPercent = isDaily
-                ? Math.min(100, (currentValue / habit.target) * 100)
-                : periodInfo.percent
               const isCompleted = isDaily
                 ? currentValue >= habit.target
                 : periodInfo.currentValue >= habit.target
@@ -566,11 +571,12 @@ function App() {
               const todayChecked = currentValue >= 1
 
               return (
-                <li
-                  key={habit.id}
+                <li key={habit.id}>
+                <Card
                   className={`habit-card ${isCompleted ? 'completed' : ''}`}
                   onClick={() => setSelectedHabit(habit)}
                 >
+                <CardContent className="habit-card-content">
                   <div className="habit-info">
                     <div className="habit-name-row">
                       <span className="habit-name">{habit.name}</span>
@@ -598,23 +604,34 @@ function App() {
 
                   {/* Progress bar - slider per tutti i tipi (incluso boolean) */}
                   <div
-                    className="habit-progress habit-progress-slider"
+                    className="habit-progress-container"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <input
-                      type="range"
-                      min="0"
-                      max={isDaily ? habit.target : Math.max(habit.target, currentValue)}
-                      value={currentValue}
-                      onChange={(e) => checkIn(habit.id, parseInt(e.target.value, 10))}
-                      className="progress-slider"
-                      aria-label={`Progresso ${habit.name}`}
-                      aria-valuetext={`${isDaily ? currentValue : periodInfo.currentValue} di ${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`}
+                    <div
+                      className="habit-progress habit-progress-slider"
                       style={{
-                        '--progress-color': habit.color || 'var(--color-primary)',
-                        '--progress-percent': `${completionPercent}%`,
+                        background: (() => {
+                          const sliderMax = isDaily ? habit.target : Math.max(habit.target, currentValue)
+                          const pct = sliderMax > 0 ? (currentValue / sliderMax) * 100 : 0
+                          const c = habit.color || 'var(--color-primary)'
+                          return `linear-gradient(to right, ${c} ${pct}%, var(--color-border) ${pct}%)`
+                        })(),
                       }}
-                    />
+                    >
+                      <input
+                        type="range"
+                        min="0"
+                        max={isDaily ? habit.target : Math.max(habit.target, currentValue)}
+                        value={currentValue}
+                        onChange={(e) => checkIn(habit.id, parseInt(e.target.value, 10))}
+                        className="progress-slider"
+                        aria-label={`Progresso ${habit.name}`}
+                        aria-valuetext={`${isDaily ? currentValue : periodInfo.currentValue} di ${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`}
+                        style={{
+                          '--progress-color': habit.color || 'var(--color-primary)',
+                        }}
+                      />
+                    </div>
                     <span className="progress-text">
                       {isDaily
                         ? `${currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`
@@ -624,14 +641,33 @@ function App() {
 
                   <div className="habit-actions" onClick={(e) => e.stopPropagation()}>
                     {habit.type === 'boolean' ? (
-                      /* Checkbox per abitudini boolean - toggle oggi */
-                      <button
-                        onClick={() => checkIn(habit.id, todayChecked ? 0 : 1)}
-                        className={`btn-check ${todayChecked ? 'checked' : ''}`}
-                        title={todayChecked ? 'Segna come non fatto oggi' : 'Segna come fatto oggi'}
-                      >
-                        ✓
-                      </button>
+                      /* Boolean habit: ✓/+ per fare (identici), - per annullare */
+                      <>
+                        <button
+                          onClick={() => checkIn(habit.id, 1)}
+                          className="btn-complete-max"
+                          disabled={todayChecked}
+                          title="Segna come fatto oggi"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={() => checkIn(habit.id, 1)}
+                          className="btn-increment"
+                          disabled={todayChecked}
+                          title="Segna come fatto oggi"
+                        >
+                          +
+                        </button>
+                        <button
+                          onClick={() => checkIn(habit.id, 0)}
+                          className="btn-decrement"
+                          disabled={!todayChecked}
+                          title="Annulla"
+                        >
+                          -
+                        </button>
+                      </>
                     ) : (
                       /* US-024: Max button + US-026: +/- con limit */
                       <>
@@ -649,7 +685,7 @@ function App() {
                           disabled={isDaily ? currentValue >= habit.target : isCompleted}
                           title="Completa al massimo"
                         >
-                          ✓✓
+                          ✓
                         </button>
                         <button
                           onClick={() => handleIncrement(habit.id, currentValue)}
@@ -682,6 +718,8 @@ function App() {
                       ×
                     </button>
                   </div>
+                </CardContent>
+                </Card>
                 </li>
               )
             })}
