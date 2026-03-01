@@ -92,14 +92,9 @@ export function HabitDetail({ habit, stats, lastNDays, onCheckIn }) {
     setEditValue(0)
   }
 
-  // Handler per toggle booleano (per abitudini boolean)
+  // Handler per toggle booleano (per abitudini boolean) — solo aggiorna UI, salva con Salva
   const handleBooleanToggle = () => {
-    const newValue = editValue === 0 ? 1 : 0
-    setEditValue(newValue)
-    if (onCheckIn) {
-      onCheckIn(habit.id, newValue, editingDay)
-    }
-    setEditingDay(null)
+    setEditValue((prev) => (prev === 0 ? 1 : 0))
   }
 
   return (
@@ -110,34 +105,34 @@ export function HabitDetail({ habit, stats, lastNDays, onCheckIn }) {
         <h2 style={{ textAlign: 'center' }}>{habit.name}</h2>
       </div>
 
-        {/* Stats Cards */}
-        {(!habit.timeframe || habit.timeframe === 'daily') ? (
-          <div className="habit-stats-grid">
-            <div className="stat-card">
-              <span className="stat-icon">🔥</span>
-              <span className="stat-value">{stats.currentStreak}</span>
-              <span className="stat-label">Streak attuale</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-icon">🏆</span>
-              <span className="stat-value">{stats.longestStreak}</span>
-              <span className="stat-label">Record streak</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-icon">📊</span>
-              <span className="stat-value">{stats.completionRate}%</span>
-              <span className="stat-label">Ultimi 30 giorni</span>
-            </div>
+      {/* Stats Cards */}
+      {(!habit.timeframe || habit.timeframe === 'daily') ? (
+        <div className="habit-stats-grid">
+          <div className="stat-card">
+            <span className="stat-icon">🔥</span>
+            <span className="stat-value">{stats.currentStreak}</span>
+            <span className="stat-label">Streak attuale</span>
           </div>
-        ) : (
-          <div className="habit-stats-grid">
-            <div className="stat-card">
-              <span className="stat-icon">📊</span>
-              <span className="stat-value">{stats.completionRate}%</span>
-              <span className="stat-label">Ultimi 30 giorni</span>
-            </div>
+          <div className="stat-card">
+            <span className="stat-icon">🏆</span>
+            <span className="stat-value">{stats.longestStreak}</span>
+            <span className="stat-label">Record streak</span>
           </div>
-        )}
+          <div className="stat-card">
+            <span className="stat-icon">📊</span>
+            <span className="stat-value">{stats.completionRate}%</span>
+            <span className="stat-label">Ultimi 30 giorni</span>
+          </div>
+        </div>
+      ) : (
+        <div className="habit-stats-grid">
+          <div className="stat-card">
+            <span className="stat-icon">📊</span>
+            <span className="stat-value">{stats.completionRate}%</span>
+            <span className="stat-label">Ultimi 30 giorni</span>
+          </div>
+        </div>
+      )}
 
         {/* Mini-form per editing giorno (US-012) */}
         {editingDay && (
@@ -167,7 +162,7 @@ export function HabitDetail({ habit, stats, lastNDays, onCheckIn }) {
                   type="number"
                   min="0"
                   value={editValue}
-                  onChange={(e) => setEditValue(Math.max(0, parseInt(e.target.value) || 0))}
+                  onChange={(e) => setEditValue(Math.max(0, parseInt(e.target.value, 10) || 0))}
                   className="edit-value-input"
                 />
                 <button className="btn-increment" onClick={() => setEditValue(editValue + 1)}>
@@ -180,16 +175,14 @@ export function HabitDetail({ habit, stats, lastNDays, onCheckIn }) {
               </div>
             )}
 
-            {habit.type !== 'boolean' && (
-              <div className="day-edit-actions">
-                <button className="btn-cancel-small" onClick={handleCancelEdit}>
-                  Annulla
-                </button>
-                <button className="btn-save-small" onClick={handleSaveEdit}>
-                  Salva
-                </button>
-              </div>
-            )}
+            <div className="day-edit-actions">
+              <button className="btn-cancel-small" onClick={handleCancelEdit}>
+                Annulla
+              </button>
+              <button className="btn-save-small" onClick={handleSaveEdit}>
+                Salva
+              </button>
+            </div>
           </div>
         )}
 

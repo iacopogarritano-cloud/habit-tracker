@@ -329,12 +329,19 @@ body {
 }
 
 /* ============================================
-   SEARCH BAR (US-009)
+   SEARCH BAR E FILTRI (US-009)
    ============================================ */
+
+.filters-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
 
 .search-bar {
   position: relative;
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 
 .search-input {
@@ -389,6 +396,30 @@ body {
   color: var(--color-text-secondary);
   margin-bottom: 12px;
   padding-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-clear-filter {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: var(--color-bg);
+  border-radius: 50%;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.btn-clear-filter:hover {
+  background: var(--color-border);
+  color: var(--color-text);
 }
 
 .btn-clear-search {

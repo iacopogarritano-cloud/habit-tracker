@@ -31,7 +31,7 @@ const MONTH_NAMES = [
   'Novembre',
   'Dicembre',
 ]
-const WEEK_DAYS = ['L', 'M', 'M', 'G', 'V', 'S', 'D']
+const WEEK_DAYS = ['L', 'Ma', 'Me', 'G', 'V', 'S', 'D']
 const DAY_NAMES = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato']
 
 /**
@@ -89,13 +89,17 @@ function getCalendarDays(year, month) {
   return days
 }
 
+// Soglie per colore progresso (corrispondono a --color-success/warning/danger in App.css)
+const PROGRESS_THRESHOLD_HIGH = 70
+const PROGRESS_THRESHOLD_MED = 40
+
 /**
- * Determina il colore in base alla percentuale
+ * Determina il colore in base alla percentuale usando CSS variables
  */
 function getProgressColor(percent) {
-  if (percent >= 70) return '#22c55e' // verde
-  if (percent >= 40) return '#eab308' // giallo
-  return '#ef4444' // rosso
+  if (percent >= PROGRESS_THRESHOLD_HIGH) return 'var(--color-success)'
+  if (percent >= PROGRESS_THRESHOLD_MED) return 'var(--color-warning)'
+  return 'var(--color-danger)'
 }
 
 /**
@@ -305,7 +309,7 @@ export function DayView({
                   disabled={isDayFuture}
                   title={day.date}
                 >
-                  {new Date(day.date).getDate()}
+                  {new Date(day.date + 'T00:00:00').getDate()}
                 </button>
               )
             })}

@@ -202,10 +202,13 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
     onSubmit(habitData)
   }
 
-  // Calculate impact preview
-  // 15 = assunzione di 3 abitudini × peso massimo 5
-  const ASSUMED_TOTAL_WEIGHT = 15
-  const impactPercent = form.weight > 0 ? Math.round((form.weight / ASSUMED_TOTAL_WEIGHT) * 100) : 0
+  // Descrizione qualitativa del peso selezionato
+  const weightLabel =
+    form.weight >= 5 ? 'Fondamentale — conta moltissimo sul punteggio' :
+    form.weight >= 4 ? 'Alta priorità — conta molto sul punteggio' :
+    form.weight >= 3 ? 'Priorità media' :
+    form.weight >= 2 ? 'Bassa priorità — conta poco sul punteggio' :
+                       'Minima — quasi irrilevante sul punteggio'
 
   // Get current unit label for display
   const getCurrentUnitLabel = () => {
@@ -293,11 +296,11 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
       {/* Target per boolean settimanale/mensile (US-027) */}
       {form.type === 'boolean' && form.timeframe !== 'daily' && (
         <div className="form-group">
-          <Label htmlFor="habit-target">
+          <Label htmlFor="habit-target-boolean">
             Quante volte {form.timeframe === 'weekly' ? 'a settimana' : 'al mese'}
           </Label>
           <Input
-            id="habit-target"
+            id="habit-target-boolean"
             type="number"
             min="1"
             max={form.timeframe === 'weekly' ? 7 : 31}
@@ -316,12 +319,12 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
       {form.type !== 'boolean' && (
         <>
           <div className="form-group">
-            <Label htmlFor="habit-target">
+            <Label htmlFor="habit-target-count">
               Target {form.timeframe === 'daily' ? 'giornaliero' : form.timeframe === 'weekly' ? 'settimanale' : 'mensile'}
             </Label>
             <div className="target-with-unit">
               <Input
-                id="habit-target"
+                id="habit-target-count"
                 type="number"
                 min="1"
                 max="9999"
@@ -356,15 +359,11 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
 
       {/* Peso/Importanza */}
       <div className="form-group">
-        <Label>
-          Importanza
-          <span className="label-hint">Quanto conta per te questa abitudine?</span>
-        </Label>
+        <Label>Importanza</Label>
+        <p className="label-hint">Quanto conta per te questa abitudine?</p>
         <WeightSelector value={form.weight} onChange={(weight) => handleChange('weight', weight)} />
         {errors.weight && <span className="form-error">{errors.weight}</span>}
-        <p className="impact-preview">
-          Impatto sul progresso: ~{impactPercent}% (se hai 3 abitudini di peso medio)
-        </p>
+        <p className="impact-preview">{weightLabel}</p>
       </div>
 
       {/* Colore (opzionale) */}

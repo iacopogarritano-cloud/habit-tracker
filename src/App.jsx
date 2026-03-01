@@ -93,6 +93,9 @@ function App() {
   const [showReportView, setShowReportView] = useState(false)
   // State per conferma reset giornata
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  // State per conferma nome duplicato
+  const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false)
+  const [pendingDuplicateData, setPendingDuplicateData] = useState(null)
 
   // State per toast notifications (US-022)
   const [toasts, setToasts] = useState([])
@@ -225,19 +228,30 @@ function App() {
 
       // Mostra toast con possibilità di annullare
       addToast(`Abitudine "${habitData.name}" modificata`, 'info', true, 5000)
+      setShowForm(false)
     } else {
       // Crea nuova abitudine - controlla nome duplicato
       const nameExists = habits.some(
         (h) => h.name.trim().toLowerCase() === habitData.name.trim().toLowerCase()
       )
       if (nameExists) {
-        const confirmed = window.confirm(
-          `Esiste già un'abitudine chiamata "${habitData.name}".\nVuoi crearla comunque?`
-        )
-        if (!confirmed) return
+        // Mostra dialog shadcn invece di window.confirm
+        setPendingDuplicateData(habitData)
+        setShowDuplicateConfirm(true)
+        return
       }
       addHabit(habitData)
+      setShowForm(false)
     }
+  }
+
+  // Handler per confermare creazione di abitudine con nome duplicato
+  const handleConfirmDuplicate = () => {
+    if (pendingDuplicateData) {
+      addHabit(pendingDuplicateData)
+      setPendingDuplicateData(null)
+    }
+    setShowDuplicateConfirm(false)
     setShowForm(false)
   }
 
@@ -396,6 +410,10 @@ function App() {
       {/* Modal dettaglio abitudine (US-008, US-012) */}
       <Dialog open={!!selectedHabit} onOpenChange={(open) => !open && setSelectedHabit(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          {/* DialogTitle visually hidden: richiesto da Radix per aria-labelledby */}
+          <DialogTitle className="sr-only">
+            {selectedHabit?.name ?? 'Dettaglio abitudine'}
+          </DialogTitle>
           {selectedHabit && (
             <HabitDetail
               habit={selectedHabit}
@@ -451,6 +469,28 @@ function App() {
             <Button variant="destructive" onClick={handleResetDay}>
               Sì, resetta
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal conferma nome duplicato */}
+      <Dialog
+        open={showDuplicateConfirm}
+        onOpenChange={(open) => !open && setShowDuplicateConfirm(false)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nome già esistente</DialogTitle>
+            <DialogDescription>
+              Esiste già un&apos;abitudine chiamata &quot;
+              <strong>{pendingDuplicateData?.name}</strong>&quot;. Vuoi crearla comunque?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDuplicateConfirm(false)}>
+              Annulla
+            </Button>
+            <Button onClick={handleConfirmDuplicate}>Crea comunque</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -569,7 +609,7 @@ function App() {
               const periodInfo = !isDaily ? getPeriodCompletion(habit.id) : null
               const isCompleted = isDaily
                 ? currentValue >= habit.target
-                : periodInfo.currentValue >= habit.target
+                : (periodInfo?.currentValue ?? 0) >= habit.target
 
               // Label periodo per display
               const periodLabel = habit.timeframe === 'weekly'
@@ -640,7 +680,7 @@ function App() {
                         onChange={(e) => checkIn(habit.id, parseInt(e.target.value, 10))}
                         className="progress-slider"
                         aria-label={`Progresso ${habit.name}`}
-                        aria-valuetext={`${isDaily ? currentValue : periodInfo.currentValue} di ${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`}
+                        aria-valuetext={`${isDaily ? currentValue : (periodInfo?.currentValue ?? 0)} di ${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`}
                         style={{
                           '--progress-color': habit.color || 'var(--color-primary)',
                         }}
@@ -649,7 +689,7 @@ function App() {
                     <span className="progress-text">
                       {isDaily
                         ? `${currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`
-                        : `${periodInfo.currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''} ${periodLabel}`}
+                        : `${periodInfo?.currentValue ?? 0}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''} ${periodLabel}`}
                     </span>
                   </div>
 
@@ -691,7 +731,7 @@ function App() {
                               checkIn(habit.id, habit.target)
                             } else {
                               // Per weekly/monthly: completa il remaining
-                              const remaining = habit.target - periodInfo.currentValue + currentValue
+                              const remaining = habit.target - (periodInfo?.currentValue ?? 0) + currentValue
                               checkIn(habit.id, Math.max(currentValue, remaining))
                             }
                           }}
