@@ -29,34 +29,6 @@ Story Points = (Business Value × Time Criticality × RROE) / Job Size
 
 ## User Stories Attive
 
-### US-013: Polish UI con shadcn/ui
-**Priority:** Should Have (SP: 4.0)
-
-**User Story (Extended Format):**
-- **As a**: utente che vuole un'esperienza visiva moderna
-- **When**: uso l'app quotidianamente
-- **In**: tutte le schermate
-- **Since**: un design curato aumenta la percezione di qualità
-- **I want to**: vedere un'interfaccia moderna con componenti shadcn/ui
-- **To/So that**: l'app abbia un aspetto professionale
-
-**Acceptance Criteria:**
-- [ ] Installato e configurato shadcn/ui
-- [ ] Buttons sostituiti con componenti shadcn
-- [ ] Cards (habit cards) con design shadcn
-- [ ] Form inputs con componenti shadcn
-- [ ] Modal/Dialog con componenti shadcn
-- [ ] Dark mode support (gratis con shadcn)
-
-**Technical Notes:**
-- Richiede Tailwind CSS come dipendenza
-- shadcn/ui è copy-paste, non npm install
-- Componenti prioritari: Button, Card, Input, Label, Dialog, Progress
-
-**WSJF:** BV=5, TC=1, RROE=2, JS=3 → SP=4.0
-
----
-
 ### US-011: Esporta dati in JSON/CSV
 **Priority:** Won't Have (SP: 0.8)
 
@@ -196,8 +168,8 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 - Could Have: US-DEV-003 (US-DEV-004 ✅)
 - Won't Have: US-DEV-005, US-DEV-006
 
-**MVP Core + Report + UX + Cloud Sync + Multi-Timeframe: COMPLETATO**
-**Prossimo obiettivo:** US-013 (shadcn/ui Polish)
+**MVP Core + Report + UX + Cloud Sync + Multi-Timeframe + shadcn/ui Polish: COMPLETATO**
+**Prossimo obiettivo:** Merge feature/shadcn → main, poi US-V2-003 (Dashboard multi-timeframe)
 
 ---
 
@@ -221,5 +193,5 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
 ---
 
-**Status:** MVP Core + Report Completato
-**Next Action:** US-021 (Cloud Sync)
+**Status:** MVP Core + Report + Cloud Sync + shadcn/ui completato
+**Next Action:** Merge feature/shadcn → main + US-V2-003

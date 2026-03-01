@@ -1,7 +1,7 @@
 # Product Backlog - User Stories Completate
 
 > **Archivio:** User stories completate dal backlog principale
-> **Ultima migrazione:** 2026-02-22
+> **Ultima migrazione:** 2026-03-01
 
 ---
 
@@ -466,3 +466,34 @@
 - [x] Badge "mese" sulla card
 - [x] Migration: habit esistenti mantengono timeframe:'daily'
 - [x] Migration: type:'duration' convertito in 'count' automaticamente
+
+---
+
+## Polish UI con shadcn/ui (Sessioni 2026-03-01)
+
+### US-013: Polish UI con shadcn/ui ✅ (2026-03-01)
+
+**Priority:** Should Have (SP: 4.0)
+
+**User Story:**
+- **As a**: utente che vuole un'esperienza visiva moderna
+- **I want to**: vedere un'interfaccia moderna con componenti shadcn/ui
+- **So that**: l'app abbia un aspetto professionale
+
+**Acceptance Criteria:**
+- [x] Installato e configurato shadcn/ui (Tailwind v4 + radix-ui)
+- [x] Buttons sostituiti con componenti shadcn
+- [x] Cards (habit cards) con design shadcn
+- [x] Form inputs con componenti shadcn (Label + Input in HabitForm)
+- [x] Modal/Dialog con componenti shadcn (elimina, reset, HabitDetail)
+- [x] Dark mode support (gratis con shadcn)
+
+**Bug Fix extra inclusi:**
+- Fix X button dialog (override App.css con inline style)
+- Fix padding dialog (inline style bypass Tailwind v4 JIT)
+- Fix allineamento report settimanale (text-align center su num e %)
+- Fix freccia → calendario DayView (rimossa position:absolute dalla X)
+- Fix giorno altro-mese selezionato (opacity:1 + color:white)
+- Fix timezone bug DayView (formatDate usa metodi locali invece di toISOString)
+
+**WSJF:** BV=5, TC=1, RROE=2, JS=3 → SP=4.0
