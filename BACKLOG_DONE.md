@@ -335,6 +335,39 @@
 
 ## Developer Stories (Completate)
 
+### US-DEV-002: Unit Tests per Storage Functions ✅ (2026-03-02)
+**Priority:** Should Have (SP: 3.0)
+
+**Acceptance Criteria completati:**
+- [x] Test per `getWeightedProgressForDate()` — 6 test (zero habits, no check-ins, hasData flag, weighted calc, 100%, partial count)
+- [x] Test per `getPeriodProgressForDate()` — testata indirettamente via `getWeeklyProgressForDate` e `getMonthlyProgressForDate` (funzione privata, non esportata)
+- [x] Test per `getMonthDates()` e `getWeekDates()` (sostituti di `getCalendarDays` che non esiste in storage.js) — 7 test
+- [x] Test per edge cases (leap year febbraio, settimana cross-mese, abitudini parziali)
+- [x] 17 nuovi test aggiunti, totale storage.test.js: 33 test ✅
+
+**WSJF:** BV=5, TC=2, RROE=1, JS=3 → SP=3.0
+
+---
+
+### US-DEV-003: Component Tests per UI Critica ✅ (2026-03-02)
+**Priority:** Could Have (SP: 2.0)
+
+**Acceptance Criteria completati:**
+- [x] Test per ReportCards — 5 test (titoli, percentuali, subtitle today, weekly/monthly, zero%)
+- [x] Test per HabitForm — 10 test (create mode: title, submit text, empty error, no onSubmit, valid submit, onCancel; edit mode: title, submit text, prefill, updated name)
+- [x] Test per DayView — 7 test (month/year header, formatted date, habit names, weekday labels, onClose, previous month nav, next month nav)
+- [x] Test per interazioni click/input — fireEvent su pulsanti close, navigazione mese, form submit
+
+**Note tecniche:**
+- Pattern `makeProps()` factory per DayView (tutti i prop via prop, nessun context)
+- `getAllByText` invece di `getByText` per testo che appare in più elementi DOM
+- Import come named export: `{ DayView }`, `{ HabitForm }`, default per `ReportCards`
+- 22 nuovi test totali (3 file nuovi), tutti ✅
+
+**WSJF:** BV=4, TC=1, RROE=1, JS=4 → SP=2.0
+
+---
+
 ### US-DEV-001: Setup Test Framework (Vitest)
 **Priority:** Should Have (SP: 4.0) — **COMPLETATA**
 
@@ -412,7 +445,7 @@
 
 ## Summary
 
-**Total Completate:** 24 User Stories (22 funzionali + 2 developer)
+**Total Completate:** 31 User Stories (27 funzionali + 4 developer)
 - Must Have: 9 (US-001 → US-005, US-021, US-022, US-024, US-026)
 - Should Have: 11 funzionali + 1 dev (US-DEV-001)
 - Could Have: 3 funzionali + 1 dev (US-DEV-004)

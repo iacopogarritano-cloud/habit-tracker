@@ -52,38 +52,37 @@ Story Points = (Business Value × Time Criticality × RROE) / Job Size
 
 ---
 
+### US-030: Segnalazione Bug In-App
+**Priority:** Should Have (SP: 4.0)
+**Target:** Utente beta / amici e parenti del developer
+
+**User Story:**
+- **As a**: utente beta che trova un problema nell'app
+- **I want to**: inviare una segnalazione in-app senza dover scrivere un'email
+- **So that**: il developer possa ricevere feedback immediato e correggere il bug velocemente
+
+**Contesto:**
+Weighbit è in fase MVP e sta per essere condiviso con amici/parenti come tester. Un canale semplice di bug reporting aumenta la quantità e qualità di feedback raccolti senza friction.
+
+**Acceptance Criteria:**
+- [ ] Pulsante "Segnala un problema" accessibile (es. in fondo alla dashboard o nel menu)
+- [ ] Click apre un dialog/form con textarea (descrizione problema) e bottone "Invia"
+- [ ] La segnalazione viene salvata in una tabella Supabase `bug_reports` con: messaggio, userId (se loggato), timestamp, user_agent
+- [ ] Feedback visivo all'utente dopo invio ("Grazie! Abbiamo ricevuto la tua segnalazione")
+- [ ] Gestione offline: se non connessi → messaggio di errore chiaro
+- [ ] Per utenti non loggati: possibilità di aggiungere nome/email opzionale
+
+**Technical Notes:**
+- Tabella Supabase `bug_reports`: `id`, `user_id` (nullable FK), `message` (text), `contact` (text, nullable), `user_agent` (text), `app_version` (text), `created_at` (timestamp)
+- Row Level Security: INSERT pubblico (anche utenti non loggati), SELECT solo per admin (service role)
+- Nessuna UI admin necessaria in V1 — si legge direttamente dalla dashboard Supabase
+- `app_version`: valore hardcoded dal `package.json` (o variabile d'ambiente)
+
+**WSJF:** BV=5, TC=3, RROE=2, JS=3 → SP=10.0 (Must Have per fase beta)
+
+---
+
 ## Developer Stories
-
-### US-DEV-002: Unit Tests per Storage Functions
-**Priority:** Should Have (SP: 3.0)
-**Target:** Developer
-**Depends on:** US-DEV-001
-
-**Acceptance Criteria:**
-- [ ] Test per `getWeightedProgressForDate()`
-- [ ] Test per `getPeriodProgressForDate()`
-- [ ] Test per `getCalendarDays()`
-- [ ] Test per edge cases
-- [ ] Coverage >= 80% per storage.js
-
-**WSJF:** BV=5, TC=2, RROE=1, JS=3 → SP=3.0
-
----
-
-### US-DEV-003: Component Tests per UI Critica
-**Priority:** Could Have (SP: 2.0)
-**Target:** Developer
-**Depends on:** US-DEV-001
-
-**Acceptance Criteria:**
-- [ ] Test per DayView
-- [ ] Test per HabitForm
-- [ ] Test per ReportCards
-- [ ] Test per interazioni click/input
-
-**WSJF:** BV=4, TC=1, RROE=1, JS=4 → SP=2.0
-
----
 
 ### US-DEV-005: CI/CD Pipeline (GitHub Actions)
 **Priority:** Won't Have (V2)
@@ -197,23 +196,24 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
 ## Backlog Summary
 
-**Total User Stories:** 33 (27 funzionali + 6 developer)
-**Completate:** 28 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
-**Rimanenti:** 5 (1 funzionale + 4 developer)
+**Total User Stories:** 36 (28 funzionali + 8 developer)
+**Completate:** 31 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
+**Rimanenti:** 5 (3 funzionali + 2 developer)
 
 **Status:**
 - Must Have: ✅ US-021 (Cloud Sync), ✅ US-028 (Fix isolamento dati) - COMPLETATE
-- Should Have: US-013 (shadcn/ui)
+- Should Have: ✅ US-013 (shadcn/ui), US-030 (bug report — pending Supabase setup)
 - Could Have: ✅ tutte completate (incl. US-029 demo habits)
 - Won't Have: US-011, US-014
 
 **Developer Stories:**
-- Should Have: US-DEV-002 (US-DEV-001 ✅)
-- Could Have: US-DEV-003 (US-DEV-004 ✅)
+- Should Have: ✅ US-DEV-002 (storage tests), ✅ US-DEV-003 (component tests)
 - Won't Have: US-DEV-005, US-DEV-006
 
+**Test totali: 55 (33 storage + 22 componenti) — tutti ✅**
+
 **MVP Core + Report + UX + Cloud Sync + Multi-Timeframe + shadcn/ui Polish: COMPLETATO**
-**Prossimo obiettivo:** Merge feature/shadcn → main, poi US-V2-003 (Dashboard multi-timeframe)
+**Prossimo obiettivo:** US-V2-003 (Dashboard multi-timeframe) o US-V2-004 (Heatmap)
 
 ---
 

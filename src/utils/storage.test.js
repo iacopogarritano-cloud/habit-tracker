@@ -7,6 +7,11 @@ import {
   getHabitsForDate,
   getWeightedDailyProgress,
   getCheckIn,
+  getWeightedProgressForDate,
+  getWeeklyProgressForDate,
+  getMonthlyProgressForDate,
+  getMonthDates,
+  getWeekDates,
 } from './storage'
 
 describe('generateId', () => {
@@ -254,5 +259,211 @@ describe('getCheckIn', () => {
     const checkIn = getCheckIn(data, 'h1', '2026-01-15')
 
     expect(checkIn).toBeNull()
+  })
+})
+
+// ============================================
+// getWeightedProgressForDate - Progresso pesato per data storica
+// ============================================
+
+describe('getWeightedProgressForDate', () => {
+  it('should return all zeros when no habits exist for that date', () => {
+    const data = { habits: [], checkIns: [] }
+
+    const result = getWeightedProgressForDate(data, '2026-01-15')
+
+    expect(result).toEqual({ percent: 0, completed: 0, total: 0, hasData: false })
+  })
+
+  it('should return hasData:false when habits exist but no check-ins', () => {
+    const data = {
+      habits: [{ id: 'h1', name: 'Test', weight: 3, target: 1, createdAt: '2026-01-01T00:00:00Z' }],
+      checkIns: [],
+    }
+
+    const result = getWeightedProgressForDate(data, '2026-01-15')
+
+    expect(result.hasData).toBe(false)
+    expect(result.percent).toBe(0)
+    expect(result.total).toBe(1)
+  })
+
+  it('should return hasData:true when at least one check-in exists', () => {
+    const data = {
+      habits: [{ id: 'h1', weight: 3, target: 1, createdAt: '2026-01-01T00:00:00Z' }],
+      checkIns: [{ habitId: 'h1', date: '2026-01-15', value: 1 }],
+    }
+
+    const result = getWeightedProgressForDate(data, '2026-01-15')
+
+    expect(result.hasData).toBe(true)
+  })
+
+  it('should calculate weighted progress correctly', () => {
+    // Habit 1: peso 5, completata → 100%
+    // Habit 2: peso 1, nessun check-in → 0%
+    // Formula: (5×100 + 1×0) / (5+1) = 83.3%
+    const data = {
+      habits: [
+        { id: 'h1', weight: 5, target: 1, createdAt: '2026-01-01T00:00:00Z' },
+        { id: 'h2', weight: 1, target: 1, createdAt: '2026-01-01T00:00:00Z' },
+      ],
+      checkIns: [{ habitId: 'h1', date: '2026-01-15', value: 1 }],
+    }
+
+    const result = getWeightedProgressForDate(data, '2026-01-15')
+
+    expect(result.percent).toBeCloseTo(83.3, 1)
+    expect(result.completed).toBe(1)
+    expect(result.total).toBe(2)
+    expect(result.hasData).toBe(true)
+  })
+
+  it('should return 100% when all habits are completed', () => {
+    const data = {
+      habits: [
+        { id: 'h1', weight: 3, target: 1, createdAt: '2026-01-01T00:00:00Z' },
+        { id: 'h2', weight: 2, target: 1, createdAt: '2026-01-01T00:00:00Z' },
+      ],
+      checkIns: [
+        { habitId: 'h1', date: '2026-01-15', value: 1 },
+        { habitId: 'h2', date: '2026-01-15', value: 1 },
+      ],
+    }
+
+    const result = getWeightedProgressForDate(data, '2026-01-15')
+
+    expect(result.percent).toBe(100)
+    expect(result.completed).toBe(2)
+    expect(result.hasData).toBe(true)
+  })
+
+  it('should handle partial completion of a count habit', () => {
+    // Count habit: target 4, fatto solo 2 → 50%
+    const data = {
+      habits: [{ id: 'h1', weight: 2, target: 4, createdAt: '2026-01-01T00:00:00Z' }],
+      checkIns: [{ habitId: 'h1', date: '2026-01-15', value: 2 }],
+    }
+
+    const result = getWeightedProgressForDate(data, '2026-01-15')
+
+    expect(result.percent).toBe(50)
+    expect(result.completed).toBe(0) // non completata al 100%
+    expect(result.hasData).toBe(true)
+  })
+})
+
+// ============================================
+// getWeeklyProgressForDate / getMonthlyProgressForDate
+// (testano indirettamente getPeriodProgressForDate, che è privata)
+// ============================================
+
+describe('getWeeklyProgressForDate', () => {
+  it('should return totalDays:7 and 0 daysWithData when no habits exist', () => {
+    const data = { habits: [], checkIns: [] }
+
+    const result = getWeeklyProgressForDate(data, '2026-01-15')
+
+    expect(result.totalDays).toBe(7)
+    expect(result.percent).toBe(0)
+    expect(result.daysWithData).toBe(0)
+    expect(result.dailyBreakdown).toHaveLength(7)
+  })
+
+  it('should have correct shape in each dailyBreakdown entry', () => {
+    const data = { habits: [], checkIns: [] }
+
+    const result = getWeeklyProgressForDate(data, '2026-01-15')
+
+    for (const entry of result.dailyBreakdown) {
+      expect(entry).toHaveProperty('date')
+      expect(entry).toHaveProperty('percent')
+      expect(entry).toHaveProperty('hasData')
+      expect(entry.date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    }
+  })
+
+  it('should average across all days where a habit exists', () => {
+    // 1 habit attiva per tutta la settimana, solo 1 giorno ha check-in al 100%
+    // Tutti e 7 i giorni contano (habit.total > 0 per ognuno)
+    // Media: 100 / 7 ≈ 14.3%
+    const data = {
+      habits: [{ id: 'h1', weight: 1, target: 1, createdAt: '2026-01-01T00:00:00Z' }],
+      checkIns: [{ habitId: 'h1', date: '2026-01-15', value: 1 }],
+    }
+
+    const result = getWeeklyProgressForDate(data, '2026-01-15')
+
+    expect(result.daysWithData).toBe(7)
+    expect(result.percent).toBeCloseTo(100 / 7, 1)
+  })
+})
+
+describe('getMonthlyProgressForDate', () => {
+  it('should return totalDays:30 and 30 entries in dailyBreakdown', () => {
+    const data = { habits: [], checkIns: [] }
+
+    const result = getMonthlyProgressForDate(data, '2026-01-15')
+
+    expect(result.totalDays).toBe(30)
+    expect(result.dailyBreakdown).toHaveLength(30)
+  })
+})
+
+// ============================================
+// getMonthDates / getWeekDates - Funzioni calendario
+// (corrispondono a "getCalendarDays" nel backlog — funzione non presente,
+//  queste sono le reali funzioni calendario esportate da storage.js)
+// ============================================
+
+describe('getMonthDates', () => {
+  it('should return 31 dates for January', () => {
+    const dates = getMonthDates(2026, 1)
+
+    expect(dates).toHaveLength(31)
+  })
+
+  it('should return 28 dates for February in a non-leap year', () => {
+    const dates = getMonthDates(2026, 2)
+
+    expect(dates).toHaveLength(28)
+  })
+
+  it('should return 29 dates for February in a leap year', () => {
+    const dates = getMonthDates(2024, 2)
+
+    expect(dates).toHaveLength(29)
+  })
+
+  it('should return dates in YYYY-MM-DD format matching the correct month', () => {
+    const dates = getMonthDates(2026, 3) // Marzo 2026
+
+    for (const date of dates) {
+      expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      expect(date.startsWith('2026-03')).toBe(true)
+    }
+  })
+})
+
+describe('getWeekDates', () => {
+  it('should return exactly 7 dates', () => {
+    const dates = getWeekDates('2026-02-16') // Lunedì
+
+    expect(dates).toHaveLength(7)
+  })
+
+  it('should start from the provided date and span 7 consecutive days', () => {
+    const dates = getWeekDates('2026-02-16') // Lunedì 16 febbraio
+
+    expect(dates[0]).toBe('2026-02-16')
+    expect(dates[6]).toBe('2026-02-22') // Domenica 22 febbraio
+  })
+
+  it('should return all dates in YYYY-MM-DD format', () => {
+    const dates = getWeekDates('2026-02-16')
+
+    for (const date of dates) {
+      expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    }
   })
 })
