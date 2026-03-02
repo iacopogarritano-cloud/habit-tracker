@@ -235,11 +235,6 @@ export function DayView({
     }
   }
 
-  // Handler per toggle boolean (usa valore del giorno, non del periodo)
-  const handleBooleanToggle = (habitId, currentValue) => {
-    onCheckIn(habitId, currentValue >= 1 ? 0 : 1, date)
-  }
-
   return (
     <div className="dayview-overlay" onClick={onClose}>
       <div className="dayview-modal dayview-modal-calendar" onClick={(e) => e.stopPropagation()}>
@@ -349,46 +344,101 @@ export function DayView({
                     <span className="dayview-habit-name">{habit.name}</span>
                   </div>
 
-                  <div className="dayview-habit-progress">
+                  {/* Progress slider — identico alla dashboard */}
+                  <div
+                    className="habit-progress-container"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <div
-                      className="dayview-progress-bar"
+                      className="habit-progress habit-progress-slider"
                       style={{
-                        width: `${habit.completionPercent}%`,
-                        backgroundColor: habit.color || 'var(--color-primary)',
+                        background: (() => {
+                          const isDaily = !habit.timeframe || habit.timeframe === 'daily'
+                          const sliderMax = isDaily
+                            ? habit.target
+                            : Math.max(habit.target, habit.currentValue)
+                          const pct = sliderMax > 0 ? (habit.currentValue / sliderMax) * 100 : 0
+                          const c = habit.color || 'var(--color-primary)'
+                          return `linear-gradient(to right, ${c} ${pct}%, var(--color-border) ${pct}%)`
+                        })(),
                       }}
-                    />
-                    <span className="dayview-progress-text">
+                    >
+                      <input
+                        type="range"
+                        min="0"
+                        max={(() => {
+                          const isDaily = !habit.timeframe || habit.timeframe === 'daily'
+                          return isDaily
+                            ? habit.target
+                            : Math.max(habit.target, habit.currentValue)
+                        })()}
+                        value={habit.currentValue}
+                        onChange={(e) => onCheckIn(habit.id, parseInt(e.target.value, 10), date)}
+                        className="progress-slider"
+                        aria-label={`Progresso ${habit.name}`}
+                        style={{ '--progress-color': habit.color || 'var(--color-primary)' }}
+                      />
+                    </div>
+                    <span className="progress-text">
                       {habit.periodInfo
-                        ? `${habit.periodInfo.currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''} ${habit.timeframe === 'weekly' ? 'sett.' : 'mese'}`
+                        ? `${habit.periodInfo.currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''} ${habit.timeframe === 'weekly' ? 'questa sett.' : 'questo mese'}`
                         : `${habit.currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`}
                     </span>
                   </div>
 
                   {!isFuture && (
-                    <div className="dayview-habit-actions">
+                    <div className="dayview-habit-actions" onClick={(e) => e.stopPropagation()}>
                       {habit.type === 'boolean' ? (
-                        <button
-                          onClick={() => handleBooleanToggle(habit.id, habit.currentValue)}
-                          className={`btn-check ${habit.currentValue >= 1 ? 'checked' : ''}`}
-                          title={habit.currentValue >= 1 ? 'Segna come non fatto' : 'Segna come fatto'}
-                        >
-                          ✓
-                        </button>
-                      ) : (
-                        /* US-024: Max button + US-026: +/- con limit */
+                        /* Boolean: identico alla dashboard (✓, +, -) */
                         <>
                           <button
-                            onClick={() => onCheckIn(habit.id, habit.target, date)}
+                            onClick={() => onCheckIn(habit.id, 1, date)}
                             className="btn-complete-max"
-                            disabled={habit.currentValue >= habit.target}
+                            disabled={habit.currentValue >= 1}
+                            title="Segna come fatto"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={() => onCheckIn(habit.id, 1, date)}
+                            className="btn-increment"
+                            disabled={habit.currentValue >= 1}
+                            title="Segna come fatto"
+                          >
+                            +
+                          </button>
+                          <button
+                            onClick={() => onCheckIn(habit.id, 0, date)}
+                            className="btn-decrement"
+                            disabled={habit.currentValue === 0}
+                          >
+                            -
+                          </button>
+                        </>
+                      ) : (
+                        /* Count/duration: identico alla dashboard (✓, +, -) */
+                        <>
+                          <button
+                            onClick={() => {
+                              const isDaily = !habit.timeframe || habit.timeframe === 'daily'
+                              if (isDaily) {
+                                onCheckIn(habit.id, habit.target, date)
+                              } else {
+                                const remaining =
+                                  habit.target - (habit.periodInfo?.currentValue ?? 0) + habit.currentValue
+                                onCheckIn(habit.id, Math.max(habit.currentValue, remaining), date)
+                              }
+                            }}
+                            className="btn-complete-max"
+                            disabled={habit.isCompleted}
                             title="Completa al massimo"
                           >
-                            ✓✓
+                            ✓
                           </button>
                           <button
                             onClick={() => handleIncrement(habit.id, habit.currentValue)}
                             className="btn-increment"
-                            disabled={habit.currentValue >= habit.target}
+                            disabled={habit.isCompleted}
                           >
                             +
                           </button>
