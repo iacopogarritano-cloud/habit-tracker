@@ -628,6 +628,10 @@ function App() {
                 <li key={habit.id}>
                 <Card
                   className={`habit-card ${isCompleted ? 'completed' : ''}`}
+                  style={{
+                    borderLeftColor: habit.color || undefined,
+                    ...(isCompleted && habit.color ? { '--habit-completed-bg': `${habit.color}1a` } : {}),
+                  }}
                   onClick={() => setSelectedHabit(habit)}
                 >
                 {!isDaily && (

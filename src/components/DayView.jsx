@@ -338,7 +338,10 @@ export function DayView({
                 <li
                   key={habit.id}
                   className={`dayview-habit-card ${habit.isCompleted ? 'completed' : ''}`}
-                  style={{ borderLeftColor: habit.color || 'transparent' }}
+                  style={{
+                    borderLeftColor: habit.color || 'transparent',
+                    ...(habit.isCompleted && habit.color ? { '--habit-completed-bg': `${habit.color}1a` } : {}),
+                  }}
                 >
                   {habit.timeframe && habit.timeframe !== 'daily' && (
                     <span className="habit-timeframe-badge">
