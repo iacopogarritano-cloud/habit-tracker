@@ -13,6 +13,7 @@ import { HabitForm } from './components/HabitForm'
 import { HabitDetail } from './components/HabitDetail'
 import { DayView } from './components/DayView'
 import { ReportView } from './components/ReportView'
+import { HeatmapView } from './components/HeatmapView'
 import { ReportCards } from './components/ReportCards'
 import { ToastContainer } from './components/Toast'
 import LoginButton from './components/LoginButton'
@@ -91,6 +92,8 @@ function App() {
   const [categoryFilter, setCategoryFilter] = useState('')
   // State per report view (US-020)
   const [showReportView, setShowReportView] = useState(false)
+  // State per heatmap view (US-V2-004)
+  const [showHeatmapView, setShowHeatmapView] = useState(false)
   // State per conferma reset giornata
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   // State per conferma nome duplicato
@@ -344,6 +347,14 @@ function App() {
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => setShowHeatmapView(true)}
+              title="Heatmap abitudini"
+            >
+              🟩
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleTheme}
               title={isDark ? 'Passa a tema chiaro' : 'Passa a tema scuro'}
             >
@@ -448,6 +459,19 @@ function App() {
           onClose={() => setShowReportView(false)}
           getCalendarMonthProgress={getCalendarMonthProgress}
           getCalendarWeekProgress={getCalendarWeekProgress}
+        />
+      )}
+
+      {/* Modal heatmap view (US-V2-004) */}
+      {showHeatmapView && (
+        <HeatmapView
+          habits={habits}
+          getPeriodCompletion={getPeriodCompletion}
+          onClose={() => setShowHeatmapView(false)}
+          onSelectDate={(date) => {
+            setSelectedDate(date)
+            setShowHeatmapView(false)
+          }}
         />
       )}
 

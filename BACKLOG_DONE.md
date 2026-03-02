@@ -1,7 +1,7 @@
 # Product Backlog - User Stories Completate
 
 > **Archivio:** User stories completate dal backlog principale
-> **Ultima migrazione:** 2026-03-01
+> **Ultima migrazione:** 2026-03-02
 
 ---
 
@@ -10,6 +10,25 @@
 - **SP:** Story Points (WSJF)
 - **Framework:** WSJF (Weighted Shortest Job First)
 - **Formula:** `Story Points = (Business Value × Time Criticality × RROE) / Job Size`
+
+---
+
+## V2 Features (Completate - 2026-03-02)
+
+### US-V2-004: Vista Heatmap Completamento
+**Priority:** V2 Should Have — **COMPLETATA 2026-03-02**
+- Vista modale (overlay) accessibile dall'header con bottone 🟩
+- Heatmap **per abitudine** (non aggregata) con 3 timeframe: Mensile / Trimestrale / Annuale
+- **Mensile:** griglia calendario 7 colonne con numeri di giorno e colori (verde/giallo/rosso)
+- **Trimestrale:** 3 mini-calendari compatti affiancati
+- **Annuale:** layout stile GitHub (52-53 colonne × 7 righe), orizzontalmente scrollabile
+- Navigazione avanti/indietro tra periodi (frecce); periodo futuro disabilitato
+- Colori: ≥70% verde, 40-69% giallo, <40% rosso; grigio = nessun dato; tratteggiato = futuro
+- Click su cella → apre DayView per quella data + chiude heatmap
+- Per abitudini settimanali/mensili: mostra completamento dell'intero periodo (stessa % per tutti i giorni della settimana/mese)
+- Media del periodo visualizzata per ogni abitudine
+- Zero modifiche a storage.js e useHabitStore.js (usa `getPeriodCompletion` già esistente)
+- Nuovi file: `HeatmapView.jsx`, `HeatmapView.css` (~6 righe in `App.jsx`)
 
 ---
 

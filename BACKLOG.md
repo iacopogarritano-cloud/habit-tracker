@@ -190,15 +190,15 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 - ✅ US-V2-001: Supporto abitudini settimanali → COMPLETATA (2026-02-20)
 - ✅ US-V2-002: Supporto abitudini mensili → COMPLETATA (2026-02-20)
 - US-V2-003: Dashboard punteggio multi-timeframe
-- US-V2-004: Vista heatmap completamento (stile GitHub)
+- ✅ US-V2-004: Vista heatmap completamento (stile GitHub) → COMPLETATA (2026-03-02)
 
 ---
 
 ## Backlog Summary
 
 **Total User Stories:** 36 (28 funzionali + 8 developer)
-**Completate:** 31 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
-**Rimanenti:** 5 (3 funzionali + 2 developer)
+**Completate:** 32 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
+**Rimanenti:** 4 (2 funzionali + 2 developer)
 
 **Status:**
 - Must Have: ✅ US-021 (Cloud Sync), ✅ US-028 (Fix isolamento dati) - COMPLETATE
@@ -212,8 +212,8 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
 **Test totali: 55 (33 storage + 22 componenti) — tutti ✅**
 
-**MVP Core + Report + UX + Cloud Sync + Multi-Timeframe + shadcn/ui Polish: COMPLETATO**
-**Prossimo obiettivo:** US-V2-003 (Dashboard multi-timeframe) o US-V2-004 (Heatmap)
+**MVP Core + Report + UX + Cloud Sync + Multi-Timeframe + shadcn/ui Polish + Heatmap: COMPLETATO**
+**Prossimo obiettivo:** US-V2-003 (Dashboard multi-timeframe) o US-030 (Bug report)
 
 ---
 
@@ -237,5 +237,5 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
 ---
 
-**Status:** MVP Core + Report + Cloud Sync + shadcn/ui completato
-**Next Action:** Merge feature/shadcn → main + US-V2-003
+**Status:** MVP Core + Report + Cloud Sync + shadcn/ui + Heatmap completato
+**Next Action:** US-V2-003 (Dashboard multi-timeframe) o US-030 (Bug report in-app)

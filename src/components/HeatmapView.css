@@ -1,0 +1,404 @@
+/**
+ * HeatmapView.css - US-V2-004: Vista Heatmap per Abitudine
+ */
+
+/* ────────────────────────────────────────────────────────────
+   Overlay + Modal
+   ──────────────────────────────────────────────────────────── */
+
+.hm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.hm-modal {
+  background: var(--color-card);
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 680px;
+  padding: 20px;
+  margin: auto;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Header
+   ──────────────────────────────────────────────────────────── */
+
+.hm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.hm-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: 4px 8px;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+}
+
+.btn-close:hover {
+  color: var(--color-text);
+  background: var(--color-border);
+}
+
+/* ────────────────────────────────────────────────────────────
+   Tabs timeframe
+   ──────────────────────────────────────────────────────────── */
+
+.hm-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.hm-tab {
+  flex: 1;
+  padding: 6px 0;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--color-border);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: background 0.15s, color 0.15s;
+}
+
+.hm-tab:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.hm-tab.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Navigazione periodo
+   ──────────────────────────────────────────────────────────── */
+
+.hm-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.hm-nav button {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.hm-nav button:hover:not(:disabled) {
+  background: var(--color-border);
+}
+
+.hm-nav button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.hm-period-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ────────────────────────────────────────────────────────────
+   Lista abitudini
+   ──────────────────────────────────────────────────────────── */
+
+.hm-habits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hm-empty {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: 32px 0;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Blocco singola abitudine
+   ──────────────────────────────────────────────────────────── */
+
+.hm-habit-block {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.hm-habit-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.hm-habit-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.hm-habit-name {
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.hm-habit-avg {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Griglia mensile (full e compact)
+   ──────────────────────────────────────────────────────────── */
+
+.hm-month-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Header etichette giorni settimana */
+.hm-weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-bottom: 2px;
+}
+
+.hm-weekday-row span {
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* Griglia celle */
+.hm-cells {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+/* Cella singola giorno — full (mensile) */
+.hm-cell {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s;
+  min-width: 0;
+}
+
+.hm-cell:hover:not(.empty):not(.future) {
+  opacity: 0.8;
+}
+
+.hm-cell.empty {
+  background: transparent;
+  cursor: default;
+  pointer-events: none;
+}
+
+.hm-cell.future {
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  cursor: default;
+}
+
+.hm-cell.no-data {
+  background: var(--color-border);
+  opacity: 0.5;
+}
+
+.hm-cell-num {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-card);
+  user-select: none;
+  mix-blend-mode: overlay;
+}
+
+/* Celle senza colore (no-data): numero in testo scuro */
+.hm-cell.no-data .hm-cell-num {
+  color: var(--color-text-secondary);
+  mix-blend-mode: normal;
+}
+
+/* Griglia compatta (trimestrale) */
+.hm-cells.compact .hm-cell {
+  border-radius: 2px;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Layout trimestrale (3 mini-mesi)
+   ──────────────────────────────────────────────────────────── */
+
+.hm-quarterly-months {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.hm-quarterly-month-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Griglia annuale (stile GitHub)
+   ──────────────────────────────────────────────────────────── */
+
+.hm-yearly-container {
+  overflow-x: auto;
+  /* Scrollbar sottile */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.hm-yearly-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.hm-yearly-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hm-yearly-container::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+.hm-yearly-scroll {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: max-content;
+}
+
+/* Riga etichette mesi */
+.hm-yearly-months {
+  display: flex;
+  gap: 2px;
+  padding-bottom: 2px;
+}
+
+.hm-yearly-day-spacer {
+  width: 22px;
+  flex-shrink: 0;
+}
+
+.hm-yearly-month-slot {
+  width: 13px;  /* stessa larghezza delle celle yearly + gap */
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: visible;
+}
+
+/* Riga per giorno della settimana */
+.hm-yearly-row {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.hm-yearly-day-label {
+  width: 22px;
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  text-align: right;
+  padding-right: 4px;
+  flex-shrink: 0;
+}
+
+/* Cella yearly (piccola, stile GitHub) */
+.hm-yearly-cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--color-border);
+  cursor: pointer;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.hm-yearly-cell:hover:not(.empty):not(.future) {
+  opacity: 0.75;
+}
+
+.hm-yearly-cell.empty {
+  background: transparent;
+  cursor: default;
+  pointer-events: none;
+}
+
+.hm-yearly-cell.future {
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  cursor: default;
+}
+
+.hm-yearly-cell.no-data {
+  background: var(--color-border);
+  opacity: 0.4;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Responsive
+   ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .hm-modal {
+    padding: 14px;
+  }
+
+  .hm-quarterly-months {
+    gap: 8px;
+  }
+}
