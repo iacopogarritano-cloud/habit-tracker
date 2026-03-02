@@ -502,6 +502,7 @@ function App() {
           getCalendarMonthProgress={getCalendarMonthProgress}
           getCalendarWeekProgress={getCalendarWeekProgress}
           initialPeriod={reportInitialPeriod}
+          onSelectDate={(date) => { setSelectedDate(date); setShowReportView(false) }}
         />
       )}
 

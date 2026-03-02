@@ -56,7 +56,7 @@ function getProgressColor(percent) {
   return 'var(--color-danger)'
 }
 
-export function ReportView({ onClose, getCalendarMonthProgress, getCalendarWeekProgress, initialPeriod }) {
+export function ReportView({ onClose, getCalendarMonthProgress, getCalendarWeekProgress, initialPeriod, onSelectDate }) {
   // Stato: tipo vista (month/week) — inizializzato da initialPeriod se presente
   const [viewType, setViewType] = useState(initialPeriod?.type === 'week' ? 'week' : 'month')
 
@@ -232,8 +232,10 @@ export function ReportView({ onClose, getCalendarMonthProgress, getCalendarWeekP
                     return (
                       <div
                         key={day.date}
-                        className={`reportview-day ${day.isFuture ? 'future' : ''} ${day.hasData ? 'has-data' : ''}`}
-                        title={`${day.date}: ${day.isFuture ? 'Futuro' : day.percent + '%'}`}
+                        className={`reportview-day ${day.isFuture ? 'future' : 'clickable'} ${day.hasData ? 'has-data' : ''}`}
+                        title={day.isFuture ? 'Futuro' : `${day.date}: ${day.percent}% — clicca per aprire la dashboard`}
+                        onClick={!day.isFuture && onSelectDate ? () => { onSelectDate(day.date); onClose() } : undefined}
+                        role={!day.isFuture && onSelectDate ? 'button' : undefined}
                       >
                         <span className="reportview-day-num">{dayNum}</span>
                         {!day.isFuture && (

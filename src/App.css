@@ -2487,6 +2487,15 @@ body {
   opacity: 0.4;
 }
 
+.reportview-day.clickable {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.reportview-day.clickable:hover {
+  background: var(--color-border);
+}
+
 .reportview-day-num {
   font-size: 0.8rem;
   font-weight: 600;
