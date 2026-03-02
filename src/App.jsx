@@ -634,9 +634,6 @@ function App() {
                   <div className="habit-info">
                     <div className="habit-name-row">
                       <span className="habit-name">{habit.name}</span>
-                      {isDaily && stats.currentStreak > 0 && (
-                        <span className="habit-streak">🔥 {stats.currentStreak}</span>
-                      )}
                       {!isDaily && (
                         <span className="habit-timeframe-badge">
                           {habit.timeframe === 'weekly' ? 'sett.' : 'mese'}
@@ -645,6 +642,9 @@ function App() {
                     </div>
                     <div className="habit-meta">
                       <span className="habit-weight">{'★'.repeat(habit.weight)}</span>
+                      {isDaily && stats.currentStreak > 0 && (
+                        <span className="habit-streak">🔥 {stats.currentStreak}</span>
+                      )}
                       {category && (
                         <span
                           className="habit-category-badge"

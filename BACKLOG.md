@@ -123,6 +123,50 @@ Story Points = (Business Value × Time Criticality × RROE) / Job Size
 
 ---
 
+### US-V2-007: Import dati da altre piattaforme
+**Priority:** V2 - Should Have (SP: 6.4)
+
+**User Story:**
+- **As a**: utente che migra da un altro habit tracker
+- **I want to**: importare le mie abitudini e lo storico esistente in Weighbit
+- **So that**: non perda i progressi accumulati e possa passare a Weighbit senza ricominciare da zero
+
+**Problem Statement:**
+La migrazione tra habit tracker è una delle principali barriere all'adozione. Un utente che usa un'altra app da mesi/anni ha investito dati preziosi (streak, storico, abitudini configurate) che non vuole perdere. Abbassare questa friction aumenta significativamente la conversione.
+
+**Acceptance Criteria:**
+- [ ] Pagina/modal "Importa dati" accessibile dalle impostazioni
+- [ ] Supporto import CSV generico con mappatura campi (step 1: minimo viabile)
+  - [ ] L'utente seleziona il file CSV
+  - [ ] L'app mostra preview delle colonne rilevate
+  - [ ] L'utente mappa colonne → campi Weighbit (nome, data, valore)
+  - [ ] Anteprima dei dati da importare prima di confermare
+  - [ ] Importazione con merge intelligente (non sovrascrive dati esistenti)
+- [ ] Supporto import JSON (formato export nativo Weighbit — US-011)
+  - [ ] Backup/restore completo dell'account
+- [ ] Supporto per almeno 1 app specifica (TBD — dipende dall'app attualmente usata)
+  - [ ] Auto-detection del formato
+  - [ ] Mappatura automatica senza intervento manuale
+- [ ] Feedback chiaro su quante abitudini/check-in sono stati importati
+- [ ] Gestione errori: file malformato, duplicati, formato non riconosciuto
+
+**Technical Notes:**
+- File parsing lato client (no upload server) → privacy-first
+- Librerie utili: `papaparse` per CSV, `zod` per validazione schema
+- Merge strategy: se esiste già un'abitudine con lo stesso nome → chiedere all'utente (skip / merge / rinomina)
+- Limitare import a ultimi 365 giorni per performance
+- Il formato di ogni app specifica va investigato prima di implementare
+
+**Open Questions:**
+- Quale app usa attualmente l'utente? Verificare se supporta export e in che formato.
+- Supportare import parziale (solo abitudini, senza storico) come opzione?
+
+**Dependencies:** US-011 (Export) è complementare — implement insieme o in sequenza
+
+**WSJF:** BV=8, TC=2, RROE=2, JS=5 → SP=6.4
+
+---
+
 ### US-V2-006: Dominio Custom (invece di Vercel)
 **Priority:** V2 - Nice to Have
 
