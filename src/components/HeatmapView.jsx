@@ -302,7 +302,7 @@ function HabitHeatmapBlock({ habit, periodData, getPeriodCompletion, onSelectDat
 // ────────────────────────────────────────────────────────────
 
 export function HeatmapView({ habits, getPeriodCompletion, onClose, onSelectDate }) {
-  const [timeframe, setTimeframe] = useState('monthly')
+  const [timeframe, setTimeframe] = useState('yearly')
   const [offset, setOffset] = useState(0)
   const today = getTodayDate()
 
@@ -329,9 +329,9 @@ export function HeatmapView({ habits, getPeriodCompletion, onClose, onSelectDate
         {/* Tabs timeframe */}
         <div className="hm-tabs">
           {[
-            { key: 'monthly', label: 'Mensile' },
-            { key: 'quarterly', label: 'Trimestrale' },
             { key: 'yearly', label: 'Annuale' },
+            { key: 'quarterly', label: 'Trimestrale' },
+            { key: 'monthly', label: 'Mensile' },
           ].map(({ key, label }) => (
             <button
               key={key}

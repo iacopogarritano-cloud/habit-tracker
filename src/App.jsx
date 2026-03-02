@@ -372,6 +372,14 @@ function App() {
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => setShowTrendView(true)}
+              title="Trend storico"
+            >
+              📈
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setShowReportView(true)}
               title="Report periodi"
             >
@@ -384,14 +392,6 @@ function App() {
               title="Heatmap abitudini"
             >
               🟩
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowTrendView(true)}
-              title="Trend storico"
-            >
-              📈
             </Button>
             <Button
               variant="ghost"
