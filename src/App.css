@@ -303,6 +303,11 @@ body {
   margin-bottom: 16px;
 }
 
+.section-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .section-header h2 {
   font-size: 18px;
   font-weight: 600;
