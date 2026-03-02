@@ -340,6 +340,11 @@ export function DayView({
                   className={`dayview-habit-card ${habit.isCompleted ? 'completed' : ''}`}
                   style={{ borderLeftColor: habit.color || 'transparent' }}
                 >
+                  {habit.timeframe && habit.timeframe !== 'daily' && (
+                    <span className="habit-timeframe-badge">
+                      {habit.timeframe === 'weekly' ? 'sett.' : 'mese'}
+                    </span>
+                  )}
                   <div className="dayview-habit-info">
                     <span className="dayview-habit-name">{habit.name}</span>
                   </div>

@@ -468,6 +468,7 @@ body {
 
 /* Card shadcn wrapper */
 .habit-card {
+  position: relative;
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.15s;
   border-left: 3px solid transparent;
@@ -539,6 +540,9 @@ body {
 
 /* US-027: Badge timeframe (sett./mese) */
 .habit-timeframe-badge {
+  position: absolute;
+  top: 8px;
+  right: 14px;
   font-size: 10px;
   font-weight: 600;
   padding: 1px 6px;
@@ -741,6 +745,7 @@ body {
 .btn-edit {
   background: var(--color-bg);
   color: var(--color-text-secondary);
+  margin-left: 8px;
 }
 
 .btn-edit:hover {
@@ -1805,6 +1810,7 @@ body {
 }
 
 .dayview-habit-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1819,6 +1825,10 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.dayview-habit-card .habit-timeframe-badge {
+  right: 12px;
 }
 
 .dayview-habit-card.completed {

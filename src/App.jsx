@@ -630,15 +630,15 @@ function App() {
                   className={`habit-card ${isCompleted ? 'completed' : ''}`}
                   onClick={() => setSelectedHabit(habit)}
                 >
+                {!isDaily && (
+                  <span className="habit-timeframe-badge">
+                    {habit.timeframe === 'weekly' ? 'sett.' : 'mese'}
+                  </span>
+                )}
                 <CardContent className="habit-card-content">
                   <div className="habit-info">
                     <div className="habit-name-row">
                       <span className="habit-name">{habit.name}</span>
-                      {!isDaily && (
-                        <span className="habit-timeframe-badge">
-                          {habit.timeframe === 'weekly' ? 'sett.' : 'mese'}
-                        </span>
-                      )}
                     </div>
                     <div className="habit-meta">
                       <span className="habit-weight">{'★'.repeat(habit.weight)}</span>
