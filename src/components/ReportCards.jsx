@@ -96,7 +96,7 @@ export function ReportCards({ todayProgress, weeklyProgress, monthlyProgress, mu
 
       {multiTimeframeProgress?.hasMultiple && (
         <div className="tf-row">
-          <span className="tf-row-label">Per frequenza</span>
+          <span className="tf-row-label">Punteggio del periodo corrente, per tipo di abitudine</span>
           <div className="tf-cards">
             <TimeframeCard label="Giornaliere" icon="☀️" data={multiTimeframeProgress.daily} />
             <TimeframeCard label="Settimanali" icon="📆" data={multiTimeframeProgress.weekly} />

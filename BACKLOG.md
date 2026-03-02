@@ -183,6 +183,70 @@ La migrazione tra habit tracker è una delle principali barriere all'adozione. U
 
 ---
 
+### US-V2-008: Vista Trend Storico (Aggregato per Settimana/Mese)
+**Priority:** V2 - Should Have (SP: 6.4)
+
+**User Story:**
+- **As a**: utente che usa Weighbit da settimane o mesi
+- **I want to**: vedere il mio punteggio aggregato settimana per settimana e mese per mese in un'unica lista scorrevole
+- **So that**: capisca se sto migliorando nel tempo e identifichi periodi di calo
+
+**Contesto:**
+Oggi posso vedere il punteggio degli ultimi 7/30 giorni (dashboard) oppure entrare nel dettaglio di un periodo specifico (ReportView). Manca la vista "a volo d'uccello": una timeline di tutti i miei periodi in un colpo d'occhio.
+
+**Acceptance Criteria:**
+- [ ] Modal overlay accessibile dall'header con nuovo bottone (es. 📈)
+- [ ] Due tab: `Settimane` | `Mesi`
+- [ ] Lista scorrevole (più recente in cima): ogni riga = periodo + punteggio aggregato + barra colorata
+  - Settimane: "24 Feb – 2 Mar · 78%" con barra verde/giallo/rosso
+  - Mesi: "Febbraio 2026 · 65%" con barra
+- [ ] Punteggio aggregato = media pesata di tutte le abitudini attive per quel periodo
+- [ ] Click su una riga → apre ReportView (US-020) per quel periodo specifico
+- [ ] Periodi senza dati → mostrati in grigio ("Nessun dato")
+- [ ] Mostra massimo ultimi 12 mesi (vista mesi) o ultime 24 settimane (vista settimane)
+
+**Differenza da ReportView (US-020):**
+- ReportView = drill-down in UN periodo specifico → vedi il breakdown giorno per giorno
+- TrendView = panoramica di TUTTI i periodi → un numero per ciascuno, come una classifica nel tempo
+
+**Technical Notes:**
+- Nuovo file: `TrendView.jsx` + `TrendView.css` (~6 righe in App.jsx)
+- Usa `getCalendarWeekProgress` e `getCalendarMonthProgress` già esistenti
+- Necessita funzione aggregatrice: `aggregateWeekScore(weekProgress)` → media pesata dei giorni
+- Pattern identico a HeatmapView per overlay/modal/tabs/nav
+
+**WSJF:** BV=8, TC=2, RROE=2, JS=5 → SP=6.4
+
+---
+
+### US-031: Dashboard più parlante — UX Discovery per Nuovo Utente
+**Priority:** Should Have (SP: 5.3)
+
+**User Story:**
+- **As a**: utente nuovo che apre Weighbit per la prima volta
+- **I want to**: capire immediatamente cosa fa ogni elemento dell'interfaccia senza dover esplorare per tentativi
+- **So that**: entri nell'app con fiducia e scopra le feature senza bisogno di tutorial
+
+**Contesto:**
+Weighbit ha accumulato molte feature (heatmap, report, punteggio multi-timeframe, etc.) ma la UI non le comunica chiaramente. Le icone nell'header sono solo emoji, le sezioni della dashboard non spiegano cosa mostrano, i bottoni non descrivono le azioni. Un nuovo utente è disorientato. **No tutorial** (nessuno lo legge) — l'obiettivo è rendere la UI intrinsecamente chiara.
+
+**Acceptance Criteria:**
+- [ ] **Header buttons:** aggiungere label testuale visibile sotto ogni icona (es. "📊 Report", "🟩 Heatmap") — o almeno tooltip rich (`title`) più descrittivi su tutti i bottoni
+- [ ] **Sezione punteggio multi-timeframe:** titolo più chiaro (già fatto parzialmente), aggiungere breve riga di contesto ("Le abitudini giornaliere vengono valutate oggi, le settimanali questa settimana")
+- [ ] **Empty state dashboard:** quando non ci sono abitudini → messaggio guidato ("Aggiungi la tua prima abitudine per iniziare a tracciare i tuoi progressi" + freccia/indicatore verso il form)
+- [ ] **Empty state categorie/ricerca:** messaggi specifici invece di lista vuota generica
+- [ ] **Habit card:** hint visivo sullo slider/pulsante + per nuovi utenti (es. tooltip al primo hover)
+- [ ] **Nessun tutorial modale** — tutto comunicato nel contesto naturale dell'UI
+
+**Technical Notes:**
+- Principalmente modifiche a `App.jsx`, `App.css`, `ReportCards.jsx`
+- Nessun nuovo file necessario
+- Attenzione: non aggiungere testo ovunque (UX clutter) — solo dove c'è attrito reale
+
+**WSJF:** BV=5, TC=2, RROE=2, JS=3 → SP=6.7
+
+---
+
 ### Sistema Multi-Timeframe (V2)
 Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
@@ -196,9 +260,9 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
 ## Backlog Summary
 
-**Total User Stories:** 36 (28 funzionali + 8 developer)
+**Total User Stories:** 38 (30 funzionali + 8 developer)
 **Completate:** 33 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
-**Rimanenti:** 3 (1 funzionale + 2 developer)
+**Rimanenti:** 5 (3 funzionali + 2 developer)
 
 **Status:**
 - Must Have: ✅ US-021 (Cloud Sync), ✅ US-028 (Fix isolamento dati) - COMPLETATE
@@ -213,7 +277,7 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 **Test totali: 55 (33 storage + 22 componenti) — tutti ✅**
 
 **MVP Core + Report + UX + Cloud Sync + Multi-Timeframe + shadcn/ui Polish + Heatmap + Dashboard V2: COMPLETATO**
-**Prossimo obiettivo:** US-030 (Bug report in-app — richiede setup Supabase)
+**Prossimo obiettivo:** US-030 (Bug report in-app — richiede setup Supabase) | US-031 (Dashboard parlante) | US-V2-008 (Trend storico)
 
 ---
 
@@ -237,5 +301,5 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
 ---
 
-**Status:** MVP Core + Report + Cloud Sync + shadcn/ui + Heatmap completato
-**Next Action:** US-V2-003 (Dashboard multi-timeframe) o US-030 (Bug report in-app)
+**Status:** MVP Core + Report + Cloud Sync + shadcn/ui + Heatmap + Dashboard V2 completato
+**Next Action:** US-030 (richiede Supabase setup) | US-031 (Dashboard parlante) | US-V2-008 (Trend storico)
