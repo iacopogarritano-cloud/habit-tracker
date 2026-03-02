@@ -98,7 +98,7 @@ export function HabitDetail({ habit, stats, lastNDays, onCheckIn }) {
   }
 
   return (
-    <div>
+    <div style={{ padding: '0 8px 8px' }}>
       {/* Header — titolo centrato, padding destra per evitare overlap con X del Dialog */}
       <div className="habit-detail-header" style={{ paddingRight: '32px', justifyContent: 'center' }}>
         <div className="habit-detail-color" style={{ backgroundColor: habit.color }} />

@@ -93,11 +93,24 @@ export function generateId() {
 }
 
 /**
+ * Formatta un oggetto Date in YYYY-MM-DD usando l'ora LOCALE (non UTC)
+ * Evita lo shift di 1 giorno causato da toISOString() in timezone UTC+
+ * @param {Date} d
+ * @returns {string}
+ */
+function formatLocalDate(d) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+/**
  * Restituisce la data odierna in formato YYYY-MM-DD
  * @returns {string}
  */
 export function getTodayDate() {
-  return new Date().toISOString().split('T')[0]
+  return formatLocalDate(new Date())
 }
 
 /**
@@ -117,8 +130,8 @@ export function getWeekBounds(dateStr) {
   sunday.setDate(monday.getDate() + 6)
 
   return {
-    start: monday.toISOString().split('T')[0],
-    end: sunday.toISOString().split('T')[0],
+    start: formatLocalDate(monday),
+    end: formatLocalDate(sunday),
   }
 }
 
@@ -136,8 +149,8 @@ export function getMonthBounds(dateStr) {
   const lastDay = new Date(year, month + 1, 0)
 
   return {
-    start: firstDay.toISOString().split('T')[0],
-    end: lastDay.toISOString().split('T')[0],
+    start: formatLocalDate(firstDay),
+    end: formatLocalDate(lastDay),
   }
 }
 
@@ -176,7 +189,7 @@ export function getPeriodCompletionForHabit(data, habit, date = getTodayDate()) 
   const todayDate = new Date(date + 'T00:00:00')
 
   while (current <= end && current <= todayDate) {
-    const dateStr = current.toISOString().split('T')[0]
+    const dateStr = formatLocalDate(current)
     const checkIn = getCheckIn(data, habit.id, dateStr)
     if (checkIn && checkIn.value > 0) {
       if (habit.type === 'boolean') {
@@ -813,7 +826,7 @@ export function getLastNDaysFromDate(days, endDate) {
   for (let i = 0; i < days; i++) {
     const date = new Date(end)
     date.setDate(end.getDate() - i)
-    dates.push(date.toISOString().split('T')[0])
+    dates.push(formatLocalDate(date))
   }
 
   return dates
@@ -891,7 +904,7 @@ export function getMonthDates(year, month) {
 
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month - 1, day)
-    dates.push(date.toISOString().split('T')[0])
+    dates.push(formatLocalDate(date))
   }
 
   return dates
@@ -909,7 +922,7 @@ export function getWeekDates(startDate) {
   for (let i = 0; i < 7; i++) {
     const date = new Date(start)
     date.setDate(start.getDate() + i)
-    dates.push(date.toISOString().split('T')[0])
+    dates.push(formatLocalDate(date))
   }
 
   return dates
@@ -1027,7 +1040,7 @@ export function getMondayOfWeek(year, week) {
   const targetMonday = new Date(firstMonday)
   targetMonday.setDate(firstMonday.getDate() + (week - 1) * 7)
 
-  return targetMonday.toISOString().split('T')[0]
+  return formatLocalDate(targetMonday)
 }
 
 /**
@@ -1066,7 +1079,7 @@ export function getWeeksOfYear(year) {
 
     const sundayDate = new Date(monday)
     sundayDate.setDate(sundayDate.getDate() + 6)
-    const sunday = sundayDate.toISOString().split('T')[0]
+    const sunday = formatLocalDate(sundayDate)
 
     // Formatta label (es: "3-9 Feb")
     const monDate = new Date(monday)
@@ -1115,7 +1128,7 @@ export function getLastNDays(days) {
   for (let i = 0; i < days; i++) {
     const date = new Date(today)
     date.setDate(today.getDate() - i)
-    dates.push(date.toISOString().split('T')[0])
+    dates.push(formatLocalDate(date))
   }
 
   return dates
@@ -1158,7 +1171,7 @@ export function calculateCurrentStreak(data, habitId) {
   for (let i = 0; i < 365; i++) {
     const date = new Date(today)
     date.setDate(today.getDate() - i)
-    const dateStr = date.toISOString().split('T')[0]
+    const dateStr = formatLocalDate(date)
 
     const checkIn = checkInsMap.get(dateStr)
 
@@ -1300,7 +1313,7 @@ export function debugGenerateFakeCheckIns(data, habitId, daysBack = 14, successR
     for (let i = 1; i <= daysBack; i++) {
       const date = new Date(today)
       date.setDate(today.getDate() - i)
-      const dateStr = date.toISOString().split('T')[0]
+      const dateStr = formatLocalDate(date)
 
       // Salta se esiste già un check-in per questa data
       const existing = newCheckIns.find((c) => c.habitId === habitId && c.date === dateStr)

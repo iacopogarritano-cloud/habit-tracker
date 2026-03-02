@@ -155,11 +155,7 @@
    BASE STYLES
    ============================================ */
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* Reset spostato in @layer base (fondo file) - necessario per CSS cascade layers con Tailwind v4 */
 
 body {
   font-family: var(--font-sans);
@@ -2634,6 +2630,9 @@ button[data-slot="button"][data-variant="destructive"]:hover:not(:disabled) {
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
   body {
     @apply bg-background text-foreground;
