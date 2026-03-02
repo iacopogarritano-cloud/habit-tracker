@@ -270,8 +270,8 @@ export function DayView({
         {/* Report Cards contestuali */}
         <div className="dayview-report-cards">
           <MiniProgressCard title={formattedDate} icon="📅" percent={dayProgress.percent} />
-          <MiniProgressCard title="Settimana" icon="📆" percent={weeklyProgress.percent} />
-          <MiniProgressCard title="Mese" icon="📊" percent={monthlyProgress.percent} />
+          <MiniProgressCard title="Ultimi 7 gg" icon="📆" percent={weeklyProgress.percent} />
+          <MiniProgressCard title="Ultimi 30 gg" icon="📊" percent={monthlyProgress.percent} />
         </div>
 
         {/* Calendario mensile */}
