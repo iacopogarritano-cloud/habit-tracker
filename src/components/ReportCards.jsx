@@ -55,19 +55,19 @@ export function ReportCards({ todayProgress, weeklyProgress, monthlyProgress }) 
         title="Oggi"
         icon="📅"
         percent={todayProgress.percent}
-        subtitle={`${todayProgress.completed}/${todayProgress.total} completate`}
+        subtitle={`${todayProgress.completed}/${todayProgress.total} abitudini completate`}
       />
       <ProgressCard
-        title="Settimana"
+        title="Ultimi 7 gg"
         icon="📆"
         percent={weeklyProgress.percent}
-        subtitle={`${weeklyProgress.daysWithData}/${weeklyProgress.totalDays} giorni`}
+        subtitle={`${weeklyProgress.daysWithData}/${weeklyProgress.totalDays} giorni tracciati`}
       />
       <ProgressCard
-        title="Mese"
+        title="Ultimi 30 gg"
         icon="📊"
         percent={monthlyProgress.percent}
-        subtitle={`${monthlyProgress.daysWithData}/${monthlyProgress.totalDays} giorni`}
+        subtitle={`${monthlyProgress.daysWithData}/${monthlyProgress.totalDays} giorni tracciati`}
       />
     </div>
   )
