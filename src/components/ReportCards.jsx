@@ -46,29 +46,64 @@ function ProgressCard({ title, icon, percent, subtitle }) {
 }
 
 /**
+ * Mini card compatta per il punteggio per tipo di frequenza
+ */
+function TimeframeCard({ label, icon, data }) {
+  if (!data) return null
+  const color = getProgressColor(data.percent)
+  return (
+    <div className="tf-card">
+      <span className="tf-card-icon">{icon}</span>
+      <span className="tf-card-label">{label}</span>
+      <span className="tf-card-percent" style={{ color }}>{data.percent}%</span>
+      <div className="tf-card-bar">
+        <div
+          className="tf-card-bar-fill"
+          style={{ width: `${Math.min(100, data.percent)}%`, backgroundColor: color }}
+        />
+      </div>
+      <span className="tf-card-count">{data.count} abit.</span>
+    </div>
+  )
+}
+
+/**
  * Componente principale con le tre card
  */
-export function ReportCards({ todayProgress, weeklyProgress, monthlyProgress }) {
+export function ReportCards({ todayProgress, weeklyProgress, monthlyProgress, multiTimeframeProgress }) {
   return (
-    <div className="report-cards-container">
-      <ProgressCard
-        title="Oggi"
-        icon="📅"
-        percent={todayProgress.percent}
-        subtitle={`${todayProgress.completed}/${todayProgress.total} abitudini completate`}
-      />
-      <ProgressCard
-        title="Ultimi 7 gg"
-        icon="📆"
-        percent={weeklyProgress.percent}
-        subtitle={`${weeklyProgress.daysWithData}/${weeklyProgress.totalDays} giorni tracciati`}
-      />
-      <ProgressCard
-        title="Ultimi 30 gg"
-        icon="📊"
-        percent={monthlyProgress.percent}
-        subtitle={`${monthlyProgress.daysWithData}/${monthlyProgress.totalDays} giorni tracciati`}
-      />
+    <div className="report-cards-wrapper">
+      <div className="report-cards-container">
+        <ProgressCard
+          title="Oggi"
+          icon="📅"
+          percent={todayProgress.percent}
+          subtitle={`${todayProgress.completed}/${todayProgress.total} abitudini completate`}
+        />
+        <ProgressCard
+          title="Ultimi 7 gg"
+          icon="📆"
+          percent={weeklyProgress.percent}
+          subtitle={`${weeklyProgress.daysWithData}/${weeklyProgress.totalDays} giorni tracciati`}
+        />
+        <ProgressCard
+          title="Ultimi 30 gg"
+          icon="📊"
+          percent={monthlyProgress.percent}
+          subtitle={`${monthlyProgress.daysWithData}/${monthlyProgress.totalDays} giorni tracciati`}
+        />
+      </div>
+
+      {multiTimeframeProgress?.hasMultiple && (
+        <div className="tf-row">
+          <span className="tf-row-label">Per frequenza</span>
+          <div className="tf-cards">
+            <TimeframeCard label="Giornaliere" icon="☀️" data={multiTimeframeProgress.daily} />
+            <TimeframeCard label="Settimanali" icon="📆" data={multiTimeframeProgress.weekly} />
+            <TimeframeCard label="Mensili" icon="📅" data={multiTimeframeProgress.monthly} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

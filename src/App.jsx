@@ -170,6 +170,35 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [undoStack, restoreFromSnapshot, addToast])
 
+  // Punteggio per timeframe (US-V2-003): daily/weekly/monthly separati
+  const multiTimeframeProgress = useMemo(() => {
+    const dailyHabits = habits.filter((h) => !h.timeframe || h.timeframe === 'daily')
+    const weeklyHabits = habits.filter((h) => h.timeframe === 'weekly')
+    const monthlyHabits = habits.filter((h) => h.timeframe === 'monthly')
+
+    function groupScore(list) {
+      if (list.length === 0) return null
+      let totalWeight = 0
+      let weightedSum = 0
+      for (const h of list) {
+        const result = getPeriodCompletion(h.id)
+        weightedSum += (result?.percent ?? 0) * h.weight
+        totalWeight += h.weight
+      }
+      return {
+        percent: totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 0,
+        count: list.length,
+      }
+    }
+
+    return {
+      daily: groupScore(dailyHabits),
+      weekly: groupScore(weeklyHabits),
+      monthly: groupScore(monthlyHabits),
+      hasMultiple: weeklyHabits.length > 0 || monthlyHabits.length > 0,
+    }
+  }, [habits, getPeriodCompletion])
+
   // Filtra abitudini in base a ricerca e categoria
   const filteredHabits = useMemo(() => {
     let result = habits
@@ -383,6 +412,7 @@ function App() {
         todayProgress={progress}
         weeklyProgress={weeklyProgress}
         monthlyProgress={monthlyProgress}
+        multiTimeframeProgress={multiTimeframeProgress}
       />
 
       {/* Form creazione/modifica abitudine (US-002, US-006) */}

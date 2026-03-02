@@ -15,6 +15,15 @@
 
 ## V2 Features (Completate - 2026-03-02)
 
+### US-V2-003: Dashboard Punteggio Multi-Timeframe
+**Priority:** V2 Should Have — **COMPLETATA 2026-03-02**
+- Seconda riga nel dashboard principale (sotto le 3 card esistenti)
+- Mostra un punteggio separato per tipo di frequenza: Giornaliere / Settimanali / Mensili
+- Visibile SOLO quando l'utente ha abitudini di frequenza mista (≥1 weekly o monthly)
+- Calcolo: media pesata dei `getPeriodCompletion` del periodo corrente per ogni gruppo
+- Ogni mini-card: icona, label, %, barra progress colorata, conteggio abitudini
+- Zero nuovi file: esteso `ReportCards.jsx` + `useMemo` in App.jsx + CSS in App.css
+
 ### US-V2-004: Vista Heatmap Completamento
 **Priority:** V2 Should Have — **COMPLETATA 2026-03-02**
 - Vista modale (overlay) accessibile dall'header con bottone 🟩
