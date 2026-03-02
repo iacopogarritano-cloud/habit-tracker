@@ -356,6 +356,26 @@ export function HeatmapView({ habits, getPeriodCompletion, onClose, onSelectDate
           </button>
         </div>
 
+        {/* Legenda colori */}
+        <div className="hm-legend">
+          <span className="hm-legend-item">
+            <span className="hm-legend-dot" style={{ backgroundColor: 'var(--color-success)' }} />
+            ≥ 70%
+          </span>
+          <span className="hm-legend-item">
+            <span className="hm-legend-dot" style={{ backgroundColor: 'var(--color-warning)' }} />
+            40–69%
+          </span>
+          <span className="hm-legend-item">
+            <span className="hm-legend-dot" style={{ backgroundColor: 'var(--color-danger)' }} />
+            &lt; 40%
+          </span>
+          <span className="hm-legend-item">
+            <span className="hm-legend-dot hm-legend-dot--empty" />
+            Nessun dato
+          </span>
+        </div>
+
         {/* Lista abitudini */}
         <div className="hm-habits-list">
           {habits.length === 0 ? (
