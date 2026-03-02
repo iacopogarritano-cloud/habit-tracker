@@ -1806,12 +1806,19 @@ body {
 
 .dayview-habit-card {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   padding: 12px;
   background: var(--color-bg);
   border-radius: var(--radius-md);
+  border-left: 3px solid transparent;
   transition: background-color 0.2s;
+}
+
+.dayview-habit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .dayview-habit-card.completed {
@@ -1822,7 +1829,6 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 120px;
 }
 
 .dayview-habit-color {

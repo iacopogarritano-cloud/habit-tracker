@@ -338,12 +338,13 @@ export function DayView({
                 <li
                   key={habit.id}
                   className={`dayview-habit-card ${habit.isCompleted ? 'completed' : ''}`}
+                  style={{ borderLeftColor: habit.color || 'transparent' }}
                 >
                   <div className="dayview-habit-info">
-                    <div className="dayview-habit-color" style={{ backgroundColor: habit.color }} />
                     <span className="dayview-habit-name">{habit.name}</span>
                   </div>
 
+                  <div className="dayview-habit-row">
                   {/* Progress slider — identico alla dashboard */}
                   <div
                     className="habit-progress-container"
@@ -453,6 +454,7 @@ export function DayView({
                       )}
                     </div>
                   )}
+                  </div>
                 </li>
               ))}
             </ul>
