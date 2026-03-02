@@ -158,7 +158,7 @@ La migrazione tra habit tracker è una delle principali barriere all'adozione. U
 - Il formato di ogni app specifica va investigato prima di implementare
 
 **Open Questions:**
-- Quale app usa attualmente l'utente? Verificare se supporta export e in che formato.
+- Verificare se l'app sorgente supporta export e in che formato (JSON/CSV/altro).
 - Supportare import parziale (solo abitudini, senza storico) come opzione?
 
 **Dependencies:** US-011 (Export) è complementare — implement insieme o in sequenza
