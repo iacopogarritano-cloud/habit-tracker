@@ -14,6 +14,7 @@ import { HabitDetail } from './components/HabitDetail'
 import { DayView } from './components/DayView'
 import { ReportView } from './components/ReportView'
 import { HeatmapView } from './components/HeatmapView'
+import { TrendView } from './components/TrendView'
 import { ReportCards } from './components/ReportCards'
 import { ToastContainer } from './components/Toast'
 import LoginButton from './components/LoginButton'
@@ -94,6 +95,9 @@ function App() {
   const [showReportView, setShowReportView] = useState(false)
   // State per heatmap view (US-V2-004)
   const [showHeatmapView, setShowHeatmapView] = useState(false)
+  // State per trend view (US-V2-008)
+  const [showTrendView, setShowTrendView] = useState(false)
+  const [reportInitialPeriod, setReportInitialPeriod] = useState(null)
   // State per conferma reset giornata
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   // State per conferma nome duplicato
@@ -384,6 +388,14 @@ function App() {
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => setShowTrendView(true)}
+              title="Trend storico"
+            >
+              📈
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleTheme}
               title={isDark ? 'Passa a tema chiaro' : 'Passa a tema scuro'}
             >
@@ -486,9 +498,24 @@ function App() {
       {/* Modal report view (US-020) */}
       {showReportView && (
         <ReportView
-          onClose={() => setShowReportView(false)}
+          onClose={() => { setShowReportView(false); setReportInitialPeriod(null) }}
           getCalendarMonthProgress={getCalendarMonthProgress}
           getCalendarWeekProgress={getCalendarWeekProgress}
+          initialPeriod={reportInitialPeriod}
+        />
+      )}
+
+      {/* Modal trend storico (US-V2-008) */}
+      {showTrendView && (
+        <TrendView
+          getCalendarWeekProgress={getCalendarWeekProgress}
+          getCalendarMonthProgress={getCalendarMonthProgress}
+          onClose={() => setShowTrendView(false)}
+          onSelectPeriod={(period) => {
+            setReportInitialPeriod(period)
+            setShowTrendView(false)
+            setShowReportView(true)
+          }}
         />
       )}
 

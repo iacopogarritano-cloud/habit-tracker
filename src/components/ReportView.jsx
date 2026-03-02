@@ -56,15 +56,15 @@ function getProgressColor(percent) {
   return 'var(--color-danger)'
 }
 
-export function ReportView({ onClose, getCalendarMonthProgress, getCalendarWeekProgress }) {
-  // Stato: tipo vista (month/week)
-  const [viewType, setViewType] = useState('month')
+export function ReportView({ onClose, getCalendarMonthProgress, getCalendarWeekProgress, initialPeriod }) {
+  // Stato: tipo vista (month/week) — inizializzato da initialPeriod se presente
+  const [viewType, setViewType] = useState(initialPeriod?.type === 'week' ? 'week' : 'month')
 
   // Stato: anno e mese/settimana selezionati
   const today = new Date()
-  const [selectedYear, setSelectedYear] = useState(today.getFullYear())
-  const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1)
-  const [selectedWeekMonday, setSelectedWeekMonday] = useState(null)
+  const [selectedYear, setSelectedYear] = useState(initialPeriod?.year ?? today.getFullYear())
+  const [selectedMonth, setSelectedMonth] = useState(initialPeriod?.month ?? today.getMonth() + 1)
+  const [selectedWeekMonday, setSelectedWeekMonday] = useState(initialPeriod?.monday ?? null)
 
   // Mesi disponibili per l'anno selezionato
   const availableMonths = useMemo(() => getAvailableMonths(selectedYear), [selectedYear])

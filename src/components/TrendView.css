@@ -1,0 +1,176 @@
+/**
+ * TrendView.css - US-V2-008: Vista Trend Storico
+ */
+
+/* ────────────────────────────────────────────────────────────
+   Overlay + Modal
+   ──────────────────────────────────────────────────────────── */
+
+.tv-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.tv-modal {
+  background: var(--color-card);
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 560px;
+  padding: 20px;
+  margin: auto;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Header
+   ──────────────────────────────────────────────────────────── */
+
+.tv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.tv-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Tabs
+   ──────────────────────────────────────────────────────────── */
+
+.tv-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.tv-tab {
+  flex: 1;
+  padding: 6px 0;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--color-border);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: background 0.15s, color 0.15s;
+}
+
+.tv-tab:hover {
+  color: var(--color-text);
+}
+
+.tv-tab.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Lista scorrevole
+   ──────────────────────────────────────────────────────────── */
+
+.tv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 70vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.tv-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.tv-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tv-list::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Riga singola
+   ──────────────────────────────────────────────────────────── */
+
+.tv-row {
+  display: grid;
+  grid-template-columns: 148px 1fr 46px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.tv-row.clickable {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.tv-row.clickable:hover {
+  background: var(--color-border);
+}
+
+.tv-row-label {
+  font-size: 13px;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.tv-row-bar {
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.tv-row-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.tv-row-percent {
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tv-row-empty {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  grid-column: 2 / 4;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Responsive
+   ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .tv-modal {
+    padding: 14px;
+  }
+
+  .tv-row {
+    grid-template-columns: 120px 1fr 42px;
+  }
+}
