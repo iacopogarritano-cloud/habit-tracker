@@ -206,7 +206,9 @@ export function HabitDetail({ habit, stats, lastNDays, onCheckIn }) {
                 }`}
                 style={day.status === 'completed' ? { backgroundColor: habit.color } : {}}
                 onClick={() => handleDayClick(day)}
-              />
+              >
+                {new Date(day.date + 'T00:00:00').getDate()}
+              </div>
             ))}
           </div>
           <div className="calendar-legend">

@@ -1375,6 +1375,12 @@ body {
   border-radius: var(--radius-sm);
   transition: all 0.2s;
   cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
 }
 
 .calendar-day.missed {
@@ -1383,10 +1389,12 @@ body {
 
 .calendar-day.partial {
   background: var(--color-warning);
+  color: rgba(0, 0, 0, 0.7);
 }
 
 .calendar-day.completed {
   background: var(--color-success);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .calendar-day.future {
