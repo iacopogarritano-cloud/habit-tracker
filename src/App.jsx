@@ -20,6 +20,7 @@ import { ToastContainer } from './components/Toast'
 import LoginButton from './components/LoginButton'
 import UserMenu from './components/UserMenu'
 import LoginPage from './components/LoginPage'
+import supabase from './lib/supabase'
 import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
 import { Card, CardContent } from './components/ui/card'
@@ -72,7 +73,7 @@ function App() {
   const { isDark, toggleTheme } = useTheme()
 
   // Auth (US-021)
-  const { isAuthenticated, isLoading: authLoading, configError } = useAuth()
+  const { user, isAuthenticated, isLoading: authLoading, configError } = useAuth()
 
   // Undo stack (US-022)
   const undoStack = useUndoStack(10)
@@ -103,6 +104,11 @@ function App() {
   // State per conferma nome duplicato
   const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false)
   const [pendingDuplicateData, setPendingDuplicateData] = useState(null)
+
+  // State bug report (US-030)
+  const [showBugReport, setShowBugReport] = useState(false)
+  const [bugMessage, setBugMessage] = useState('')
+  const [isSendingBug, setIsSendingBug] = useState(false)
 
   // State per toast notifications (US-022)
   const [toasts, setToasts] = useState([])
@@ -362,6 +368,28 @@ function App() {
     setShowResetConfirm(false)
   }
 
+  // Handler invio segnalazione bug (US-030)
+  const handleSubmitBugReport = async () => {
+    if (!bugMessage.trim()) return
+    setIsSendingBug(true)
+    try {
+      const { error: insertError } = await supabase.from('bug_reports').insert({
+        user_id: user?.id ?? null,
+        message: bugMessage.trim(),
+        user_agent: navigator.userAgent,
+        app_version: '0.0.0',
+      })
+      if (insertError) throw insertError
+      setShowBugReport(false)
+      setBugMessage('')
+      addToast('Grazie! Abbiamo ricevuto la tua segnalazione 🙏', 'success', false, 5000)
+    } catch {
+      addToast("Errore nell'invio. Controlla la connessione e riprova.", 'warning', false, 5000)
+    } finally {
+      setIsSendingBug(false)
+    }
+  }
+
   return (
     <div className="app">
       {/* Header con data cliccabile e theme toggle */}
@@ -371,38 +399,46 @@ function App() {
           <div className="header-actions">
             <Button
               variant="ghost"
-              size="icon"
               onClick={() => setShowTrendView(true)}
               title="Trend storico"
+              className="header-btn"
             >
-              📈
+              <span>📈</span>
+              <span className="header-btn-label">Trend</span>
             </Button>
             <Button
               variant="ghost"
-              size="icon"
               onClick={() => setShowReportView(true)}
               title="Report periodi"
+              className="header-btn"
             >
-              📊
+              <span>📊</span>
+              <span className="header-btn-label">Report</span>
             </Button>
             <Button
               variant="ghost"
-              size="icon"
               onClick={() => setShowHeatmapView(true)}
               title="Heatmap abitudini"
+              className="header-btn"
             >
-              🟩
+              <span>🟩</span>
+              <span className="header-btn-label">Heatmap</span>
             </Button>
             <Button
               variant="ghost"
-              size="icon"
               onClick={toggleTheme}
               title={isDark ? 'Passa a tema chiaro' : 'Passa a tema scuro'}
+              className="header-btn"
             >
-              {isDark ? '☀️' : '🌙'}
+              <span>{isDark ? '☀️' : '🌙'}</span>
+              <span className="header-btn-label">Tema</span>
             </Button>
             {/* Auth UI (US-021) */}
-            {isAuthenticated ? <UserMenu /> : <LoginButton />}
+            {isAuthenticated ? (
+              <UserMenu onOpenBugReport={() => setShowBugReport(true)} />
+            ) : (
+              <LoginButton />
+            )}
           </div>
         </div>
         <Button
@@ -659,8 +695,14 @@ function App() {
 
         {habits.length === 0 ? (
           <div className="empty-state">
-            <p>Nessuna abitudine ancora.</p>
-            <p>Clicca "+ Aggiungi" per creare la tua prima abitudine!</p>
+            <div className="empty-state-icon">🎯</div>
+            <h3 className="empty-state-title">Inizia a tracciare le tue abitudini</h3>
+            <p>Aggiungi la tua prima abitudine e costruisci la tua routine quotidiana.</p>
+            {!showForm && (
+              <Button className="empty-state-cta" onClick={() => setShowForm(true)}>
+                + Aggiungi la tua prima abitudine
+              </Button>
+            )}
           </div>
         ) : filteredHabits.length === 0 ? (
           <div className="empty-state">
@@ -866,6 +908,62 @@ function App() {
           </ul>
         )}
       </section>
+
+      {/* Dialog segnalazione bug (US-030) */}
+      <Dialog
+        open={showBugReport}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowBugReport(false)
+            setBugMessage('')
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Segnala un problema</DialogTitle>
+            <DialogDescription>
+              Descrivi il problema che hai riscontrato. Lo vedremo il prima possibile.
+            </DialogDescription>
+          </DialogHeader>
+          <textarea
+            value={bugMessage}
+            onChange={(e) => setBugMessage(e.target.value)}
+            placeholder="Cosa è successo? Come possiamo riprodurlo?"
+            rows={5}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid var(--border-color, #e5e7eb)',
+              backgroundColor: 'var(--input-bg, #fff)',
+              color: 'var(--text-primary, #111827)',
+              fontSize: '14px',
+              resize: 'vertical',
+              fontFamily: 'inherit',
+              boxSizing: 'border-box',
+            }}
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowBugReport(false)
+                setBugMessage('')
+              }}
+              disabled={isSendingBug}
+            >
+              Annulla
+            </Button>
+            <Button
+              onClick={handleSubmitBugReport}
+              disabled={!bugMessage.trim() || isSendingBug}
+            >
+              {isSendingBug ? 'Invio...' : 'Invia segnalazione'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Debug info - solo in development */}
       {import.meta.env.DEV && (

@@ -5,6 +5,46 @@
 
 ---
 
+## US-031: Dashboard più parlante — UX Discovery per Nuovo Utente ✅
+**Completata:** 2026-03-03 | **Priority:** Should Have (SP: 5.3)
+
+**User Story:**
+- **As a**: utente nuovo che apre Weighbit per la prima volta
+- **I want to**: capire immediatamente cosa fa ogni elemento dell'interfaccia senza dover esplorare per tentativi
+- **So that**: entri nell'app con fiducia e scopra le feature senza bisogno di tutorial
+
+**Acceptance Criteria:**
+- [x] **Header buttons:** label testuale visibile sotto ogni icona ("📊 Report", "🟩 Heatmap", "📈 Trend", "🌙 Tema")
+- [x] **Sezione punteggio multi-timeframe:** tooltip ℹ su ogni mini-card che spiega cosa misura (giornaliere/settimanali/mensili, punteggio pesato di oggi per quel tipo)
+- [x] **ReportCards principali:** tooltip ℹ su Oggi/Ultimi 7gg/Ultimi 30gg — spiega logica pesata, prorazione, stessa metrica su timeframe diverso
+- [x] **Empty state dashboard:** messaggio guidato con icona 🎯, titolo, CTA "+ Aggiungi la tua prima abitudine"
+- [x] **Subtitle viste modali:** frase descrittiva sotto il titolo in Trend, Report, Heatmap
+- [x] **Nessun tutorial modale** — tutto comunicato nel contesto naturale dell'UI
+
+**Implementazione:** `App.jsx`, `App.css`, `ReportCards.jsx`, `TrendView.jsx`, `ReportView.jsx`, `HeatmapView.jsx`
+
+---
+
+## US-030: Segnalazione Bug In-App ✅
+**Completata:** 2026-03-03 | **Priority:** Should Have (SP: 4.0)
+
+**User Story:**
+- **As a**: utente beta che trova un problema nell'app
+- **I want to**: inviare una segnalazione in-app senza dover scrivere un'email
+- **So that**: il developer possa ricevere feedback immediato e correggere il bug velocemente
+
+**Acceptance Criteria:**
+- [x] Pulsante "🐛 Segnala un problema" nel dropdown UserMenu
+- [x] Click apre shadcn Dialog con textarea (descrizione problema) e bottone "Invia"
+- [x] La segnalazione viene salvata in tabella Supabase `bug_reports` (message, user_id, user_agent, app_version, created_at)
+- [x] Feedback visivo all'utente dopo invio (toast "Grazie! Segnalazione ricevuta")
+- [x] Gestione offline/errore: toast di errore chiaro se invio fallisce
+- [x] Row Level Security: INSERT pubblico, SELECT solo service role
+
+**Implementazione:** `App.jsx`, `UserMenu.jsx` + tabella Supabase `bug_reports` con RLS
+
+---
+
 ## US-032: True Last-Write-Wins — Conflict Resolution Multi-Device ✅
 **Completata:** 2026-03-03 | **Priority:** Must Have (SP: 16.0)
 

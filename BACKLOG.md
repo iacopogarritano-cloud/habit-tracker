@@ -52,36 +52,6 @@ Story Points = (Business Value × Time Criticality × RROE) / Job Size
 
 ---
 
-### US-030: Segnalazione Bug In-App
-**Priority:** Should Have (SP: 4.0)
-**Target:** Utente beta / amici e parenti del developer
-
-**User Story:**
-- **As a**: utente beta che trova un problema nell'app
-- **I want to**: inviare una segnalazione in-app senza dover scrivere un'email
-- **So that**: il developer possa ricevere feedback immediato e correggere il bug velocemente
-
-**Contesto:**
-Weighbit è in fase MVP e sta per essere condiviso con amici/parenti come tester. Un canale semplice di bug reporting aumenta la quantità e qualità di feedback raccolti senza friction.
-
-**Acceptance Criteria:**
-- [ ] Pulsante "Segnala un problema" accessibile (es. in fondo alla dashboard o nel menu)
-- [ ] Click apre un dialog/form con textarea (descrizione problema) e bottone "Invia"
-- [ ] La segnalazione viene salvata in una tabella Supabase `bug_reports` con: messaggio, userId (se loggato), timestamp, user_agent
-- [ ] Feedback visivo all'utente dopo invio ("Grazie! Abbiamo ricevuto la tua segnalazione")
-- [ ] Gestione offline: se non connessi → messaggio di errore chiaro
-- [ ] Per utenti non loggati: possibilità di aggiungere nome/email opzionale
-
-**Technical Notes:**
-- Tabella Supabase `bug_reports`: `id`, `user_id` (nullable FK), `message` (text), `contact` (text, nullable), `user_agent` (text), `app_version` (text), `created_at` (timestamp)
-- Row Level Security: INSERT pubblico (anche utenti non loggati), SELECT solo per admin (service role)
-- Nessuna UI admin necessaria in V1 — si legge direttamente dalla dashboard Supabase
-- `app_version`: valore hardcoded dal `package.json` (o variabile d'ambiente)
-
-**WSJF:** BV=5, TC=3, RROE=2, JS=3 → SP=10.0 (Must Have per fase beta)
-
----
-
 ## Developer Stories
 
 ### US-DEV-005: CI/CD Pipeline (GitHub Actions)
@@ -184,34 +154,6 @@ La migrazione tra habit tracker è una delle principali barriere all'adozione. U
 ---
 
 
-### US-031: Dashboard più parlante — UX Discovery per Nuovo Utente
-**Priority:** Should Have (SP: 5.3)
-
-**User Story:**
-- **As a**: utente nuovo che apre Weighbit per la prima volta
-- **I want to**: capire immediatamente cosa fa ogni elemento dell'interfaccia senza dover esplorare per tentativi
-- **So that**: entri nell'app con fiducia e scopra le feature senza bisogno di tutorial
-
-**Contesto:**
-Weighbit ha accumulato molte feature (heatmap, report, punteggio multi-timeframe, etc.) ma la UI non le comunica chiaramente. Le icone nell'header sono solo emoji, le sezioni della dashboard non spiegano cosa mostrano, i bottoni non descrivono le azioni. Un nuovo utente è disorientato. **No tutorial** (nessuno lo legge) — l'obiettivo è rendere la UI intrinsecamente chiara.
-
-**Acceptance Criteria:**
-- [ ] **Header buttons:** aggiungere label testuale visibile sotto ogni icona (es. "📊 Report", "🟩 Heatmap") — o almeno tooltip rich (`title`) più descrittivi su tutti i bottoni
-- [ ] **Sezione punteggio multi-timeframe:** titolo più chiaro (già fatto parzialmente), aggiungere breve riga di contesto ("Le abitudini giornaliere vengono valutate oggi, le settimanali questa settimana")
-- [ ] **Empty state dashboard:** quando non ci sono abitudini → messaggio guidato ("Aggiungi la tua prima abitudine per iniziare a tracciare i tuoi progressi" + freccia/indicatore verso il form)
-- [ ] **Empty state categorie/ricerca:** messaggi specifici invece di lista vuota generica
-- [ ] **Habit card:** hint visivo sullo slider/pulsante + per nuovi utenti (es. tooltip al primo hover)
-- [ ] **Nessun tutorial modale** — tutto comunicato nel contesto naturale dell'UI
-
-**Technical Notes:**
-- Principalmente modifiche a `App.jsx`, `App.css`, `ReportCards.jsx`
-- Nessun nuovo file necessario
-- Attenzione: non aggiungere testo ovunque (UX clutter) — solo dove c'è attrito reale
-
-**WSJF:** BV=5, TC=2, RROE=2, JS=3 → SP=6.7
-
----
-
 ### Sistema Multi-Timeframe (V2)
 Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
@@ -226,12 +168,12 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 ## Backlog Summary
 
 **Total User Stories:** 39 (31 funzionali + 8 developer)
-**Completate:** 35 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
-**Rimanenti:** 4 (2 funzionali + 2 developer)
+**Completate:** 37 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
+**Rimanenti:** 2 (0 funzionali + 2 developer Won't Have)
 
 **Status:**
-- Must Have: ✅ US-021 (Cloud Sync), ✅ US-028 (Fix isolamento dati) - COMPLETATE
-- Should Have: ✅ US-013 (shadcn/ui), US-030 (bug report — pending Supabase setup)
+- Must Have: ✅ US-021 (Cloud Sync), ✅ US-028 (Fix isolamento dati), ✅ US-032 (Last-Write-Wins) - COMPLETATE
+- Should Have: ✅ US-013 (shadcn/ui), ✅ US-030 (bug report), ✅ US-031 (Dashboard parlante) - COMPLETATE
 - Could Have: ✅ tutte completate (incl. US-029 demo habits)
 - Won't Have: US-011, US-014
 
@@ -266,5 +208,5 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
 ---
 
-**Status:** MVP Core + Report + Cloud Sync + shadcn/ui + Heatmap + Dashboard V2 + Trend Storico completato
-**Next Action:** US-030 (richiede Supabase setup) | US-031 (Dashboard parlante)
+**Status:** MVP Core + Report + Cloud Sync + shadcn/ui + Heatmap + Dashboard V2 + Trend Storico + Bug Report + Dashboard UX: COMPLETATO
+**Next Action:** US-V2-007 (Import dati — V2) | Technical Literacy Sessions

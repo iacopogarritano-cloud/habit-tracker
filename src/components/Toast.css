@@ -79,7 +79,7 @@
 .toast-message {
   flex: 1;
   font-size: 14px;
-  color: var(--color-text, #1f2937);
+  color: #111827;
   line-height: 1.4;
 }
 

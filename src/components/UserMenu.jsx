@@ -8,7 +8,7 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
-export default function UserMenu() {
+export default function UserMenu({ onOpenBugReport }) {
   const { user, signOut } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
@@ -126,6 +126,27 @@ export default function UserMenu() {
                 {email}
               </div>
             </div>
+
+            {/* Bug report button */}
+            <button
+              onClick={() => {
+                setIsOpen(false)
+                onOpenBugReport?.()
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                textAlign: 'left',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: '1px solid var(--border-color, #e5e7eb)',
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: 'var(--text-primary, #111827)',
+              }}
+            >
+              🐛 Segnala un problema
+            </button>
 
             {/* Logout button */}
             <button

@@ -146,7 +146,10 @@ export function TrendView({ getCalendarWeekProgress, getCalendarMonthProgress, o
     <div className="tv-overlay" onClick={onClose}>
       <div className="tv-modal" onClick={(e) => e.stopPropagation()}>
         <div className="tv-header">
-          <h2>Trend storico</h2>
+          <div className="view-title-group">
+            <h2>Trend storico</h2>
+            <p className="view-subtitle">Evoluzione del punteggio settimana per settimana. Clicca un periodo per il dettaglio.</p>
+          </div>
           <button className="btn-close" onClick={onClose}>×</button>
         </div>
 

@@ -114,7 +114,10 @@ export function ReportView({ onClose, getCalendarMonthProgress, getCalendarWeekP
       <div className="reportview-modal" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="reportview-header">
-          <h2>Report</h2>
+          <div className="view-title-group">
+            <h2>Report</h2>
+            <p className="view-subtitle">Analisi dettagliata di un mese o settimana specifica. Clicca su un giorno per aprirlo.</p>
+          </div>
           <button className="btn-close" onClick={onClose}>
             ×
           </button>

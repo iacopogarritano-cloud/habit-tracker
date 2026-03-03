@@ -322,7 +322,10 @@ export function HeatmapView({ habits, getPeriodCompletion, onClose, onSelectDate
       <div className="hm-modal" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="hm-header">
-          <h2>Heatmap</h2>
+          <div className="view-title-group">
+            <h2>Heatmap</h2>
+            <p className="view-subtitle">La costanza di ogni abitudine nel tempo, giorno per giorno.</p>
+          </div>
           <button className="btn-close" onClick={onClose}>×</button>
         </div>
 
