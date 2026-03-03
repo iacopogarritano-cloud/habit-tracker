@@ -375,6 +375,7 @@ export function createHabit(habitData) {
     weight: habitData.weight ?? 3, // Default peso medio
     timeframe: habitData.timeframe || 'daily',
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     color: habitData.color || null,
     unit: habitData.unit || '', // US-015: unità di misura
     categoryId: habitData.categoryId || null, // US-016: categoria
@@ -408,7 +409,9 @@ export function addHabit(data, habitData) {
 export function updateHabit(data, habitId, updates) {
   const newData = {
     ...data,
-    habits: data.habits.map((h) => (h.id === habitId ? { ...h, ...updates } : h)),
+    habits: data.habits.map((h) =>
+      h.id === habitId ? { ...h, ...updates, updatedAt: new Date().toISOString() } : h
+    ),
   }
 
   const { error } = saveToStorage(newData)

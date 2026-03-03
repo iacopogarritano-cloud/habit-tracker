@@ -513,6 +513,7 @@ function transformHabitFromCloud(cloudHabit) {
     weight: cloudHabit.weight,
     timeframe: cloudHabit.timeframe || 'daily',
     createdAt: cloudHabit.created_at,
+    updatedAt: cloudHabit.updated_at,
     color: cloudHabit.color,
     unit: cloudHabit.unit || '',
     categoryId: cloudHabit.category_id,
@@ -559,6 +560,7 @@ function transformCheckInFromCloud(cloudCheckIn) {
     value: cloudCheckIn.value,
     completed: cloudCheckIn.completed,
     timestamp: cloudCheckIn.timestamp || cloudCheckIn.created_at,
+    updatedAt: cloudCheckIn.updated_at,
   }
 }
 
@@ -614,34 +616,47 @@ function transformCategoryToCloud(category) {
  * @returns {object} Dati merged
  */
 function mergeData(localData, cloudData) {
-  // Per semplicità, usiamo last-write-wins: cloud data sovrascrive local
-  // In futuro si può implementare merge più sofisticato con timestamp
+  // True Last-Write-Wins: vince il record con updatedAt più recente
+  // per ogni singola entità, indipendentemente dall'ordine di sincronizzazione.
+  // Eccezione: soft delete locale ha sempre priorità.
 
-  // Habits: usa cloud, aggiungi local che non esistono su cloud
-  // IMPORTANTE: rispetta soft delete locale (deletedAt ha priorità sulla versione cloud)
-  const cloudHabitIds = new Set(cloudData.habits.map((h) => h.id))
+  // Habits: confronta updatedAt per ogni ID
+  const cloudHabitMap = new Map(cloudData.habits.map((h) => [h.id, h]))
   const localHabitMap = new Map(localData.habits.map((h) => [h.id, h]))
-  const mergedHabits = [
-    // Include habits dal cloud SOLO se non soft-deleted localmente
-    ...cloudData.habits.filter((cloudHabit) => {
-      const localHabit = localHabitMap.get(cloudHabit.id)
-      return !localHabit?.deletedAt
-    }),
-    // Include habits locali non in cloud, solo se non soft-deleted
-    ...localData.habits.filter((h) => !cloudHabitIds.has(h.id) && !h.deletedAt),
-  ]
+  const allHabitIds = new Set([...cloudHabitMap.keys(), ...localHabitMap.keys()])
 
-  // Check-ins: combina per chiave (habitId + date)
-  const checkInMap = new Map()
-  // Prima i locali
-  for (const ci of localData.checkIns) {
-    const key = `${ci.habitId}-${ci.date}`
-    checkInMap.set(key, ci)
+  const mergedHabits = []
+  for (const id of allHabitIds) {
+    const local = localHabitMap.get(id)
+    const cloud = cloudHabitMap.get(id)
+
+    // Soft delete locale ha sempre priorità
+    if (local?.deletedAt) continue
+
+    if (!local) { mergedHabits.push(cloud); continue }
+    if (!cloud) { mergedHabits.push(local); continue }
+
+    // True LWW: vince il più recente (fallback a createdAt se updatedAt manca)
+    const localTime = new Date(local.updatedAt || local.createdAt || 0).getTime()
+    const cloudTime = new Date(cloud.updatedAt || cloud.createdAt || 0).getTime()
+    mergedHabits.push(cloudTime >= localTime ? cloud : local)
   }
-  // Cloud sovrascrive
+
+  // Check-ins: confronta timestamp (locale) vs updatedAt (cloud) per chiave (habitId + date)
+  const checkInMap = new Map()
+  for (const ci of localData.checkIns) {
+    checkInMap.set(`${ci.habitId}-${ci.date}`, ci)
+  }
   for (const ci of cloudData.checkIns) {
     const key = `${ci.habitId}-${ci.date}`
-    checkInMap.set(key, ci)
+    const existing = checkInMap.get(key)
+    if (!existing) {
+      checkInMap.set(key, ci)
+    } else {
+      const localTime = new Date(existing.timestamp || 0).getTime()
+      const cloudTime = new Date(ci.updatedAt || ci.timestamp || 0).getTime()
+      if (cloudTime > localTime) checkInMap.set(key, ci)
+    }
   }
   const mergedCheckIns = Array.from(checkInMap.values())
 

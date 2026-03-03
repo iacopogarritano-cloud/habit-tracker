@@ -183,41 +183,6 @@ La migrazione tra habit tracker è una delle principali barriere all'adozione. U
 
 ---
 
-### US-V2-008: Vista Trend Storico (Aggregato per Settimana/Mese)
-**Priority:** V2 - Should Have (SP: 6.4)
-
-**User Story:**
-- **As a**: utente che usa Weighbit da settimane o mesi
-- **I want to**: vedere il mio punteggio aggregato settimana per settimana e mese per mese in un'unica lista scorrevole
-- **So that**: capisca se sto migliorando nel tempo e identifichi periodi di calo
-
-**Contesto:**
-Oggi posso vedere il punteggio degli ultimi 7/30 giorni (dashboard) oppure entrare nel dettaglio di un periodo specifico (ReportView). Manca la vista "a volo d'uccello": una timeline di tutti i miei periodi in un colpo d'occhio.
-
-**Acceptance Criteria:**
-- [ ] Modal overlay accessibile dall'header con nuovo bottone (es. 📈)
-- [ ] Due tab: `Settimane` | `Mesi`
-- [ ] Lista scorrevole (più recente in cima): ogni riga = periodo + punteggio aggregato + barra colorata
-  - Settimane: "24 Feb – 2 Mar · 78%" con barra verde/giallo/rosso
-  - Mesi: "Febbraio 2026 · 65%" con barra
-- [ ] Punteggio aggregato = media pesata di tutte le abitudini attive per quel periodo
-- [ ] Click su una riga → apre ReportView (US-020) per quel periodo specifico
-- [ ] Periodi senza dati → mostrati in grigio ("Nessun dato")
-- [ ] Mostra massimo ultimi 12 mesi (vista mesi) o ultime 24 settimane (vista settimane)
-
-**Differenza da ReportView (US-020):**
-- ReportView = drill-down in UN periodo specifico → vedi il breakdown giorno per giorno
-- TrendView = panoramica di TUTTI i periodi → un numero per ciascuno, come una classifica nel tempo
-
-**Technical Notes:**
-- Nuovo file: `TrendView.jsx` + `TrendView.css` (~6 righe in App.jsx)
-- Usa `getCalendarWeekProgress` e `getCalendarMonthProgress` già esistenti
-- Necessita funzione aggregatrice: `aggregateWeekScore(weekProgress)` → media pesata dei giorni
-- Pattern identico a HeatmapView per overlay/modal/tabs/nav
-
-**WSJF:** BV=8, TC=2, RROE=2, JS=5 → SP=6.4
-
----
 
 ### US-031: Dashboard più parlante — UX Discovery per Nuovo Utente
 **Priority:** Should Have (SP: 5.3)
@@ -260,9 +225,9 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
 ## Backlog Summary
 
-**Total User Stories:** 38 (30 funzionali + 8 developer)
-**Completate:** 33 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
-**Rimanenti:** 5 (3 funzionali + 2 developer)
+**Total User Stories:** 39 (31 funzionali + 8 developer)
+**Completate:** 35 → vedi [BACKLOG_DONE.md](./BACKLOG_DONE.md)
+**Rimanenti:** 4 (2 funzionali + 2 developer)
 
 **Status:**
 - Must Have: ✅ US-021 (Cloud Sync), ✅ US-028 (Fix isolamento dati) - COMPLETATE
@@ -276,8 +241,8 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
 **Test totali: 55 (33 storage + 22 componenti) — tutti ✅**
 
-**MVP Core + Report + UX + Cloud Sync + Multi-Timeframe + shadcn/ui Polish + Heatmap + Dashboard V2: COMPLETATO**
-**Prossimo obiettivo:** US-030 (Bug report in-app — richiede setup Supabase) | US-031 (Dashboard parlante) | US-V2-008 (Trend storico)
+**MVP Core + Report + UX + Cloud Sync + Multi-Timeframe + shadcn/ui Polish + Heatmap + Dashboard V2 + Trend Storico: COMPLETATO**
+**Prossimo obiettivo:** US-030 (Bug report in-app — richiede setup Supabase) | US-031 (Dashboard parlante)
 
 ---
 
@@ -301,5 +266,5 @@ Supportare abitudini giornaliere, settimanali e mensili con punteggio unificato.
 
 ---
 
-**Status:** MVP Core + Report + Cloud Sync + shadcn/ui + Heatmap + Dashboard V2 completato
-**Next Action:** US-030 (richiede Supabase setup) | US-031 (Dashboard parlante) | US-V2-008 (Trend storico)
+**Status:** MVP Core + Report + Cloud Sync + shadcn/ui + Heatmap + Dashboard V2 + Trend Storico completato
+**Next Action:** US-030 (richiede Supabase setup) | US-031 (Dashboard parlante)

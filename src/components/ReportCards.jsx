@@ -6,21 +6,22 @@
  * - Mese (media ultimi 30 giorni)
  */
 
-/**
- * Determina il colore in base alla percentuale
- * Verde >= 70%, Giallo 40-69%, Rosso < 40%
- */
+import { useState } from 'react'
+
 function getProgressColor(percent) {
-  if (percent >= 70) return '#22c55e' // verde
-  if (percent >= 40) return '#eab308' // giallo
-  return '#ef4444' // rosso
+  if (percent >= 70) return '#22c55e'
+  if (percent >= 40) return '#eab308'
+  return '#ef4444'
 }
 
 /**
- * Card singola per il progresso
+ * Card singola per il progresso con tooltip ℹ (US-031)
+ * Il tooltip è sibling del badge (non figlio) → posizionato relativo alla card,
+ * quindi non sfora mai i bordi dello schermo.
  */
-function ProgressCard({ title, icon, percent, subtitle }) {
+function ProgressCard({ title, icon, percent, subtitle, tooltip }) {
   const color = getProgressColor(percent)
+  const [showTooltip, setShowTooltip] = useState(false)
 
   return (
     <div className="report-card">
@@ -41,16 +42,35 @@ function ProgressCard({ title, icon, percent, subtitle }) {
         />
       </div>
       {subtitle && <div className="report-card-subtitle">{subtitle}</div>}
+      {tooltip && (
+        <>
+          {showTooltip && (
+            <div className="report-card-tooltip">{tooltip}</div>
+          )}
+          <span
+            className="report-card-info"
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            onClick={() => setShowTooltip((v) => !v)}
+            aria-label="Info"
+          >
+            i
+          </span>
+        </>
+      )}
     </div>
   )
 }
 
 /**
  * Mini card compatta per il punteggio per tipo di frequenza
+ * Con tooltip ℹ per spiegare il periodo di riferimento (US-031)
  */
-function TimeframeCard({ label, icon, data }) {
+function TimeframeCard({ label, icon, data, tooltip }) {
+  const [showTooltip, setShowTooltip] = useState(false)
   if (!data) return null
   const color = getProgressColor(data.percent)
+
   return (
     <div className="tf-card">
       <span className="tf-card-icon">{icon}</span>
@@ -63,13 +83,26 @@ function TimeframeCard({ label, icon, data }) {
         />
       </div>
       <span className="tf-card-count">{data.count} abit.</span>
+      {tooltip && (
+        <>
+          {showTooltip && (
+            <div className="tf-card-tooltip">{tooltip}</div>
+          )}
+          <span
+            className="tf-card-info"
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            onClick={() => setShowTooltip((v) => !v)}
+            aria-label="Info"
+          >
+            i
+          </span>
+        </>
+      )}
     </div>
   )
 }
 
-/**
- * Componente principale con le tre card
- */
 export function ReportCards({ todayProgress, weeklyProgress, monthlyProgress, multiTimeframeProgress }) {
   return (
     <div className="report-cards-wrapper">
@@ -79,28 +112,45 @@ export function ReportCards({ todayProgress, weeklyProgress, monthlyProgress, mu
           icon="📅"
           percent={todayProgress.percent}
           subtitle={`${todayProgress.completed}/${todayProgress.total} abitudini completate`}
+          tooltip="Punteggio pesato di oggi. Mescola giornaliere (completate oggi), settimanali (attribuite su 7 giorni) e mensili (attribuite su 30 giorni). ★★★★★ vale 5x rispetto a ★."
         />
         <ProgressCard
           title="Ultimi 7 gg"
           icon="📆"
           percent={weeklyProgress.percent}
           subtitle={`${weeklyProgress.daysWithData}/${weeklyProgress.totalDays} giorni tracciati`}
+          tooltip="Media del punteggio degli ultimi 7 giorni. Stessa logica di 'Oggi' applicata a ogni giorno: giornaliere, settimanali e mensili, pesate per importanza (★★★★★ = 5x)."
         />
         <ProgressCard
           title="Ultimi 30 gg"
           icon="📊"
           percent={monthlyProgress.percent}
           subtitle={`${monthlyProgress.daysWithData}/${monthlyProgress.totalDays} giorni tracciati`}
+          tooltip="Media del punteggio degli ultimi 30 giorni. Stessa logica di 'Oggi' applicata a ogni giorno: giornaliere, settimanali e mensili, pesate per importanza (★★★★★ = 5x)."
         />
       </div>
 
       {multiTimeframeProgress?.hasMultiple && (
         <div className="tf-row">
-          <span className="tf-row-label">Punteggio del periodo corrente, per tipo di abitudine</span>
           <div className="tf-cards">
-            <TimeframeCard label="Giornaliere" icon="☀️" data={multiTimeframeProgress.daily} />
-            <TimeframeCard label="Settimanali" icon="📆" data={multiTimeframeProgress.weekly} />
-            <TimeframeCard label="Mensili" icon="📅" data={multiTimeframeProgress.monthly} />
+            <TimeframeCard
+              label="Giornaliere"
+              icon="☀️"
+              data={multiTimeframeProgress.daily}
+              tooltip="Punteggio pesato di oggi delle sole abitudini giornaliere (★★★★★ = 5x rispetto a ★)."
+            />
+            <TimeframeCard
+              label="Settimanali"
+              icon="📆"
+              data={multiTimeframeProgress.weekly}
+              tooltip="Punteggio pesato di oggi delle sole abitudini settimanali. La quota giornaliera è calcolata sul progresso della settimana in corso (★★★★★ = 5x)."
+            />
+            <TimeframeCard
+              label="Mensili"
+              icon="📅"
+              data={multiTimeframeProgress.monthly}
+              tooltip="Punteggio pesato di oggi delle sole abitudini mensili. La quota giornaliera è calcolata sul progresso del mese in corso (★★★★★ = 5x)."
+            />
           </div>
         </div>
       )}

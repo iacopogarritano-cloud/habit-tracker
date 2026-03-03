@@ -1,7 +1,27 @@
 # Product Backlog - User Stories Completate
 
 > **Archivio:** User stories completate dal backlog principale
-> **Ultima migrazione:** 2026-03-02
+> **Ultima migrazione:** 2026-03-03
+
+---
+
+## US-032: True Last-Write-Wins — Conflict Resolution Multi-Device ✅
+**Completata:** 2026-03-03 | **Priority:** Must Have (SP: 16.0)
+
+**User Story:**
+- **As a**: utente che traccia le abitudini su più dispositivi
+- **I want to**: che vinca sempre il dato più recentemente modificato, indipendentemente da quale dispositivo ha sincronizzato per ultimo
+- **So that**: non perda mai un check-in fatto su un dispositivo a causa di una sincronizzazione successiva da un altro dispositivo
+
+**Acceptance Criteria:**
+- [x] Il merge in `syncEngine.js` confronta `updatedAt` per ogni record (habit, check-in, category)
+- [x] Vince sempre il record con `updatedAt` più recente, indipendentemente da locale vs cloud
+- [x] Il soft delete locale mantiene la sua priorità (non regredisce il comportamento esistente)
+- [x] Il campo `updatedAt` viene aggiornato localmente ad ogni modifica (in `storage.js`)
+- [x] Il campo `updatedAt` viene incluso nei dati scaricati dal cloud (nelle funzioni `transformFromCloud`)
+- [x] Test unitari aggiornati — 57/57 test ✅
+
+**WSJF:** BV=8, TC=2, RROE=3, JS=3 → SP=16.0
 
 ---
 
@@ -38,6 +58,16 @@
 - Media del periodo visualizzata per ogni abitudine
 - Zero modifiche a storage.js e useHabitStore.js (usa `getPeriodCompletion` già esistente)
 - Nuovi file: `HeatmapView.jsx`, `HeatmapView.css` (~6 righe in `App.jsx`)
+
+### US-V2-008: Vista Trend Storico (Aggregato per Settimana/Mese)
+**Priority:** V2 Should Have — **COMPLETATA 2026-03-02**
+- Lista scorrevole ultime 24 settimane / 12 mesi con punteggio aggregato, più recente in cima
+- Due tab: Settimane | Mesi; ogni riga = label periodo + barra colorata + %
+- Click su riga → chiude TrendView, apre ReportView già posizionato su quel periodo (`initialPeriod` prop)
+- Periodi senza dati → mostrati in grigio con label "Nessun dato" (non cliccabili)
+- Bottone 📈 in header (primo a sinistra, prima di 📊 e 🟩)
+- `ReportView.jsx` esteso con prop `initialPeriod` e `onSelectDate` (click su giorno → apre DayView)
+- Nuovi file: `TrendView.jsx`, `TrendView.css`
 
 ---
 

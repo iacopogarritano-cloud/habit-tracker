@@ -3,6 +3,7 @@ import {
   generateId,
   getTodayDate,
   createHabit,
+  updateHabit,
   getActiveHabits,
   getHabitsForDate,
   getWeightedDailyProgress,
@@ -65,6 +66,7 @@ describe('createHabit', () => {
     expect(habit.name).toBe('Bere acqua')
     expect(habit.id).toBeDefined()
     expect(habit.createdAt).toBeDefined()
+    expect(habit.updatedAt).toBeDefined()
   })
 
   it('should apply default values', () => {
@@ -90,6 +92,46 @@ describe('createHabit', () => {
     expect(habit.target).toBe(10)
     expect(habit.weight).toBe(5)
     expect(habit.color).toBe('#ff0000')
+  })
+})
+
+// ============================================
+// updateHabit - Aggiorna e imposta updatedAt
+// ============================================
+
+describe('updateHabit', () => {
+  it('should update updatedAt on every update', async () => {
+    // ARRANGE
+    const habit = createHabit({ name: 'Test' })
+    const data = { habits: [habit], checkIns: [], categories: [] }
+    const originalUpdatedAt = habit.updatedAt
+
+    // Aspetta 1ms per garantire timestamp diverso
+    await new Promise((r) => setTimeout(r, 1))
+
+    // ACT
+    const { data: newData } = updateHabit(data, habit.id, { name: 'Test aggiornato' })
+    const updated = newData.habits.find((h) => h.id === habit.id)
+
+    // ASSERT
+    expect(updated.name).toBe('Test aggiornato')
+    expect(updated.updatedAt).toBeDefined()
+    expect(updated.updatedAt).not.toBe(originalUpdatedAt)
+  })
+
+  it('should not overwrite updatedAt with a value from updates', () => {
+    // updatedAt deve essere sempre generato da updateHabit, non passato dall'esterno
+    const habit = createHabit({ name: 'Test' })
+    const data = { habits: [habit], checkIns: [], categories: [] }
+
+    const { data: newData } = updateHabit(data, habit.id, {
+      name: 'Nuovo nome',
+      updatedAt: '1970-01-01T00:00:00.000Z', // tentativo di sovrascrivere
+    })
+    const updated = newData.habits.find((h) => h.id === habit.id)
+
+    // updatedAt deve essere il timestamp corrente, non quello passato
+    expect(updated.updatedAt).not.toBe('1970-01-01T00:00:00.000Z')
   })
 })
 
