@@ -14,6 +14,7 @@ import {
   fullSync,
   syncHabitToCloud,
   deleteHabitFromCloud,
+  clearHabitHistoryFromCloud,
   syncCheckInToCloud,
   syncCategoryToCloud,
   onConnectivityChange,
@@ -35,6 +36,7 @@ import {
   debugGenerateFakeCheckIns,
   debugClearFakeCheckIns,
   // Category functions (US-016)
+  clearHabitHistory as clearHabitHistoryFromStorage,
   addCategory as addCategoryToStorage,
   updateCategory as updateCategoryInStorage,
   deleteCategory as deleteCategoryFromStorage,
@@ -264,6 +266,36 @@ export function useHabitStore() {
           console.error('[useHabitStore] Sync deleteHabit failed:', err)
         )
       }
+    },
+    [data, userId]
+  )
+
+  /**
+   * Azzera lo storico check-in di un'abitudine (richiede connessione)
+   * @param {string} habitId
+   * @returns {Promise<{ success: boolean, error: string | null }>}
+   */
+  const clearHabitHistory = useCallback(
+    async (habitId) => {
+      if (!data) return { success: false, error: 'Dati non disponibili' }
+
+      // Se autenticato, cancella dal cloud prima (richiede connessione)
+      if (userId) {
+        const { success, error: cloudError } = await clearHabitHistoryFromCloud(userId, habitId)
+        if (!success) {
+          if (cloudError === 'offline') {
+            return { success: false, error: 'Devi essere online per azzerare lo storico' }
+          }
+          return { success: false, error: cloudError }
+        }
+      }
+
+      // Aggiorna localStorage
+      const { data: newData, error: saveError } = clearHabitHistoryFromStorage(data, habitId)
+      setData(newData)
+      if (saveError) setError(saveError)
+
+      return { success: true, error: null }
     },
     [data, userId]
   )
@@ -680,6 +712,7 @@ export function useHabitStore() {
     addHabit,
     updateHabit,
     deleteHabit,
+    clearHabitHistory,
 
     // Category actions (US-016)
     addCategory,

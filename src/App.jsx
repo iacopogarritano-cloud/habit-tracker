@@ -47,6 +47,7 @@ function App() {
     addHabit,
     updateHabit,
     deleteHabit,
+    clearHabitHistory,
     checkIn,
     getTodayCheckIn,
     getStats,
@@ -568,6 +569,7 @@ function App() {
             onCancel={handleCancelForm}
             initialData={editingHabit}
             categories={categories}
+            habits={habits}
           />
         </section>
       )}
@@ -607,6 +609,7 @@ function App() {
               lastNDays={getLastNDays(30)}
               onClose={() => setSelectedHabit(null)}
               onCheckIn={checkIn}
+              onClearHistory={clearHabitHistory}
             />
           )}
         </DialogContent>

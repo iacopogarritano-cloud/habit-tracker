@@ -441,6 +441,22 @@ export function deleteHabit(data, habitId) {
 }
 
 /**
+ * Azzera lo storico check-in di un'abitudine (non la elimina)
+ * @param {StorageData} data - Stato attuale
+ * @param {string} habitId - ID abitudine
+ * @returns {{ data: StorageData, error: string | null }}
+ */
+export function clearHabitHistory(data, habitId) {
+  const newData = {
+    ...data,
+    checkIns: data.checkIns.filter((c) => c.habitId !== habitId),
+  }
+
+  const { error } = saveToStorage(newData)
+  return { data: newData, error }
+}
+
+/**
  * Ottiene solo le abitudini attive (non eliminate)
  * @param {StorageData} data - Stato attuale
  * @returns {Habit[]} Abitudini senza deletedAt

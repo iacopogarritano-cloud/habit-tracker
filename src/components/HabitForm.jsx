@@ -99,7 +99,7 @@ const DEFAULT_FORM = {
   timeframe: 'daily', // US-027
 }
 
-export function HabitForm({ onSubmit, onCancel, initialData = null, categories = [] }) {
+export function HabitForm({ onSubmit, onCancel, initialData = null, categories = [], habits = [] }) {
   const [form, setForm] = useState(() => {
     if (initialData) {
       return {
@@ -154,6 +154,14 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
       newErrors.name = 'Il nome è obbligatorio'
     } else if (form.name.length > 50) {
       newErrors.name = 'Max 50 caratteri'
+    } else {
+      const trimmedName = form.name.trim().toLowerCase()
+      const isDuplicate = habits.some(
+        (h) => h.name.toLowerCase() === trimmedName && h.id !== initialData?.id
+      )
+      if (isDuplicate) {
+        newErrors.name = 'Esiste già un\'abitudine con questo nome'
+      }
     }
 
     const needsTarget = form.type !== 'boolean' || form.timeframe !== 'daily'

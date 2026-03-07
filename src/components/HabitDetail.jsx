@@ -13,10 +13,13 @@
 
 import { useState, useMemo } from 'react'
 
-export function HabitDetail({ habit, stats, lastNDays, onCheckIn }) {
+export function HabitDetail({ habit, stats, lastNDays, onCheckIn, onClearHistory }) {
   // Stato per editing di un giorno specifico
   const [editingDay, setEditingDay] = useState(null)
   const [editValue, setEditValue] = useState(0)
+  // Stato per conferma azzera storico
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [clearError, setClearError] = useState(null)
 
   // Calcola lo stato di ogni giorno (completed, partial, missed, future)
   const calendarDays = useMemo(() => {
@@ -90,6 +93,18 @@ export function HabitDetail({ habit, stats, lastNDays, onCheckIn }) {
   const handleCancelEdit = () => {
     setEditingDay(null)
     setEditValue(0)
+  }
+
+  // Handler per confermare azzera storico
+  const handleConfirmClear = async () => {
+    if (!onClearHistory) return
+    const result = await onClearHistory(habit.id)
+    if (result?.success === false) {
+      setClearError(result.error)
+    } else {
+      setShowClearConfirm(false)
+      setClearError(null)
+    }
   }
 
   // Handler per toggle booleano (per abitudini boolean) — solo aggiorna UI, salva con Salva
@@ -248,6 +263,38 @@ export function HabitDetail({ habit, stats, lastNDays, onCheckIn }) {
           {'☆'.repeat(5 - habit.weight)}
         </p>
       </div>
+
+      {/* Zona pericolosa: azzera storico */}
+      {onClearHistory && (
+        <div className="habit-danger-zone">
+          {!showClearConfirm ? (
+            <button
+              className="btn-danger-outline"
+              onClick={() => { setShowClearConfirm(true); setClearError(null) }}
+            >
+              Azzera storico
+            </button>
+          ) : (
+            <div className="clear-history-confirm">
+              <p className="clear-history-warning">
+                Sei sicuro? Tutti i check-in di questa abitudine verranno eliminati definitivamente.
+              </p>
+              {clearError && <p className="form-error">{clearError}</p>}
+              <div className="day-edit-actions">
+                <button
+                  className="btn-cancel-small"
+                  onClick={() => { setShowClearConfirm(false); setClearError(null) }}
+                >
+                  Annulla
+                </button>
+                <button className="btn-delete-small" onClick={handleConfirmClear}>
+                  Conferma
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

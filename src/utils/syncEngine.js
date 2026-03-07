@@ -262,6 +262,38 @@ export async function deleteHabitFromCloud(userId, habitId) {
   }
 }
 
+/**
+ * Elimina tutti i check-in di un'abitudine da Supabase
+ * Richiede connessione: non può essere messa in coda offline perché
+ * il fullSync al reconnect riscaricherebbe i check-in dal cloud
+ * @param {string} userId
+ * @param {string} habitId
+ * @returns {Promise<{ success: boolean, error: string | null }>}
+ */
+export async function clearHabitHistoryFromCloud(userId, habitId) {
+  if (!isSupabaseConfigured || !supabase) {
+    return { success: false, error: 'Supabase non configurato' }
+  }
+
+  if (!isOnline()) {
+    return { success: false, error: 'offline' }
+  }
+
+  try {
+    const { error } = await supabase
+      .from('check_ins')
+      .delete()
+      .eq('habit_id', habitId)
+      .eq('user_id', userId)
+
+    if (error) throw error
+    return { success: true, error: null }
+  } catch (error) {
+    console.error('[SyncEngine] clearHabitHistoryFromCloud error:', error)
+    return { success: false, error: error.message }
+  }
+}
+
 // ============================================
 // SUPABASE SYNC OPERATIONS - CHECK-INS
 // ============================================
@@ -717,6 +749,7 @@ export default {
   fetchHabitsFromCloud,
   syncHabitToCloud,
   deleteHabitFromCloud,
+  clearHabitHistoryFromCloud,
   // Check-ins
   fetchCheckInsFromCloud,
   syncCheckInToCloud,

@@ -1558,6 +1558,60 @@ body {
   color: var(--color-text);
 }
 
+/* Danger zone - azzera storico */
+.habit-danger-zone {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.btn-danger-outline {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  transition: all 0.2s;
+}
+
+.btn-danger-outline:hover {
+  background: #fef2f2;
+}
+
+.dark .btn-danger-outline:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.clear-history-confirm {
+  text-align: left;
+}
+
+.clear-history-warning {
+  font-size: 13px;
+  color: #ef4444;
+  margin-bottom: 8px;
+}
+
+.btn-delete-small {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: #ef4444;
+  border: none;
+  color: white;
+  transition: all 0.2s;
+}
+
+.btn-delete-small:hover {
+  background: #dc2626;
+}
+
 /* ============================================
    DAY EDITING (US-012)
    ============================================ */
