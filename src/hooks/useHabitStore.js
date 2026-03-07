@@ -412,8 +412,8 @@ export function useHabitStore() {
   // DERIVED STATE
   // ============================================
 
-  // Lista abitudini ATTIVE (escluse eliminate) ordinata per peso (decrescente)
-  const habits = data ? getActiveHabits(data).sort((a, b) => b.weight - a.weight) : []
+  // Lista abitudini ATTIVE (escluse eliminate) — ordine gestito da App.jsx (sortMode)
+  const habits = data ? getActiveHabits(data) : []
 
   // Lista categorie (US-016)
   const categories = data?.categories || []

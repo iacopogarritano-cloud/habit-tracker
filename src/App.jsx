@@ -4,7 +4,7 @@
  * US-022: Undo/Annulla Azione
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useHabitStore } from './hooks/useHabitStore'
 import { useTheme } from './hooks/useTheme'
 import { useUndoStack } from './hooks/useUndoStack'
@@ -99,6 +99,16 @@ function App() {
   // State per trend view (US-V2-008)
   const [showTrendView, setShowTrendView] = useState(false)
   const [reportInitialPeriod, setReportInitialPeriod] = useState(null)
+
+  // Sort mode: 'weight' | 'alpha' | 'category' | 'manual'
+  const [sortMode, setSortMode] = useState(() => localStorage.getItem('weighbit-sort-mode') || 'weight')
+  // Ordine manuale: array di habit ID nella sequenza desiderata
+  const [manualOrder, setManualOrder] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('weighbit-sort-order') || '[]') } catch { return [] }
+  })
+  // Ref per tracciare quale card si sta trascinando (non serve re-render)
+  const draggedIdRef = useRef(null)
+  const [dragOverId, setDragOverId] = useState(null)
   // State per conferma reset giornata
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   // State per conferma nome duplicato
@@ -180,6 +190,10 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [undoStack, restoreFromSnapshot, addToast])
 
+  // Persisti sort settings in localStorage
+  useEffect(() => { localStorage.setItem('weighbit-sort-mode', sortMode) }, [sortMode])
+  useEffect(() => { localStorage.setItem('weighbit-sort-order', JSON.stringify(manualOrder)) }, [manualOrder])
+
   // Punteggio per timeframe (US-V2-003): daily/weekly/monthly separati
   const multiTimeframeProgress = useMemo(() => {
     const dailyHabits = habits.filter((h) => !h.timeframe || h.timeframe === 'daily')
@@ -209,7 +223,7 @@ function App() {
     }
   }, [habits, getPeriodCompletion])
 
-  // Filtra abitudini in base a ricerca e categoria
+  // Filtra e ordina abitudini
   const filteredHabits = useMemo(() => {
     let result = habits
 
@@ -224,8 +238,27 @@ function App() {
       result = result.filter((habit) => habit.name.toLowerCase().includes(query))
     }
 
+    // Ordinamento
+    if (sortMode === 'weight') {
+      result = [...result].sort((a, b) => b.weight - a.weight)
+    } else if (sortMode === 'alpha') {
+      result = [...result].sort((a, b) => a.name.localeCompare(b.name, 'it'))
+    } else if (sortMode === 'category') {
+      result = [...result].sort((a, b) => {
+        const catA = a.categoryId ? (categories.find((c) => c.id === a.categoryId)?.name || '') : ''
+        const catB = b.categoryId ? (categories.find((c) => c.id === b.categoryId)?.name || '') : ''
+        return catA.localeCompare(catB, 'it') || a.name.localeCompare(b.name, 'it')
+      })
+    } else if (sortMode === 'manual') {
+      result = [...result].sort((a, b) => {
+        const iA = manualOrder.indexOf(a.id)
+        const iB = manualOrder.indexOf(b.id)
+        return (iA === -1 ? Infinity : iA) - (iB === -1 ? Infinity : iB)
+      })
+    }
+
     return result
-  }, [habits, searchQuery, categoryFilter])
+  }, [habits, searchQuery, categoryFilter, sortMode, manualOrder, categories])
 
   // Loading state
   if (isLoading || authLoading) {
@@ -366,6 +399,70 @@ function App() {
     }
 
     setShowResetConfirm(false)
+  }
+
+  // ============================================
+  // SORT & DRAG-AND-DROP HANDLERS
+  // ============================================
+
+  // Cambia modalità di ordinamento. Se si passa a 'manual' per la prima volta,
+  // inizializza l'ordine dall'ordinamento corrente visibile.
+  const handleSortChange = (newMode) => {
+    if (newMode === 'manual' && manualOrder.length === 0) {
+      setManualOrder(filteredHabits.map((h) => h.id))
+    }
+    setSortMode(newMode)
+  }
+
+  const handleDragStart = (e, habitId) => {
+    draggedIdRef.current = habitId
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e, habitId) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (dragOverId !== habitId) setDragOverId(habitId)
+  }
+
+  const handleDragLeave = (e) => {
+    // Ignora eventi bubbling dai figli
+    if (!e.currentTarget.contains(e.relatedTarget)) setDragOverId(null)
+  }
+
+  const handleDrop = (e, targetId) => {
+    e.preventDefault()
+    setDragOverId(null)
+    const sourceId = draggedIdRef.current
+    draggedIdRef.current = null
+    if (!sourceId || sourceId === targetId) return
+
+    // Costruisce l'ordine corrente completo (tutti gli habit attivi)
+    const allIds = habits.map((h) => h.id)
+    const currentOrder =
+      manualOrder.length > 0
+        ? [...allIds].sort((a, b) => {
+            const iA = manualOrder.indexOf(a)
+            const iB = manualOrder.indexOf(b)
+            return (iA === -1 ? Infinity : iA) - (iB === -1 ? Infinity : iB)
+          })
+        : allIds
+
+    // Sposta sourceId nella posizione di targetId
+    const newOrder = [...currentOrder]
+    const fromIdx = newOrder.indexOf(sourceId)
+    const toIdx = newOrder.indexOf(targetId)
+    if (fromIdx === -1 || toIdx === -1) return
+    newOrder.splice(fromIdx, 1)
+    newOrder.splice(toIdx, 0, sourceId)
+
+    setManualOrder(newOrder)
+    setSortMode('manual')
+  }
+
+  const handleDragEnd = () => {
+    setDragOverId(null)
+    draggedIdRef.current = null
   }
 
   // Handler invio segnalazione bug (US-030)
@@ -673,6 +770,31 @@ function App() {
                 ))}
               </select>
             )}
+
+            {/* Controlli ordinamento */}
+            <div className="sort-controls">
+              <span className="sort-label">Ordina:</span>
+              {[
+                { mode: 'weight', label: '★ Peso' },
+                { mode: 'alpha',  label: 'A–Z' },
+                { mode: 'category', label: '⊞ Cat.' },
+                { mode: 'manual', label: '⠿ Manuale' },
+              ].map(({ mode, label }) => (
+                <button
+                  key={mode}
+                  className={`sort-btn ${sortMode === mode ? 'active' : ''}`}
+                  onClick={() => handleSortChange(mode)}
+                  title={
+                    mode === 'weight' ? 'Ordina per peso (★)' :
+                    mode === 'alpha'  ? 'Ordina alfabeticamente' :
+                    mode === 'category' ? 'Ordina per categoria' :
+                    'Trascina le card per riordinare'
+                  }
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -749,7 +871,16 @@ function App() {
               const todayChecked = currentValue >= 1
 
               return (
-                <li key={habit.id}>
+                <li
+                  key={habit.id}
+                  draggable={sortMode === 'manual'}
+                  onDragStart={sortMode === 'manual' ? (e) => handleDragStart(e, habit.id) : undefined}
+                  onDragOver={sortMode === 'manual' ? (e) => handleDragOver(e, habit.id) : undefined}
+                  onDragLeave={sortMode === 'manual' ? handleDragLeave : undefined}
+                  onDrop={sortMode === 'manual' ? (e) => handleDrop(e, habit.id) : undefined}
+                  onDragEnd={sortMode === 'manual' ? handleDragEnd : undefined}
+                  className={dragOverId === habit.id ? 'drag-over' : ''}
+                >
                 <Card
                   className={`habit-card ${isCompleted ? 'completed' : ''}`}
                   style={{
