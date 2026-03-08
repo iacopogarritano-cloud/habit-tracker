@@ -121,7 +121,15 @@ export async function processOfflineQueue(userId) {
 
       switch (type) {
         case 'insert':
-          await supabase.from(table).insert({ ...data, user_id: userId })
+          // check_ins usa upsert per evitare errori di constraint unique(user_id, habit_id, date)
+          // nel caso in cui la row esista già (es. doppia esecuzione della queue)
+          if (table === 'check_ins') {
+            await supabase
+              .from(table)
+              .upsert({ ...data, user_id: userId }, { onConflict: 'user_id,habit_id,date' })
+          } else {
+            await supabase.from(table).insert({ ...data, user_id: userId })
+          }
           break
         case 'update':
           await supabase.from(table).update(data).eq('id', data.id).eq('user_id', userId)
@@ -605,7 +613,7 @@ function transformCheckInFromCloud(cloudCheckIn) {
 
 /**
  * Trasforma check-in da formato locale a cloud
- * Nota: la tabella Supabase usa created_at invece di timestamp
+ * updated_at = momento dell'azione utente (non upload time), usato per LWW in mergeData
  */
 function transformCheckInToCloud(checkIn) {
   return {
@@ -614,8 +622,8 @@ function transformCheckInToCloud(checkIn) {
     date: checkIn.date,
     value: checkIn.value,
     completed: checkIn.completed,
-    // Supabase usa created_at, non timestamp
-    updated_at: new Date().toISOString(),
+    // Usiamo il timestamp dell'azione utente (non l'ora di upload) per LWW corretto
+    updated_at: checkIn.timestamp || new Date().toISOString(),
   }
 }
 
@@ -704,9 +712,11 @@ function mergeData(localData, cloudData, lastSyncTime = 0) {
       const ciTime = new Date(ci.timestamp || ci.updatedAt || 0).getTime()
       if (ciTime > lastSyncTime) checkInMap.set(key, ci)
     } else {
-      // Entrambi hanno la entry: LWW — vince il più recente
+      // Entrambi hanno la entry: LWW simmetrico — entrambi i lati usano "tempo azione utente"
+      // Cloud: updatedAt = checkIn.timestamp al momento dell'upload (vedi transformCheckInToCloud)
+      // Locale: timestamp = momento in cui l'utente ha premuto check
       const existing = checkInMap.get(key)
-      const localTime = new Date(ci.timestamp || 0).getTime()
+      const localTime = new Date(ci.timestamp || ci.updatedAt || 0).getTime()
       const cloudTime = new Date(existing.updatedAt || existing.timestamp || 0).getTime()
       if (localTime > cloudTime) checkInMap.set(key, ci)
     }

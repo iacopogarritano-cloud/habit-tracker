@@ -8,7 +8,7 @@
  * const { habits, addHabit, checkIn, progress, error, isSyncing } = useHabitStore();
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import {
   fullSync,
@@ -76,6 +76,8 @@ export function useHabitStore() {
 
   // Ref per accedere ai dati aggiornati nel listener online senza closure stantia
   const dataRef = useRef(data)
+  // Ref per debounce del cloud sync durante riordinamento (evita N write per N drag-over)
+  const orderSyncTimerRef = useRef(null)
   useEffect(() => {
     dataRef.current = data
   }, [data])
@@ -264,15 +266,18 @@ export function useHabitStore() {
       saveToStorage(newData)
       setData(newData)
 
-      // Cloud sync: carica ogni habit riordinato (fire-and-forget)
+      // Cloud sync: debounced per evitare N write su drag rapidi (1.5s dopo l'ultimo reorder)
       if (userId) {
-        for (const habit of newHabits) {
-          if (orderedIds.includes(habit.id)) {
-            syncHabitToCloud(userId, habit).catch((err) =>
-              console.error('[useHabitStore] Sync updateHabitsOrder failed:', err)
-            )
+        clearTimeout(orderSyncTimerRef.current)
+        orderSyncTimerRef.current = setTimeout(() => {
+          for (const habit of newHabits) {
+            if (orderedIds.includes(habit.id)) {
+              syncHabitToCloud(userId, habit).catch((err) =>
+                console.error('[useHabitStore] Sync updateHabitsOrder failed:', err)
+              )
+            }
           }
-        }
+        }, 1500)
       }
     },
     [data, userId]
@@ -475,7 +480,8 @@ export function useHabitStore() {
   // ============================================
 
   // Lista abitudini ATTIVE (escluse eliminate) — ordine gestito da App.jsx (sortMode)
-  const habits = data ? getActiveHabits(data) : []
+  // useMemo evita ricalcolo ad ogni render quando data non è cambiato
+  const habits = useMemo(() => (data ? getActiveHabits(data) : []), [data])
 
   // Lista categorie (US-016)
   const categories = data?.categories || []

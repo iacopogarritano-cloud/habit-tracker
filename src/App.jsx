@@ -217,7 +217,7 @@ function App() {
       if (prev.length > 0) return prev // ho già un ordine locale, non sovrascrivere
       return [...habitsWithOrder].sort((a, b) => a.order - b.order).map((h) => h.id)
     })
-  }, [habits]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [habits]) // intenzionale: setManualOrder è stabile, vogliamo rieseguire solo quando habits cambia
 
   // Punteggio per timeframe (US-V2-003): daily/weekly/monthly separati
   const multiTimeframeProgress = useMemo(() => {
@@ -294,6 +294,33 @@ function App() {
       return (iA === -1 ? Infinity : iA) - (iB === -1 ? Infinity : iB)
     })
   }, [habits, manualOrder])
+
+  // Logica di riordinamento condivisa tra mouse drag e touch drag.
+  // useCallback qui (prima degli early return) garantisce che hooks siano sempre chiamati nello stesso ordine.
+  const performReorder = useCallback((sourceId, targetId) => {
+    if (!sourceId || !targetId || sourceId === targetId) return
+
+    const allIds = habits.map((h) => h.id)
+    const currentOrder =
+      manualOrder.length > 0
+        ? [...allIds].sort((a, b) => {
+            const iA = manualOrder.indexOf(a)
+            const iB = manualOrder.indexOf(b)
+            return (iA === -1 ? Infinity : iA) - (iB === -1 ? Infinity : iB)
+          })
+        : allIds
+
+    const newOrder = [...currentOrder]
+    const fromIdx = newOrder.indexOf(sourceId)
+    const toIdx = newOrder.indexOf(targetId)
+    if (fromIdx === -1 || toIdx === -1) return
+    newOrder.splice(fromIdx, 1)
+    newOrder.splice(toIdx, 0, sourceId)
+
+    setManualOrder(newOrder)
+    setSortMode('manual')
+    updateHabitsOrder(newOrder)
+  }, [habits, manualOrder, updateHabitsOrder])
 
   // Loading state
   if (isLoading || authLoading) {
@@ -508,32 +535,6 @@ function App() {
   const handleDragLeave = (e) => {
     // Ignora eventi bubbling dai figli
     if (!e.currentTarget.contains(e.relatedTarget)) setDragOverId(null)
-  }
-
-  // Logica di riordinamento condivisa tra mouse drag e touch drag
-  const performReorder = (sourceId, targetId) => {
-    if (!sourceId || !targetId || sourceId === targetId) return
-
-    const allIds = habits.map((h) => h.id)
-    const currentOrder =
-      manualOrder.length > 0
-        ? [...allIds].sort((a, b) => {
-            const iA = manualOrder.indexOf(a)
-            const iB = manualOrder.indexOf(b)
-            return (iA === -1 ? Infinity : iA) - (iB === -1 ? Infinity : iB)
-          })
-        : allIds
-
-    const newOrder = [...currentOrder]
-    const fromIdx = newOrder.indexOf(sourceId)
-    const toIdx = newOrder.indexOf(targetId)
-    if (fromIdx === -1 || toIdx === -1) return
-    newOrder.splice(fromIdx, 1)
-    newOrder.splice(toIdx, 0, sourceId)
-
-    setManualOrder(newOrder)
-    setSortMode('manual')
-    updateHabitsOrder(newOrder) // Fix 3: sync ordine su cloud
   }
 
   const handleDrop = (e, targetId) => {
