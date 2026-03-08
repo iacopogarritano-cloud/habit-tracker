@@ -771,6 +771,7 @@ body {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  overflow: hidden;
 }
 
 .habit-category-badge {
@@ -779,6 +780,10 @@ body {
   padding: 2px 8px;
   border-radius: 12px;
   white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* US-027: Badge timeframe (sett./mese) */
