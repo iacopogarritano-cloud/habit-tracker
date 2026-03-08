@@ -363,10 +363,9 @@ export function DayView({
                       style={{
                         background: (() => {
                           const isDaily = !habit.timeframe || habit.timeframe === 'daily'
-                          const sliderMax = isDaily
-                            ? habit.target
-                            : Math.max(habit.target, habit.currentValue)
-                          const pct = sliderMax > 0 ? (habit.currentValue / sliderMax) * 100 : 0
+                          const displayValue = isDaily ? habit.currentValue : (habit.periodInfo?.currentValue ?? 0)
+                          const sliderMax = Math.max(habit.target, displayValue)
+                          const pct = sliderMax > 0 ? (displayValue / sliderMax) * 100 : 0
                           const c = habit.color || 'var(--color-primary)'
                           return `linear-gradient(to right, ${c} ${pct}%, var(--color-border) ${pct}%)`
                         })(),
@@ -378,10 +377,10 @@ export function DayView({
                         max={(() => {
                           const isDaily = !habit.timeframe || habit.timeframe === 'daily'
                           return isDaily
-                            ? habit.target
-                            : Math.max(habit.target, habit.currentValue)
+                            ? Math.max(habit.target, habit.currentValue)
+                            : Math.max(habit.target, habit.periodInfo?.currentValue ?? 0)
                         })()}
-                        value={habit.currentValue}
+                        value={!habit.timeframe || habit.timeframe === 'daily' ? habit.currentValue : (habit.periodInfo?.currentValue ?? 0)}
                         onChange={(e) => onCheckIn(habit.id, parseInt(e.target.value, 10), date)}
                         className="progress-slider"
                         aria-label={`Progresso ${habit.name}`}

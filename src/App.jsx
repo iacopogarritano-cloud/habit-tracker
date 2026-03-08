@@ -1178,8 +1178,9 @@ function App() {
                         className="habit-progress habit-progress-slider"
                         style={{
                           background: (() => {
-                            const sliderMax = isDaily ? habit.target : Math.max(habit.target, currentValue)
-                            const pct = sliderMax > 0 ? (currentValue / sliderMax) * 100 : 0
+                            const displayValue = isDaily ? currentValue : (periodInfo?.currentValue ?? 0)
+                            const sliderMax = Math.max(habit.target, displayValue)
+                            const pct = sliderMax > 0 ? (displayValue / sliderMax) * 100 : 0
                             const c = habit.color || 'var(--color-primary)'
                             return `linear-gradient(to right, ${c} ${pct}%, var(--color-border) ${pct}%)`
                           })(),
@@ -1188,8 +1189,8 @@ function App() {
                         <input
                           type="range"
                           min="0"
-                          max={isDaily ? habit.target : Math.max(habit.target, currentValue)}
-                          value={currentValue}
+                          max={isDaily ? Math.max(habit.target, currentValue) : Math.max(habit.target, periodInfo?.currentValue ?? 0)}
+                          value={isDaily ? currentValue : (periodInfo?.currentValue ?? 0)}
                           onChange={(e) => checkIn(habit.id, parseInt(e.target.value, 10))}
                           className="progress-slider"
                           aria-label={`Progresso ${habit.name}`}
