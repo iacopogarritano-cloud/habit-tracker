@@ -208,14 +208,30 @@ function App() {
   useEffect(() => { localStorage.setItem('weighbit-sort-mode', sortMode) }, [sortMode])
   useEffect(() => { localStorage.setItem('weighbit-sort-order', JSON.stringify(manualOrder)) }, [manualOrder])
 
-  // Deriva manualOrder dal campo `order` degli habit (sync cross-device).
-  // Si attiva solo quando il device non ha ancora un ordine locale (nuovo device/browser).
+  // Deriva/aggiorna manualOrder dal campo `order` degli habit (sync cross-device).
+  // Caso 1: nessun ordine locale → deriva tutto dal cloud (nuovo device/browser).
+  // Caso 2: ordine locale esiste → inserisce solo i nuovi habit (non ancora in manualOrder)
+  //         nella posizione indicata dal campo order del cloud, preservando l'ordine locale esistente.
   useEffect(() => {
-    const habitsWithOrder = habits.filter((h) => h.order != null)
-    if (habitsWithOrder.length === 0) return
     setManualOrder((prev) => {
-      if (prev.length > 0) return prev // ho già un ordine locale, non sovrascrivere
-      return [...habitsWithOrder].sort((a, b) => a.order - b.order).map((h) => h.id)
+      if (prev.length === 0) {
+        // Nessun ordine locale: deriva tutto dal cloud
+        const habitsWithOrder = habits.filter((h) => h.order != null)
+        if (habitsWithOrder.length === 0) return prev
+        return [...habitsWithOrder].sort((a, b) => a.order - b.order).map((h) => h.id)
+      }
+      // Ordine locale esiste: trova habit nuovi arrivati dal cloud non ancora presenti
+      const newHabits = habits
+        .filter((h) => !prev.includes(h.id))
+        .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))
+      if (newHabits.length === 0) return prev
+      // Inserisce ogni nuovo habit nella posizione cloud (o in fondo se fuori range)
+      const result = [...prev]
+      for (const h of newHabits) {
+        const pos = Math.min(h.order ?? result.length, result.length)
+        result.splice(pos, 0, h.id)
+      }
+      return result
     })
   }, [habits]) // intenzionale: setManualOrder è stabile, vogliamo rieseguire solo quando habits cambia
 
