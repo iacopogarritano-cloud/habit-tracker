@@ -517,12 +517,9 @@ export async function uploadLocalDataToCloud(userId, localData) {
       }
     }
 
-    // Upload categories (escludi quelle di default che già esistono)
+    // Upload categories (incluse quelle di default)
     for (const category of localData.categories || []) {
-      // Skip default categories (hanno id che inizia con 'cat-')
-      if (!category.id.startsWith('cat-')) {
-        await syncCategoryToCloud(userId, category)
-      }
+      await syncCategoryToCloud(userId, category)
     }
 
     // Upload check-ins
@@ -565,15 +562,6 @@ function transformHabitFromCloud(cloudHabit) {
 }
 
 /**
- * Verifica se una stringa è un UUID valido
- */
-function isValidUUID(str) {
-  if (!str) return false
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  return uuidRegex.test(str)
-}
-
-/**
  * Trasforma habit da formato locale (camelCase) a cloud (snake_case)
  */
 function transformHabitToCloud(habit) {
@@ -588,8 +576,7 @@ function transformHabitToCloud(habit) {
     color: habit.color,
     unit: habit.unit || '',
     emoji: habit.emoji || '',
-    // category_id deve essere UUID valido o null (le categorie default come "cat-health" non sono UUID)
-    category_id: isValidUUID(habit.categoryId) ? habit.categoryId : null,
+    category_id: habit.categoryId || null,
     description: habit.description || '',
     order: habit.order ?? null,
     updated_at: new Date().toISOString(),

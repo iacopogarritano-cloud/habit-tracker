@@ -17,6 +17,7 @@ import {
   clearHabitHistoryFromCloud,
   syncCheckInToCloud,
   syncCategoryToCloud,
+  uploadLocalDataToCloud,
   onConnectivityChange,
   processOfflineQueue,
 } from '../utils/syncEngine'
@@ -156,6 +157,15 @@ export function useHabitStore() {
 
           setData(finalData)
           saveToStorage(finalData)
+
+          // One-time migration: re-upload tutti i dati locali per correggere
+          // i category_id NULL in Supabase (fix: cat-xxx IDs ora accettati come TEXT)
+          const CAT_FIX_KEY = 'weighbit-cat-fix-1'
+          if (!localStorage.getItem(CAT_FIX_KEY)) {
+            uploadLocalDataToCloud(userId, finalData)
+              .then(() => localStorage.setItem(CAT_FIX_KEY, 'true'))
+              .catch((err) => console.warn('[useHabitStore] Cat fix upload failed:', err))
+          }
         }
       } catch (err) {
         console.error('[useHabitStore] Sync failed:', err)
