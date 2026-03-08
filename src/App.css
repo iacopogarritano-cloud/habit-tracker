@@ -1013,6 +1013,35 @@ body {
 }
 
 /* ============================================
+   HABIT CARD - MOBILE LAYOUT (≤480px)
+   Ribilancia colonne e riduce bottoni per evitare wrap
+   ============================================ */
+
+@media (max-width: 480px) {
+  /* Meno spazio alla colonna destra → più spazio al badge categoria */
+  .habit-right-col {
+    flex: 1.2;
+    min-width: 162px;
+  }
+
+  /* Bottoni più compatti → 5 bottoni entrano in una riga senza wrap */
+  .btn-increment,
+  .btn-decrement,
+  .btn-check,
+  .btn-edit,
+  .btn-delete,
+  .btn-complete-max {
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
+  }
+
+  .habit-actions {
+    gap: 4px;
+  }
+}
+
+/* ============================================
    MODAL (US-007)
    ============================================ */
 
