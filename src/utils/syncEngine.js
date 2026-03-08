@@ -548,6 +548,7 @@ function transformHabitFromCloud(cloudHabit) {
     updatedAt: cloudHabit.updated_at,
     color: cloudHabit.color,
     unit: cloudHabit.unit || '',
+    emoji: cloudHabit.emoji || '',
     categoryId: cloudHabit.category_id,
   }
 }
@@ -575,6 +576,7 @@ function transformHabitToCloud(habit) {
     created_at: habit.createdAt,
     color: habit.color,
     unit: habit.unit || '',
+    emoji: habit.emoji || '',
     // category_id deve essere UUID valido o null (le categorie default come "cat-health" non sono UUID)
     category_id: isValidUUID(habit.categoryId) ? habit.categoryId : null,
     updated_at: new Date().toISOString(),
@@ -676,7 +678,9 @@ function mergeData(localData, cloudData) {
     // Preserva categoryId locale: cloud non può salvare IDs non-UUID (es. 'cat-health')
     // quindi un categoryId null su cloud potrebbe significare "non sincronizzabile", non "rimosso"
     const categoryId = winner.categoryId ?? loser.categoryId ?? null
-    mergedHabits.push({ ...winner, categoryId })
+    // Fallback emoji: preferisce quella del winner, ma se mancante usa il loser
+    const emoji = winner.emoji ?? loser.emoji ?? ''
+    mergedHabits.push({ ...winner, categoryId, emoji })
   }
 
   // Check-ins: confronta timestamp (locale) vs updatedAt (cloud) per chiave (habitId + date)

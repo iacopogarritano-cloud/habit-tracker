@@ -24,6 +24,7 @@ import supabase from './lib/supabase'
 import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
 import { Card, CardContent } from './components/ui/card'
+import EmojiPicker from 'emoji-picker-react'
 import {
   Dialog,
   DialogContent,
@@ -128,6 +129,7 @@ function App() {
   const [showBugReport, setShowBugReport] = useState(false)
   const [bugMessage, setBugMessage] = useState('')
   const [isSendingBug, setIsSendingBug] = useState(false)
+  const [emojiPickerHabitId, setEmojiPickerHabitId] = useState(null)
 
   // State per toast notifications (US-022)
   const [toasts, setToasts] = useState([])
@@ -989,7 +991,7 @@ function App() {
                   className={dragOverId === habit.id ? 'drag-over' : ''}
                 >
                 <Card
-                  className={`habit-card ${isCompleted ? 'completed' : ''}`}
+                  className={`habit-card ${isCompleted ? 'completed' : ''} ${emojiPickerHabitId === habit.id ? 'has-emoji-picker' : ''}`}
                   style={{
                     borderLeftColor: habit.color || undefined,
                     ...(isCompleted && habit.color ? { '--habit-completed-bg': `${habit.color}1a` } : {}),
@@ -1004,9 +1006,55 @@ function App() {
                 <CardContent className="habit-card-content">
                   {/* Left accent: emoji box + drag handle */}
                   <div className="habit-left-accent">
-                    <span className="habit-emoji-box">
-                      {habit.emoji || habit.name?.[0]?.toUpperCase() || '?'}
-                    </span>
+                    <div
+                      className="emoji-box-container"
+                      onBlur={(e) => {
+                        if (!e.currentTarget.contains(e.relatedTarget)) {
+                          setEmojiPickerHabitId(null)
+                        }
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className="habit-emoji-box"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEmojiPickerHabitId(emojiPickerHabitId === habit.id ? null : habit.id)
+                        }}
+                        title="Cambia emoji"
+                      >
+                        {habit.emoji || habit.name?.[0]?.toUpperCase() || '?'}
+                      </button>
+                      {emojiPickerHabitId === habit.id && (
+                        <div className="emoji-dropdown" onClick={(e) => e.stopPropagation()}>
+                          <EmojiPicker
+                            onEmojiClick={(emojiData) => {
+                              updateHabit(habit.id, { emoji: emojiData.emoji })
+                              setEmojiPickerHabitId(null)
+                            }}
+                            previewConfig={{ showPreview: false }}
+                            skinTonesDisabled={true}
+                            height={320}
+                            width={280}
+                            searchPlaceholder="Cerca emoji..."
+                            lazyLoadEmojis
+                          />
+                          {habit.emoji && (
+                            <button
+                              type="button"
+                              className="emoji-clear-btn"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                updateHabit(habit.id, { emoji: '' })
+                                setEmojiPickerHabitId(null)
+                              }}
+                            >
+                              ✕ Rimuovi emoji
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     {sortMode === 'manual' && (
                       <span
                         className="drag-handle"
@@ -1032,7 +1080,7 @@ function App() {
                       {category && (
                         <span
                           className="habit-category-badge"
-                          style={{ backgroundColor: category.color + '20', color: category.color }}
+                          style={{ backgroundColor: habit.color + '20', color: habit.color }}
                         >
                           {category.icon} {category.name}
                         </span>

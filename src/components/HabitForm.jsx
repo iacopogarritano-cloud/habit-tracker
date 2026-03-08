@@ -231,7 +231,7 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
   }
 
   return (
-    <form className="habit-form" onSubmit={handleSubmit}>
+    <form className="habit-form" onSubmit={handleSubmit} style={{ '--habit-color': form.color }}>
       <h3 className="form-title">{isEdit ? 'Modifica Abitudine' : 'Nuova Abitudine'}</h3>
 
       {/* Nome + Emoji */}
