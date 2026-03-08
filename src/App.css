@@ -498,17 +498,93 @@ body {
 }
 
 .drag-handle {
-  font-size: 18px;
+  font-size: 14px;
   color: var(--color-text-secondary);
   cursor: grab;
-  padding: 0 6px 0 2px;
   user-select: none;
-  flex-shrink: 0;
+  opacity: 0.4;
   line-height: 1;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: opacity 0.15s;
+}
+
+.drag-handle:hover {
+  opacity: 1;
 }
 
 .drag-handle:active {
   cursor: grabbing;
+  opacity: 1;
+}
+
+/* ============================================
+   REORDER MODAL
+   ============================================ */
+
+.reorder-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 2px;
+  list-style: none;
+  margin: 0;
+}
+
+.reorder-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  cursor: grab;
+  user-select: none;
+  transition: background 0.15s, outline 0.1s;
+}
+
+.reorder-item:active {
+  cursor: grabbing;
+}
+
+.reorder-item.drag-over {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: 2px;
+  opacity: 0.75;
+}
+
+.reorder-item-handle {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.reorder-item-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.reorder-item-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reorder-item-stars {
+  font-size: 11px;
+  color: var(--color-accent);
+  flex-shrink: 0;
 }
 
 .btn-clear-filter:hover {
@@ -594,18 +670,53 @@ body {
   transform: translateY(-1px);
 }
 
-/* Inner layout del contenuto card */
+/* Inner layout del contenuto card - 3 colonne: accent | info | right */
 .habit-card-content {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  padding: 14px !important;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px !important;
 }
 
+/* Left accent: emoji box + drag handle */
+.habit-left-accent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.habit-emoji-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: var(--color-bg-secondary);
+  border: 1.5px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  flex-shrink: 0;
+  overflow: hidden;
+  line-height: 1;
+}
+
+/* Center info column */
 .habit-info {
   flex: 1;
-  min-width: 120px;
+  min-width: 80px;
+}
+
+/* Right column: slider full-width + buttons below */
+.habit-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 2;
+  min-width: 140px;
 }
 
 .habit-name {
@@ -786,7 +897,8 @@ body {
 
 .habit-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .btn-increment,
@@ -991,6 +1103,93 @@ body {
 
 .form-group {
   margin-bottom: 20px;
+}
+
+/* Nome + Emoji row in HabitForm */
+.name-emoji-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.name-emoji-row > :last-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Emoji picker container */
+.emoji-picker-container {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Trigger button: shows current emoji or '+' */
+.emoji-trigger {
+  width: 44px;
+  height: 40px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, background 0.15s;
+  padding: 0;
+}
+
+.emoji-trigger.has-emoji {
+  font-size: 22px;
+  color: var(--color-text);
+}
+
+.emoji-trigger:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg);
+}
+
+/* Dropdown panel — contiene EmojiPicker library */
+.emoji-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* Isola il picker dal CSS globale dell'app (form input styles bleeding) */
+.emoji-dropdown input[type='text'],
+.emoji-dropdown input[type='search'] {
+  width: auto !important;
+  padding: 8px 8px 8px 36px !important; /* 36px sinistra per icona lente */
+  border: unset !important;
+  font-size: unset !important;
+  border-radius: unset !important;
+  transition: unset !important;
+}
+
+/* Nasconde barra categorie — scroll verticale è sufficiente */
+.emoji-dropdown .epr-category-nav {
+  display: none !important;
+}
+
+.emoji-clear-btn {
+  width: 100%;
+  padding: 6px;
+  border: none;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.emoji-clear-btn:hover {
+  background: var(--color-border);
 }
 
 .form-group label {

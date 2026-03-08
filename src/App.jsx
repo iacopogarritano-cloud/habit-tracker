@@ -110,6 +110,14 @@ function App() {
   // Ref per tracciare quale card si sta trascinando (non serve re-render)
   const draggedIdRef = useRef(null)
   const [dragOverId, setDragOverId] = useState(null)
+  // Refs per auto-scroll durante il drag
+  const scrollAnimRef = useRef(null)
+  const modalScrollAnimRef = useRef(null)
+  const reorderListRef = useRef(null)
+  // Ref per handle-only drag (impedisce che slider/bottoni avviino il reorder)
+  const dragHandlePressedRef = useRef(false)
+  // State per modale riordinamento compatto
+  const [showReorderModal, setShowReorderModal] = useState(false)
   // State per conferma reset giornata
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   // State per conferma nome duplicato
@@ -260,6 +268,16 @@ function App() {
 
     return result
   }, [habits, searchQuery, categoryFilter, sortMode, manualOrder, categories])
+
+  // Lista per modale riordinamento compatto (tutte le abitudini, ordinate per manualOrder)
+  const reorderModalList = useMemo(() => {
+    return [...habits].sort((a, b) => {
+      const iA = manualOrder.indexOf(a.id)
+      const iB = manualOrder.indexOf(b.id)
+      if (iA === -1 && iB === -1) return b.weight - a.weight
+      return (iA === -1 ? Infinity : iA) - (iB === -1 ? Infinity : iB)
+    })
+  }, [habits, manualOrder])
 
   // Loading state
   if (isLoading || authLoading) {
@@ -415,6 +433,42 @@ function App() {
     setSortMode(newMode)
   }
 
+  // Auto-scroll durante il drag (finestra principale)
+  const stopAutoScroll = () => {
+    if (scrollAnimRef.current) {
+      cancelAnimationFrame(scrollAnimRef.current)
+      scrollAnimRef.current = null
+    }
+  }
+
+  const startAutoScroll = (direction) => {
+    stopAutoScroll()
+    const scroll = () => {
+      window.scrollBy(0, direction * 10)
+      scrollAnimRef.current = requestAnimationFrame(scroll)
+    }
+    scrollAnimRef.current = requestAnimationFrame(scroll)
+  }
+
+  // Auto-scroll durante il drag (modale riordinamento)
+  const stopModalAutoScroll = () => {
+    if (modalScrollAnimRef.current) {
+      cancelAnimationFrame(modalScrollAnimRef.current)
+      modalScrollAnimRef.current = null
+    }
+  }
+
+  const startModalAutoScroll = (direction) => {
+    stopModalAutoScroll()
+    const scroll = () => {
+      if (reorderListRef.current) {
+        reorderListRef.current.scrollTop += direction * 10
+      }
+      modalScrollAnimRef.current = requestAnimationFrame(scroll)
+    }
+    modalScrollAnimRef.current = requestAnimationFrame(scroll)
+  }
+
   const handleDragStart = (e, habitId) => {
     draggedIdRef.current = habitId
     e.dataTransfer.effectAllowed = 'move'
@@ -424,6 +478,15 @@ function App() {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
     if (dragOverId !== habitId) setDragOverId(habitId)
+    // Auto-scroll bordi viewport
+    const threshold = 80
+    if (e.clientY < threshold) {
+      startAutoScroll(-1)
+    } else if (e.clientY > window.innerHeight - threshold) {
+      startAutoScroll(1)
+    } else {
+      stopAutoScroll()
+    }
   }
 
   const handleDragLeave = (e) => {
@@ -433,6 +496,8 @@ function App() {
 
   const handleDrop = (e, targetId) => {
     e.preventDefault()
+    stopAutoScroll()
+    stopModalAutoScroll()
     setDragOverId(null)
     const sourceId = draggedIdRef.current
     draggedIdRef.current = null
@@ -462,6 +527,32 @@ function App() {
   }
 
   const handleDragEnd = () => {
+    stopAutoScroll()
+    setDragOverId(null)
+    draggedIdRef.current = null
+    dragHandlePressedRef.current = false
+  }
+
+  // Drag handlers specifici per la modale riordinamento
+  const handleModalDragOver = (e, habitId) => {
+    e.preventDefault()
+    if (dragOverId !== habitId) setDragOverId(habitId)
+    const container = reorderListRef.current
+    if (container) {
+      const rect = container.getBoundingClientRect()
+      const threshold = 60
+      if (e.clientY < rect.top + threshold) {
+        startModalAutoScroll(-1)
+      } else if (e.clientY > rect.bottom - threshold) {
+        startModalAutoScroll(1)
+      } else {
+        stopModalAutoScroll()
+      }
+    }
+  }
+
+  const handleModalDragEnd = () => {
+    stopModalAutoScroll()
     setDragOverId(null)
     draggedIdRef.current = null
   }
@@ -797,6 +888,16 @@ function App() {
                   {label}
                 </button>
               ))}
+              <button
+                className="sort-btn reorder-list-btn"
+                onClick={() => {
+                  if (sortMode !== 'manual') handleSortChange('manual')
+                  setShowReorderModal(true)
+                }}
+                title="Apri lista compatta per riordinare velocemente"
+              >
+                ≡ Lista
+              </button>
             </div>
           </div>
         )}
@@ -877,7 +978,10 @@ function App() {
                 <li
                   key={habit.id}
                   draggable={sortMode === 'manual'}
-                  onDragStart={sortMode === 'manual' ? (e) => handleDragStart(e, habit.id) : undefined}
+                  onDragStart={sortMode === 'manual' ? (e) => {
+                    if (!dragHandlePressedRef.current) { e.preventDefault(); return }
+                    handleDragStart(e, habit.id)
+                  } : undefined}
                   onDragOver={sortMode === 'manual' ? (e) => handleDragOver(e, habit.id) : undefined}
                   onDragLeave={sortMode === 'manual' ? handleDragLeave : undefined}
                   onDrop={sortMode === 'manual' ? (e) => handleDrop(e, habit.id) : undefined}
@@ -898,6 +1002,24 @@ function App() {
                   </span>
                 )}
                 <CardContent className="habit-card-content">
+                  {/* Left accent: emoji box + drag handle */}
+                  <div className="habit-left-accent">
+                    <span className="habit-emoji-box">
+                      {habit.emoji || habit.name?.[0]?.toUpperCase() || '?'}
+                    </span>
+                    {sortMode === 'manual' && (
+                      <span
+                        className="drag-handle"
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={() => { dragHandlePressedRef.current = true }}
+                        onMouseUp={() => { dragHandlePressedRef.current = false }}
+                      >
+                        ⠿
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Center: name + meta */}
                   <div className="habit-info">
                     <div className="habit-name-row">
                       <span className="habit-name">{habit.name}</span>
@@ -918,121 +1040,124 @@ function App() {
                     </div>
                   </div>
 
-                  {/* Progress bar - slider per tutti i tipi (incluso boolean) */}
-                  <div
-                    className="habit-progress-container"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  {/* Right col: slider + actions */}
+                  <div className="habit-right-col">
+                    {/* Progress bar - slider per tutti i tipi (incluso boolean) */}
                     <div
-                      className="habit-progress habit-progress-slider"
-                      style={{
-                        background: (() => {
-                          const sliderMax = isDaily ? habit.target : Math.max(habit.target, currentValue)
-                          const pct = sliderMax > 0 ? (currentValue / sliderMax) * 100 : 0
-                          const c = habit.color || 'var(--color-primary)'
-                          return `linear-gradient(to right, ${c} ${pct}%, var(--color-border) ${pct}%)`
-                        })(),
-                      }}
+                      className="habit-progress-container"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <input
-                        type="range"
-                        min="0"
-                        max={isDaily ? habit.target : Math.max(habit.target, currentValue)}
-                        value={currentValue}
-                        onChange={(e) => checkIn(habit.id, parseInt(e.target.value, 10))}
-                        className="progress-slider"
-                        aria-label={`Progresso ${habit.name}`}
-                        aria-valuetext={`${isDaily ? currentValue : (periodInfo?.currentValue ?? 0)} di ${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`}
+                      <div
+                        className="habit-progress habit-progress-slider"
                         style={{
-                          '--progress-color': habit.color || 'var(--color-primary)',
+                          background: (() => {
+                            const sliderMax = isDaily ? habit.target : Math.max(habit.target, currentValue)
+                            const pct = sliderMax > 0 ? (currentValue / sliderMax) * 100 : 0
+                            const c = habit.color || 'var(--color-primary)'
+                            return `linear-gradient(to right, ${c} ${pct}%, var(--color-border) ${pct}%)`
+                          })(),
                         }}
-                      />
-                    </div>
-                    <span className="progress-text">
-                      {isDaily
-                        ? `${currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`
-                        : `${periodInfo?.currentValue ?? 0}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''} ${periodLabel}`}
-                    </span>
-                  </div>
-
-                  <div className="habit-actions" onClick={(e) => e.stopPropagation()}>
-                    {habit.type === 'boolean' ? (
-                      /* Boolean habit: ✓/+ per fare (identici), - per annullare */
-                      <>
-                        <button
-                          onClick={() => checkIn(habit.id, 1)}
-                          className="btn-complete-max"
-                          disabled={todayChecked}
-                          title="Segna come fatto oggi"
-                        >
-                          ✓
-                        </button>
-                        <button
-                          onClick={() => checkIn(habit.id, 1)}
-                          className="btn-increment"
-                          disabled={todayChecked}
-                          title="Segna come fatto oggi"
-                        >
-                          +
-                        </button>
-                        <button
-                          onClick={() => checkIn(habit.id, 0)}
-                          className="btn-decrement"
-                          disabled={!todayChecked}
-                          title="Annulla"
-                        >
-                          -
-                        </button>
-                      </>
-                    ) : (
-                      /* US-024: Max button + US-026: +/- con limit */
-                      <>
-                        <button
-                          onClick={() => {
-                            if (isDaily) {
-                              checkIn(habit.id, habit.target)
-                            } else {
-                              // Per weekly/monthly: completa il remaining
-                              const remaining = habit.target - (periodInfo?.currentValue ?? 0) + currentValue
-                              checkIn(habit.id, Math.max(currentValue, remaining))
-                            }
+                      >
+                        <input
+                          type="range"
+                          min="0"
+                          max={isDaily ? habit.target : Math.max(habit.target, currentValue)}
+                          value={currentValue}
+                          onChange={(e) => checkIn(habit.id, parseInt(e.target.value, 10))}
+                          className="progress-slider"
+                          aria-label={`Progresso ${habit.name}`}
+                          aria-valuetext={`${isDaily ? currentValue : (periodInfo?.currentValue ?? 0)} di ${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`}
+                          style={{
+                            '--progress-color': habit.color || 'var(--color-primary)',
                           }}
-                          className="btn-complete-max"
-                          disabled={isDaily ? currentValue >= habit.target : isCompleted}
-                          title="Completa al massimo"
-                        >
-                          ✓
-                        </button>
-                        <button
-                          onClick={() => handleIncrement(habit.id, currentValue)}
-                          className="btn-increment"
-                          disabled={isDaily ? currentValue >= habit.target : isCompleted}
-                        >
-                          +
-                        </button>
-                        <button
-                          onClick={() => handleDecrement(habit.id, currentValue)}
-                          className="btn-decrement"
-                          disabled={currentValue === 0}
-                        >
-                          -
-                        </button>
-                      </>
-                    )}
-                    <button
-                      onClick={() => handleEditHabit(habit)}
-                      className="btn-edit"
-                      title="Modifica"
-                    >
-                      ✎
-                    </button>
-                    <button
-                      onClick={() => setDeletingHabit(habit)}
-                      className="btn-delete"
-                      title="Elimina"
-                    >
-                      ×
-                    </button>
+                        />
+                      </div>
+                      <span className="progress-text">
+                        {isDaily
+                          ? `${currentValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`
+                          : `${periodInfo?.currentValue ?? 0}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''} ${periodLabel}`}
+                      </span>
+                    </div>
+
+                    <div className="habit-actions" onClick={(e) => e.stopPropagation()}>
+                      {habit.type === 'boolean' ? (
+                        /* Boolean habit: ✓/+ per fare (identici), - per annullare */
+                        <>
+                          <button
+                            onClick={() => checkIn(habit.id, 1)}
+                            className="btn-complete-max"
+                            disabled={todayChecked}
+                            title="Segna come fatto oggi"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={() => checkIn(habit.id, 1)}
+                            className="btn-increment"
+                            disabled={todayChecked}
+                            title="Segna come fatto oggi"
+                          >
+                            +
+                          </button>
+                          <button
+                            onClick={() => checkIn(habit.id, 0)}
+                            className="btn-decrement"
+                            disabled={!todayChecked}
+                            title="Annulla"
+                          >
+                            -
+                          </button>
+                        </>
+                      ) : (
+                        /* US-024: Max button + US-026: +/- con limit */
+                        <>
+                          <button
+                            onClick={() => {
+                              if (isDaily) {
+                                checkIn(habit.id, habit.target)
+                              } else {
+                                // Per weekly/monthly: completa il remaining
+                                const remaining = habit.target - (periodInfo?.currentValue ?? 0) + currentValue
+                                checkIn(habit.id, Math.max(currentValue, remaining))
+                              }
+                            }}
+                            className="btn-complete-max"
+                            disabled={isDaily ? currentValue >= habit.target : isCompleted}
+                            title="Completa al massimo"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={() => handleIncrement(habit.id, currentValue)}
+                            className="btn-increment"
+                            disabled={isDaily ? currentValue >= habit.target : isCompleted}
+                          >
+                            +
+                          </button>
+                          <button
+                            onClick={() => handleDecrement(habit.id, currentValue)}
+                            className="btn-decrement"
+                            disabled={isDaily ? currentValue === 0 : (periodInfo?.currentValue ?? 0) === 0}
+                          >
+                            -
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={() => handleEditHabit(habit)}
+                        className="btn-edit"
+                        title="Modifica"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        onClick={() => setDeletingHabit(habit)}
+                        className="btn-delete"
+                        title="Elimina"
+                      >
+                        ×
+                      </button>
+                    </div>
                   </div>
                 </CardContent>
                 </Card>
@@ -1096,6 +1221,48 @@ function App() {
               {isSendingBug ? 'Invio...' : 'Invia segnalazione'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modale riordinamento compatto */}
+      <Dialog
+        open={showReorderModal}
+        onOpenChange={(open) => {
+          if (!open) stopModalAutoScroll()
+          setShowReorderModal(open)
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Riordina abitudini</DialogTitle>
+            <DialogDescription>
+              Trascina le righe per cambiare l&apos;ordine.
+            </DialogDescription>
+          </DialogHeader>
+          <ul ref={reorderListRef} className="reorder-modal-list">
+            {reorderModalList.map((habit) => (
+              <li
+                key={habit.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, habit.id)}
+                onDragOver={(e) => handleModalDragOver(e, habit.id)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, habit.id)}
+                onDragEnd={handleModalDragEnd}
+                className={`reorder-item ${dragOverId === habit.id ? 'drag-over' : ''}`}
+              >
+                <span className="reorder-item-handle">⠿</span>
+                {habit.color && (
+                  <span
+                    className="reorder-item-color"
+                    style={{ background: habit.color }}
+                  />
+                )}
+                <span className="reorder-item-name">{habit.name}</span>
+                <span className="reorder-item-stars">{'★'.repeat(habit.weight)}</span>
+              </li>
+            ))}
+          </ul>
         </DialogContent>
       </Dialog>
 

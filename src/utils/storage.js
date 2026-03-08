@@ -377,6 +377,7 @@ export function createHabit(habitData) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     color: habitData.color || null,
+    emoji: habitData.emoji || '', // icona emoji opzionale
     unit: habitData.unit || '', // US-015: unità di misura
     categoryId: habitData.categoryId || null, // US-016: categoria
   }

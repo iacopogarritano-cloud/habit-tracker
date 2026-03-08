@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react'
+import EmojiPicker from 'emoji-picker-react'
 import { WeightSelector } from './WeightSelector'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
@@ -90,6 +91,7 @@ const DEFAULT_UNITS = {
 
 const DEFAULT_FORM = {
   name: '',
+  emoji: '',
   type: 'boolean',
   target: 1,
   weight: 3,
@@ -100,6 +102,7 @@ const DEFAULT_FORM = {
 }
 
 export function HabitForm({ onSubmit, onCancel, initialData = null, categories = [], habits = [] }) {
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [form, setForm] = useState(() => {
     if (initialData) {
       return {
@@ -231,18 +234,64 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
     <form className="habit-form" onSubmit={handleSubmit}>
       <h3 className="form-title">{isEdit ? 'Modifica Abitudine' : 'Nuova Abitudine'}</h3>
 
-      {/* Nome */}
+      {/* Nome + Emoji */}
       <div className="form-group">
         <Label htmlFor="habit-name">Nome *</Label>
-        <Input
-          id="habit-name"
-          type="text"
-          value={form.name}
-          onChange={(e) => handleChange('name', e.target.value)}
-          placeholder="Es. Mangiare verdura"
-          maxLength={50}
-          autoFocus
-        />
+        <div className="name-emoji-row">
+          {/* Emoji picker */}
+          <div
+            className="emoji-picker-container"
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget)) {
+                setShowEmojiPicker(false)
+              }
+            }}
+          >
+            <button
+              type="button"
+              className={`emoji-trigger${form.emoji ? ' has-emoji' : ''}`}
+              onClick={() => setShowEmojiPicker((v) => !v)}
+              title="Scegli emoji"
+            >
+              {form.emoji || '+'}
+            </button>
+            {showEmojiPicker && (
+              <div className="emoji-dropdown">
+                <EmojiPicker
+                  onEmojiClick={(emojiData) => {
+                    handleChange('emoji', emojiData.emoji)
+                    setShowEmojiPicker(false)
+                  }}
+                  previewConfig={{ showPreview: false }}
+                  skinTonesDisabled={true}
+                  height={380}
+                  width={300}
+                  searchPlaceholder="Cerca emoji..."
+                  lazyLoadEmojis
+                />
+                {form.emoji && (
+                  <button
+                    type="button"
+                    className="emoji-clear-btn"
+                    onClick={() => { handleChange('emoji', ''); setShowEmojiPicker(false) }}
+                  >
+                    ✕ Rimuovi emoji
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          <Input
+            id="habit-name"
+            type="text"
+            value={form.name}
+            onChange={(e) => handleChange('name', e.target.value)}
+            placeholder="Es. Mangiare verdura"
+            maxLength={50}
+            autoFocus
+          />
+        </div>
         {errors.name && <span className="form-error">{errors.name}</span>}
       </div>
 

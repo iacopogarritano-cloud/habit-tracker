@@ -671,7 +671,12 @@ function mergeData(localData, cloudData) {
     // True LWW: vince il più recente (fallback a createdAt se updatedAt manca)
     const localTime = new Date(local.updatedAt || local.createdAt || 0).getTime()
     const cloudTime = new Date(cloud.updatedAt || cloud.createdAt || 0).getTime()
-    mergedHabits.push(cloudTime >= localTime ? cloud : local)
+    const winner = cloudTime >= localTime ? cloud : local
+    const loser = cloudTime >= localTime ? local : cloud
+    // Preserva categoryId locale: cloud non può salvare IDs non-UUID (es. 'cat-health')
+    // quindi un categoryId null su cloud potrebbe significare "non sincronizzabile", non "rimosso"
+    const categoryId = winner.categoryId ?? loser.categoryId ?? null
+    mergedHabits.push({ ...winner, categoryId })
   }
 
   // Check-ins: confronta timestamp (locale) vs updatedAt (cloud) per chiave (habitId + date)
