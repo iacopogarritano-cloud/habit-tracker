@@ -464,12 +464,13 @@ export async function fullSync(userId, localData) {
       )
     }
 
-    // 3. Merge dati (cloud vince in caso di conflitto)
+    // 3. Merge dati — leggo prevLastSyncTime PRIMA di aggiornarlo (usato per check-ins)
+    const prevLastSyncTime = new Date(localStorage.getItem(LAST_SYNC_KEY) || 0).getTime()
     const mergedData = mergeData(localData, {
       habits: habitsResult.data,
       checkIns: checkInsResult.data,
       categories: categoriesResult.data,
-    })
+    }, prevLastSyncTime)
 
     // 4. Salva timestamp ultimo sync
     localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString())
@@ -550,6 +551,8 @@ function transformHabitFromCloud(cloudHabit) {
     unit: cloudHabit.unit || '',
     emoji: cloudHabit.emoji || '',
     categoryId: cloudHabit.category_id,
+    description: cloudHabit.description || '',
+    order: cloudHabit.order ?? null,
   }
 }
 
@@ -579,6 +582,8 @@ function transformHabitToCloud(habit) {
     emoji: habit.emoji || '',
     // category_id deve essere UUID valido o null (le categorie default come "cat-health" non sono UUID)
     category_id: isValidUUID(habit.categoryId) ? habit.categoryId : null,
+    description: habit.description || '',
+    order: habit.order ?? null,
     updated_at: new Date().toISOString(),
   }
 }
@@ -649,7 +654,7 @@ function transformCategoryToCloud(category) {
  * @param {object} cloudData
  * @returns {object} Dati merged
  */
-function mergeData(localData, cloudData) {
+function mergeData(localData, cloudData, lastSyncTime = 0) {
   // True Last-Write-Wins: vince il record con updatedAt più recente
   // per ogni singola entità, indipendentemente dall'ordine di sincronizzazione.
   // Eccezione: soft delete locale ha sempre priorità.
@@ -668,7 +673,9 @@ function mergeData(localData, cloudData) {
     if (local?.deletedAt) continue
 
     if (!local) { mergedHabits.push(cloud); continue }
-    if (!cloud) { mergedHabits.push(local); continue }
+    // Cloud è fonte di verità per l'esistenza: se un habit non è in cloud (fu eliminato
+    // da un altro device), non sopravvive sul locale → fix cross-device delete
+    if (!cloud) { continue }
 
     // True LWW: vince il più recente (fallback a createdAt se updatedAt manca)
     const localTime = new Date(local.updatedAt || local.createdAt || 0).getTime()
@@ -683,20 +690,25 @@ function mergeData(localData, cloudData) {
     mergedHabits.push({ ...winner, categoryId, emoji })
   }
 
-  // Check-ins: confronta timestamp (locale) vs updatedAt (cloud) per chiave (habitId + date)
+  // Check-ins: cloud è fonte di verità. Un check-in locale che non esiste più in cloud
+  // è stato cancellato da un altro device (es. reset storico). Lo manteniamo solo se
+  // è stato creato DOPO l'ultimo sync (= offline, non ancora caricato).
   const checkInMap = new Map()
-  for (const ci of localData.checkIns) {
+  for (const ci of cloudData.checkIns) {
     checkInMap.set(`${ci.habitId}-${ci.date}`, ci)
   }
-  for (const ci of cloudData.checkIns) {
+  for (const ci of localData.checkIns) {
     const key = `${ci.habitId}-${ci.date}`
-    const existing = checkInMap.get(key)
-    if (!existing) {
-      checkInMap.set(key, ci)
+    if (!checkInMap.has(key)) {
+      // Locale-only: mantieni solo se creato dopo l'ultimo sync (offline-created)
+      const ciTime = new Date(ci.timestamp || ci.updatedAt || 0).getTime()
+      if (ciTime > lastSyncTime) checkInMap.set(key, ci)
     } else {
-      const localTime = new Date(existing.timestamp || 0).getTime()
-      const cloudTime = new Date(ci.updatedAt || ci.timestamp || 0).getTime()
-      if (cloudTime > localTime) checkInMap.set(key, ci)
+      // Entrambi hanno la entry: LWW — vince il più recente
+      const existing = checkInMap.get(key)
+      const localTime = new Date(ci.timestamp || 0).getTime()
+      const cloudTime = new Date(existing.updatedAt || existing.timestamp || 0).getTime()
+      if (localTime > cloudTime) checkInMap.set(key, ci)
     }
   }
   const mergedCheckIns = Array.from(checkInMap.values())

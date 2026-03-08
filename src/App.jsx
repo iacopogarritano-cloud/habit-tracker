@@ -47,6 +47,7 @@ function App() {
     today,
     addHabit,
     updateHabit,
+    updateHabitsOrder,
     deleteHabit,
     clearHabitHistory,
     checkIn,
@@ -117,6 +118,8 @@ function App() {
   const reorderListRef = useRef(null)
   // Ref per handle-only drag (impedisce che slider/bottoni avviino il reorder)
   const dragHandlePressedRef = useRef(false)
+  // Ref per touch drag su mobile
+  const touchDragIdRef = useRef(null)
   // State per modale riordinamento compatto
   const [showReorderModal, setShowReorderModal] = useState(false)
   // State per conferma reset giornata
@@ -204,6 +207,17 @@ function App() {
   // Persisti sort settings in localStorage
   useEffect(() => { localStorage.setItem('weighbit-sort-mode', sortMode) }, [sortMode])
   useEffect(() => { localStorage.setItem('weighbit-sort-order', JSON.stringify(manualOrder)) }, [manualOrder])
+
+  // Deriva manualOrder dal campo `order` degli habit (sync cross-device).
+  // Si attiva solo quando il device non ha ancora un ordine locale (nuovo device/browser).
+  useEffect(() => {
+    const habitsWithOrder = habits.filter((h) => h.order != null)
+    if (habitsWithOrder.length === 0) return
+    setManualOrder((prev) => {
+      if (prev.length > 0) return prev // ho già un ordine locale, non sovrascrivere
+      return [...habitsWithOrder].sort((a, b) => a.order - b.order).map((h) => h.id)
+    })
+  }, [habits]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Punteggio per timeframe (US-V2-003): daily/weekly/monthly separati
   const multiTimeframeProgress = useMemo(() => {
@@ -496,16 +510,10 @@ function App() {
     if (!e.currentTarget.contains(e.relatedTarget)) setDragOverId(null)
   }
 
-  const handleDrop = (e, targetId) => {
-    e.preventDefault()
-    stopAutoScroll()
-    stopModalAutoScroll()
-    setDragOverId(null)
-    const sourceId = draggedIdRef.current
-    draggedIdRef.current = null
-    if (!sourceId || sourceId === targetId) return
+  // Logica di riordinamento condivisa tra mouse drag e touch drag
+  const performReorder = (sourceId, targetId) => {
+    if (!sourceId || !targetId || sourceId === targetId) return
 
-    // Costruisce l'ordine corrente completo (tutti gli habit attivi)
     const allIds = habits.map((h) => h.id)
     const currentOrder =
       manualOrder.length > 0
@@ -516,7 +524,6 @@ function App() {
           })
         : allIds
 
-    // Sposta sourceId nella posizione di targetId
     const newOrder = [...currentOrder]
     const fromIdx = newOrder.indexOf(sourceId)
     const toIdx = newOrder.indexOf(targetId)
@@ -526,6 +533,17 @@ function App() {
 
     setManualOrder(newOrder)
     setSortMode('manual')
+    updateHabitsOrder(newOrder) // Fix 3: sync ordine su cloud
+  }
+
+  const handleDrop = (e, targetId) => {
+    e.preventDefault()
+    stopAutoScroll()
+    stopModalAutoScroll()
+    setDragOverId(null)
+    const sourceId = draggedIdRef.current
+    draggedIdRef.current = null
+    performReorder(sourceId, targetId)
   }
 
   const handleDragEnd = () => {
@@ -979,6 +997,7 @@ function App() {
               return (
                 <li
                   key={habit.id}
+                  data-habit-id={habit.id}
                   draggable={sortMode === 'manual'}
                   onDragStart={sortMode === 'manual' ? (e) => {
                     if (!dragHandlePressedRef.current) { e.preventDefault(); return }
@@ -1061,6 +1080,30 @@ function App() {
                         onClick={(e) => e.stopPropagation()}
                         onMouseDown={() => { dragHandlePressedRef.current = true }}
                         onMouseUp={() => { dragHandlePressedRef.current = false }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation()
+                          touchDragIdRef.current = habit.id
+                        }}
+                        onTouchMove={(e) => {
+                          if (!touchDragIdRef.current) return
+                          e.preventDefault() // blocca scroll durante il drag
+                          const touch = e.touches[0]
+                          const el = document.elementFromPoint(touch.clientX, touch.clientY)
+                          const li = el?.closest('[data-habit-id]')
+                          const targetId = li?.getAttribute('data-habit-id')
+                          if (targetId) setDragOverId(targetId)
+                        }}
+                        onTouchEnd={(e) => {
+                          const sourceId = touchDragIdRef.current
+                          touchDragIdRef.current = null
+                          setDragOverId(null)
+                          if (!sourceId) return
+                          const touch = e.changedTouches[0]
+                          const el = document.elementFromPoint(touch.clientX, touch.clientY)
+                          const li = el?.closest('[data-habit-id]')
+                          const targetId = li?.getAttribute('data-habit-id')
+                          if (targetId) performReorder(sourceId, targetId)
+                        }}
                       >
                         ⠿
                       </span>

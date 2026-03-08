@@ -1244,6 +1244,30 @@ body {
   border-color: var(--habit-color, var(--color-primary));
 }
 
+.description-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 70px;
+  transition: border-color 0.2s;
+}
+
+.description-textarea::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.description-textarea:focus {
+  outline: none;
+  border-color: var(--habit-color, var(--color-primary));
+}
+
 .form-error {
   display: block;
   color: var(--color-danger);
@@ -1644,6 +1668,16 @@ body {
 .habit-detail-header .btn-close:hover {
   background: var(--color-border);
   color: var(--color-text);
+}
+
+.habit-detail-description {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 0 16px 12px;
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
 }
 
 /* Stats Grid */

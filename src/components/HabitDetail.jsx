@@ -120,6 +120,11 @@ export function HabitDetail({ habit, stats, lastNDays, onCheckIn, onClearHistory
         <h2 style={{ textAlign: 'center' }}>{habit.name}</h2>
       </div>
 
+      {/* Descrizione / Note */}
+      {habit.description && (
+        <p className="habit-detail-description">{habit.description}</p>
+      )}
+
       {/* Stats Cards */}
       {(!habit.timeframe || habit.timeframe === 'daily') ? (
         <div className="habit-stats-grid">

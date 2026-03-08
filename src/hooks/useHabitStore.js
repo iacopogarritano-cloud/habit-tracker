@@ -249,6 +249,36 @@ export function useHabitStore() {
   )
 
   /**
+   * Aggiorna l'ordine manuale di tutte le abitudini (cross-device sync)
+   * @param {string[]} orderedIds - Array di habit ID nell'ordine desiderato
+   */
+  const updateHabitsOrder = useCallback(
+    (orderedIds) => {
+      if (!data) return
+
+      const newHabits = data.habits.map((h) => {
+        const idx = orderedIds.indexOf(h.id)
+        return idx !== -1 ? { ...h, order: idx, updatedAt: new Date().toISOString() } : h
+      })
+      const newData = { ...data, habits: newHabits, lastUpdated: new Date().toISOString() }
+      saveToStorage(newData)
+      setData(newData)
+
+      // Cloud sync: carica ogni habit riordinato (fire-and-forget)
+      if (userId) {
+        for (const habit of newHabits) {
+          if (orderedIds.includes(habit.id)) {
+            syncHabitToCloud(userId, habit).catch((err) =>
+              console.error('[useHabitStore] Sync updateHabitsOrder failed:', err)
+            )
+          }
+        }
+      }
+    },
+    [data, userId]
+  )
+
+  /**
    * Elimina un'abitudine
    * @param {string} habitId
    */
@@ -711,6 +741,7 @@ export function useHabitStore() {
     // Habit actions
     addHabit,
     updateHabit,
+    updateHabitsOrder,
     deleteHabit,
     clearHabitHistory,
 

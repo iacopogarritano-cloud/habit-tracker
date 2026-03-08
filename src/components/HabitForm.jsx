@@ -99,6 +99,7 @@ const DEFAULT_FORM = {
   unit: '',
   categoryId: '', // US-016
   timeframe: 'daily', // US-027
+  description: '',
 }
 
 export function HabitForm({ onSubmit, onCancel, initialData = null, categories = [], habits = [] }) {
@@ -438,6 +439,20 @@ export function HabitForm({ onSubmit, onCancel, initialData = null, categories =
             />
           ))}
         </div>
+      </div>
+
+      {/* Note / Descrizione (opzionale) */}
+      <div className="form-group">
+        <Label htmlFor="habit-description">Note (opzionale)</Label>
+        <textarea
+          id="habit-description"
+          value={form.description || ''}
+          onChange={(e) => handleChange('description', e.target.value)}
+          placeholder="Es. Multivitaminico, Omega 3, Vitamina C, Vitamina D..."
+          maxLength={500}
+          className="description-textarea"
+          rows={3}
+        />
       </div>
 
       {/* Actions */}
