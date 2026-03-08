@@ -208,31 +208,38 @@ function App() {
   useEffect(() => { localStorage.setItem('weighbit-sort-mode', sortMode) }, [sortMode])
   useEffect(() => { localStorage.setItem('weighbit-sort-order', JSON.stringify(manualOrder)) }, [manualOrder])
 
-  // Deriva/aggiorna manualOrder dal campo `order` degli habit (sync cross-device).
-  // Caso 1: nessun ordine locale → deriva tutto dal cloud (nuovo device/browser).
-  // Caso 2: ordine locale esiste → inserisce solo i nuovi habit (non ancora in manualOrder)
-  //         nella posizione indicata dal campo order del cloud, preservando l'ordine locale esistente.
+  // Sincronizza manualOrder con il campo order degli habit (già LWW-merged tra local e cloud).
+  // Caso completo: tutti gli habit hanno order → ricostruisce l'ordine dal merge (cloud o local vince per updatedAt).
+  // Caso parziale: solo alcuni hanno order (migrazione) → inserisce nuovi habit nella posizione cloud.
+  // L'equality check evita re-render inutili quando l'ordine non è cambiato (es. su check-in).
   useEffect(() => {
-    setManualOrder((prev) => {
-      if (prev.length === 0) {
-        // Nessun ordine locale: deriva tutto dal cloud
-        const habitsWithOrder = habits.filter((h) => h.order != null)
-        if (habitsWithOrder.length === 0) return prev
-        return [...habitsWithOrder].sort((a, b) => a.order - b.order).map((h) => h.id)
-      }
-      // Ordine locale esiste: trova habit nuovi arrivati dal cloud non ancora presenti
-      const newHabits = habits
-        .filter((h) => !prev.includes(h.id))
-        .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))
-      if (newHabits.length === 0) return prev
-      // Inserisce ogni nuovo habit nella posizione cloud (o in fondo se fuori range)
-      const result = [...prev]
-      for (const h of newHabits) {
-        const pos = Math.min(h.order ?? result.length, result.length)
-        result.splice(pos, 0, h.id)
-      }
-      return result
-    })
+    const habitsWithOrder = habits.filter((h) => h.order != null)
+    if (habitsWithOrder.length === 0) return
+
+    if (habitsWithOrder.length === habits.length) {
+      // Tutti hanno order: ricostruisci l'ordine completo dal campo order (già LWW-merged)
+      const newOrder = [...habitsWithOrder].sort((a, b) => a.order - b.order).map((h) => h.id)
+      setManualOrder((prev) =>
+        prev.length === newOrder.length && prev.every((id, i) => id === newOrder[i]) ? prev : newOrder
+      )
+    } else {
+      // Solo alcuni hanno order: aggiungi solo gli habit nuovi non ancora in manualOrder
+      setManualOrder((prev) => {
+        if (prev.length === 0) {
+          return [...habitsWithOrder].sort((a, b) => a.order - b.order).map((h) => h.id)
+        }
+        const newHabits = habits
+          .filter((h) => !prev.includes(h.id))
+          .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))
+        if (newHabits.length === 0) return prev
+        const result = [...prev]
+        for (const h of newHabits) {
+          const pos = Math.min(h.order ?? result.length, result.length)
+          result.splice(pos, 0, h.id)
+        }
+        return result
+      })
+    }
   }, [habits]) // intenzionale: setManualOrder è stabile, vogliamo rieseguire solo quando habits cambia
 
   // Punteggio per timeframe (US-V2-003): daily/weekly/monthly separati
