@@ -120,6 +120,8 @@ function App() {
   const dragHandlePressedRef = useRef(false)
   // Ref per touch drag su mobile
   const touchDragIdRef = useRef(null)
+  // Ref per la lista habits (per listener touchmove non-passive)
+  const habitListRef = useRef(null)
   // State per modale riordinamento compatto
   const [showReorderModal, setShowReorderModal] = useState(false)
   // State per conferma reset giornata
@@ -207,6 +209,16 @@ function App() {
   // Persisti sort settings in localStorage
   useEffect(() => { localStorage.setItem('weighbit-sort-mode', sortMode) }, [sortMode])
   useEffect(() => { localStorage.setItem('weighbit-sort-order', JSON.stringify(manualOrder)) }, [manualOrder])
+
+  // Listener touchmove non-passive per bloccare lo scroll durante touch drag
+  // React attacca i listener come passive per default → e.preventDefault() ignorato su iOS
+  useEffect(() => {
+    const preventScroll = (e) => {
+      if (touchDragIdRef.current) e.preventDefault()
+    }
+    document.addEventListener('touchmove', preventScroll, { passive: false })
+    return () => document.removeEventListener('touchmove', preventScroll)
+  }, [])
 
   // Sincronizza manualOrder con il campo order degli habit (già LWW-merged tra local e cloud).
   // Caso completo: tutti gli habit hanno order → ricostruisce l'ordine dal merge (cloud o local vince per updatedAt).
@@ -993,7 +1005,7 @@ function App() {
             </Button>
           </div>
         ) : (
-          <ul className="habit-list">
+          <ul ref={habitListRef} className="habit-list">
             {filteredHabits.map((habit) => {
               const todayCheckIn = getTodayCheckIn(habit.id)
               const currentValue = todayCheckIn?.value || 0
@@ -1274,6 +1286,16 @@ function App() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Badge categoria — full-width, visibile solo su mobile via CSS */}
+                  {category && (
+                    <span
+                      className="habit-category-badge habit-category-badge--footer"
+                      style={{ backgroundColor: habit.color + '20', color: habit.color }}
+                    >
+                      {category.icon} {category.name}
+                    </span>
+                  )}
                 </CardContent>
                 </Card>
                 </li>

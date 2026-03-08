@@ -786,6 +786,11 @@ body {
   max-width: 100%;
 }
 
+/* Footer badge: full-width in fondo alla card, nascosto su desktop */
+.habit-category-badge--footer {
+  display: none;
+}
+
 /* US-027: Badge timeframe (sett./mese) */
 .habit-timeframe-badge {
   position: absolute;
@@ -1014,30 +1019,40 @@ body {
 
 /* ============================================
    HABIT CARD - MOBILE LAYOUT (≤480px)
-   Ribilancia colonne e riduce bottoni per evitare wrap
+   Badge in fondo full-width, bottoni compatti senza wrap
    ============================================ */
 
 @media (max-width: 480px) {
-  /* Meno spazio alla colonna destra → più spazio al badge categoria */
-  .habit-right-col {
-    flex: 1.2;
-    min-width: 162px;
+  /* Flex-wrap per permettere al footer badge di occupare una riga intera */
+  .habit-card-content {
+    flex-wrap: wrap;
   }
 
-  /* Bottoni più compatti → 5 bottoni entrano in una riga senza wrap */
+  /* Bottoni 28px → tutti e 5 in una riga, niente dislivello */
   .btn-increment,
   .btn-decrement,
   .btn-check,
   .btn-edit,
   .btn-delete,
   .btn-complete-max {
-    width: 30px;
-    height: 30px;
-    font-size: 15px;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
   }
 
   .habit-actions {
-    gap: 4px;
+    gap: 3px;
+  }
+
+  /* Nascondi badge inline (dentro habit-meta), mostra footer badge */
+  .habit-meta .habit-category-badge {
+    display: none;
+  }
+
+  .habit-category-badge--footer {
+    display: inline-block;
+    flex: 0 0 100%;
+    margin-top: 4px;
   }
 }
 
