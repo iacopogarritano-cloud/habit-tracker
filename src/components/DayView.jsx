@@ -491,7 +491,10 @@ export function DayView({
         </div>
       </div>
       {/* Quick-add modal: immissione quantità variabile dal pulsante + */}
-      <Dialog open={!!quickAddModal} onOpenChange={(open) => !open && setQuickAddModal(null)}>
+      <Dialog
+        open={!!quickAddModal}
+        onOpenChange={(open) => { if (!open) { setQuickAddModal(null); setQuickAddAmount('') } }}
+      >
         <DialogContent className="max-w-xs">
           <DialogHeader>
             <DialogTitle>Aggiungi a {quickAddModal?.habitName}</DialogTitle>
@@ -502,6 +505,7 @@ export function DayView({
           <Input
             type="number"
             min="1"
+            step="1"
             value={quickAddAmount}
             onChange={(e) => setQuickAddAmount(e.target.value)}
             placeholder="Quantità"
@@ -510,7 +514,7 @@ export function DayView({
             style={{ marginTop: '4px' }}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setQuickAddModal(null)}>Annulla</Button>
+            <Button variant="outline" onClick={() => { setQuickAddModal(null); setQuickAddAmount('') }}>Annulla</Button>
             <Button
               onClick={handleQuickAdd}
               disabled={!quickAddAmount || parseInt(quickAddAmount, 10) <= 0}
