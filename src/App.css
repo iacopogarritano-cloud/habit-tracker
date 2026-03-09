@@ -1042,6 +1042,23 @@ body {
 
   .habit-actions {
     gap: 3px;
+    flex-wrap: nowrap; /* impedisce a × di andare a capo */
+  }
+
+  /* Reset margin-left del btn-edit: su mobile non serve il separatore visivo */
+  .btn-edit {
+    margin-left: 0;
+  }
+
+  /* Previeni overflow del nome nell'area slider */
+  .habit-info {
+    overflow: hidden;
+  }
+
+  /* Riduci font nome su mobile: evita che parole lunghe coprano lo slider */
+  .habit-name {
+    font-size: 0.82rem;
+    word-break: break-word;
   }
 
   /* Nascondi badge inline (dentro habit-meta), mostra footer badge */

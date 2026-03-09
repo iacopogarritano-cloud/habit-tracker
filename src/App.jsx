@@ -133,6 +133,10 @@ function App() {
   const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false)
   const [pendingDuplicateData, setPendingDuplicateData] = useState(null)
 
+  // State quick-add modal (+ variabile)
+  const [quickAddModal, setQuickAddModal] = useState(null) // { habitId, habitName, currentValue, unit }
+  const [quickAddAmount, setQuickAddAmount] = useState('')
+
   // State bug report (US-030)
   const [showBugReport, setShowBugReport] = useState(false)
   const [bugMessage, setBugMessage] = useState('')
@@ -360,6 +364,16 @@ function App() {
     updateHabitsOrder(newOrder)
   }, [habits, manualOrder, updateHabitsOrder])
 
+  // Handler per quick-add (modal +) — useCallback PRIMA degli early return (regola hooks)
+  const handleQuickAdd = useCallback(() => {
+    if (!quickAddModal) return
+    const amount = parseInt(quickAddAmount, 10)
+    if (isNaN(amount) || amount <= 0) return
+    checkIn(quickAddModal.habitId, quickAddModal.currentValue + amount)
+    setQuickAddModal(null)
+    setQuickAddAmount('')
+  }, [quickAddModal, quickAddAmount, checkIn])
+
   // Loading state
   if (isLoading || authLoading) {
     return <div className="app-loading">Caricamento...</div>
@@ -461,11 +475,6 @@ function App() {
       // Mostra toast con possibilità di annullare
       addToast(`Abitudine "${habitName}" eliminata`, 'warning', true, 6000)
     }
-  }
-
-  // Handler per incrementare
-  const handleIncrement = (habitId, currentValue) => {
-    checkIn(habitId, currentValue + 1)
   }
 
   // Handler per decrementare
@@ -1273,7 +1282,11 @@ function App() {
                             ✓
                           </button>
                           <button
-                            onClick={() => handleIncrement(habit.id, currentValue)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setQuickAddModal({ habitId: habit.id, habitName: habit.name, currentValue, unit: habit.unit })
+                              setQuickAddAmount('')
+                            }}
                             className="btn-increment"
                             disabled={isDaily ? currentValue >= habit.target : isCompleted}
                           >
@@ -1435,6 +1448,37 @@ function App() {
           </details>
         </footer>
       )}
+
+      {/* Quick-add modal: immissione quantità variabile dal pulsante + */}
+      <Dialog open={!!quickAddModal} onOpenChange={(open) => !open && setQuickAddModal(null)}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Aggiungi a {quickAddModal?.habitName}</DialogTitle>
+            <DialogDescription>
+              Inserisci la quantità da aggiungere{quickAddModal?.unit ? ` (${quickAddModal.unit})` : ''}.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            type="number"
+            min="1"
+            value={quickAddAmount}
+            onChange={(e) => setQuickAddAmount(e.target.value)}
+            placeholder="Quantità"
+            autoFocus
+            onKeyDown={(e) => { if (e.key === 'Enter') handleQuickAdd() }}
+            style={{ marginTop: '4px' }}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuickAddModal(null)}>Annulla</Button>
+            <Button
+              onClick={handleQuickAdd}
+              disabled={!quickAddAmount || parseInt(quickAddAmount, 10) <= 0}
+            >
+              Aggiungi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Toast notifications (US-022) */}
       <ToastContainer

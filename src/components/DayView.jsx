@@ -14,7 +14,17 @@
  * - onSelectDate: callback per selezionare una data
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from './ui/dialog'
 
 // Costanti - fuori dal componente per evitare ricreazione
 const MONTH_NAMES = [
@@ -135,6 +145,19 @@ export function DayView({
   const isFuture = date > today
   const isToday = date === today
 
+  // State quick-add modal (pulsante +)
+  const [quickAddModal, setQuickAddModal] = useState(null) // { habitId, habitName, currentValue, unit }
+  const [quickAddAmount, setQuickAddAmount] = useState('')
+
+  const handleQuickAdd = useCallback(() => {
+    if (!quickAddModal) return
+    const amount = parseInt(quickAddAmount, 10)
+    if (isNaN(amount) || amount <= 0) return
+    onCheckIn(quickAddModal.habitId, quickAddModal.currentValue + amount, date)
+    setQuickAddModal(null)
+    setQuickAddAmount('')
+  }, [quickAddModal, quickAddAmount, onCheckIn, date])
+
   // Mese visualizzato nel calendario (può essere diverso dalla data selezionata)
   const [viewMonth, setViewMonth] = useState(() => {
     const d = new Date(date)
@@ -221,11 +244,6 @@ export function DayView({
   const handleDayClick = (dayDate) => {
     if (dayDate > today) return // Non selezionare giorni futuri
     onSelectDate(dayDate)
-  }
-
-  // Handler per incrementare
-  const handleIncrement = (habitId, currentValue) => {
-    onCheckIn(habitId, currentValue + 1, date)
   }
 
   // Handler per decrementare
@@ -444,7 +462,11 @@ export function DayView({
                             ✓
                           </button>
                           <button
-                            onClick={() => handleIncrement(habit.id, habit.currentValue)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setQuickAddModal({ habitId: habit.id, habitName: habit.name, currentValue: habit.currentValue, unit: habit.unit })
+                              setQuickAddAmount('')
+                            }}
                             className="btn-increment"
                             disabled={habit.isCompleted}
                           >
@@ -468,6 +490,36 @@ export function DayView({
           )}
         </div>
       </div>
+      {/* Quick-add modal: immissione quantità variabile dal pulsante + */}
+      <Dialog open={!!quickAddModal} onOpenChange={(open) => !open && setQuickAddModal(null)}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Aggiungi a {quickAddModal?.habitName}</DialogTitle>
+            <DialogDescription>
+              Inserisci la quantità da aggiungere{quickAddModal?.unit ? ` (${quickAddModal.unit})` : ''}.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            type="number"
+            min="1"
+            value={quickAddAmount}
+            onChange={(e) => setQuickAddAmount(e.target.value)}
+            placeholder="Quantità"
+            autoFocus
+            onKeyDown={(e) => { if (e.key === 'Enter') handleQuickAdd() }}
+            style={{ marginTop: '4px' }}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuickAddModal(null)}>Annulla</Button>
+            <Button
+              onClick={handleQuickAdd}
+              disabled={!quickAddAmount || parseInt(quickAddAmount, 10) <= 0}
+            >
+              Aggiungi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
