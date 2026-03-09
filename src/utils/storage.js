@@ -1226,6 +1226,53 @@ export function calculateCurrentStreak(data, habitId) {
 }
 
 /**
+ * Restituisce una data di riferimento N periodi fa rispetto a `today`.
+ * Per mensile: primo giorno del mese N mesi fa.
+ * Per settimanale: stesso giorno della settimana N settimane fa.
+ */
+function getDateNPeriodsAgo(today, timeframe, n) {
+  const d = new Date(today + 'T00:00:00')
+  if (timeframe === 'monthly') {
+    d.setMonth(d.getMonth() - n)
+  } else if (timeframe === 'weekly') {
+    d.setDate(d.getDate() - n * 7)
+  }
+  return formatLocalDate(d)
+}
+
+/**
+ * Calcola lo streak di periodi consecutivi completati per abitudini weekly/monthly.
+ * Logica identica al daily streak ma su periodi: se il periodo corrente non è ancora
+ * completato, viene saltato (non rompe lo streak — il mese è ancora in corso).
+ * @param {StorageData} data
+ * @param {string} habitId
+ * @returns {number} Numero di periodi consecutivi completati
+ */
+export function calculatePeriodStreak(data, habitId) {
+  const habit = data.habits.find((h) => h.id === habitId)
+  if (!habit || !habit.timeframe || habit.timeframe === 'daily') return 0
+
+  const today = getTodayDate()
+  let streak = 0
+
+  for (let i = 0; i < 120; i++) {
+    const refDate = getDateNPeriodsAgo(today, habit.timeframe, i)
+    const completion = getPeriodCompletionForHabit(data, habit, refDate, true)
+
+    // Periodo corrente (i=0) non ancora completato → salta, streak non rotto
+    if (i === 0 && completion.percent < 100) continue
+
+    if (completion.percent >= 100) {
+      streak++
+    } else {
+      break
+    }
+  }
+
+  return streak
+}
+
+/**
  * Calcola lo streak più lungo di sempre
  * @param {StorageData} data - Stato attuale
  * @param {string} habitId - ID abitudine
@@ -1308,8 +1355,12 @@ export function calculateCompletionRate(data, habitId, days = 30) {
  * @returns {{ currentStreak: number, longestStreak: number, completionRate: number, history: Map<string, CheckIn> }}
  */
 export function getHabitStats(data, habitId) {
+  const habit = data.habits.find((h) => h.id === habitId)
+  const isDaily = !habit?.timeframe || habit.timeframe === 'daily'
   return {
-    currentStreak: calculateCurrentStreak(data, habitId),
+    currentStreak: isDaily
+      ? calculateCurrentStreak(data, habitId)
+      : calculatePeriodStreak(data, habitId),
     longestStreak: calculateLongestStreak(data, habitId),
     completionRate: calculateCompletionRate(data, habitId, 30),
     history: getHabitHistory(data, habitId),
@@ -1478,6 +1529,7 @@ export default {
   // Streak & History (US-008)
   getHabitHistory,
   calculateCurrentStreak,
+  calculatePeriodStreak,
   calculateLongestStreak,
   calculateCompletionRate,
   getHabitStats,
