@@ -1,5 +1,9 @@
 /**
  * ScoringInfoModal - Spiega come funziona il punteggio pesato di Weighbit
+ *
+ * IMPORTANTE: aggiornare questo modal ogni volta che si modifica la logica
+ * di calcolo del punteggio (storage.js: getWeightedDailyProgress,
+ * getWeightedProgressForDate, getPeriodDivisor, getPeriodCompletionForHabit).
  */
 import {
   Dialog,
@@ -20,33 +24,36 @@ export function ScoringInfoModal({ open, onClose }) {
 
           {/* Formula base */}
           <section className="scoring-info-section">
-            <h3>La formula</h3>
+            <h3>La formula base</h3>
             <p>
-              Il punteggio giornaliero è una <strong>media pesata</strong> di tutte le tue abitudini:
+              Ogni punteggio in Weighbit (giornaliero, settimanale, mensile) è una
+              <strong> media pesata</strong> delle tue abitudini:
             </p>
             <div className="scoring-formula-box">
-              Punteggio = Σ (peso × completamento%) / Σ pesi totali
+              Punteggio = Σ (peso_effettivo × completamento%) / Σ pesi_effettivi
             </div>
             <p>
-              Un'abitudine con peso 5 incide il doppio di una con peso 2 — indipendentemente da quante ne hai.
+              Un'abitudine con peso 5 incide il doppio di una con peso 2,
+              indipendentemente da quante abitudini hai in totale.
             </p>
           </section>
 
           {/* Pesi */}
           <section className="scoring-info-section">
-            <h3>I pesi (1–5)</h3>
+            <h3>I pesi (1–5 stelle)</h3>
+            <p>Il peso rappresenta <strong>l'importanza di ogni singola occorrenza</strong> dell'abitudine:</p>
             <div className="scoring-weight-grid">
               <div className="scoring-weight-row">
                 <span className="scoring-weight-stars">⭐</span>
-                <span>Abitudine di routine, poco impatto se mancata</span>
+                <span>Routine di supporto — poco impatto se saltata</span>
               </div>
               <div className="scoring-weight-row">
                 <span className="scoring-weight-stars">⭐⭐⭐</span>
-                <span>Abitudine importante, impatta la settimana</span>
+                <span>Abitudine importante — impatta la settimana</span>
               </div>
               <div className="scoring-weight-row">
                 <span className="scoring-weight-stars">⭐⭐⭐⭐⭐</span>
-                <span>Priorità massima, fondamentale per il benessere</span>
+                <span>Priorità massima — fondamentale per il benessere</span>
               </div>
             </div>
           </section>
@@ -55,82 +62,126 @@ export function ScoringInfoModal({ open, onClose }) {
           <section className="scoring-info-section">
             <h3>Frequenza e normalizzazione</h3>
             <p>
-              Le abitudini non-quotidiane vengono normalizzate per evitare che fare una cosa
-              una volta al mese valga quanto farla ogni giorno:
+              Fare qualcosa una volta al mese è diverso dal farlo ogni giorno.
+              Per riflettere questo, le abitudini non-quotidiane vengono normalizzate
+              tramite un divisore applicato al loro peso:
             </p>
             <table className="scoring-timeframe-table">
               <thead>
                 <tr>
                   <th>Frequenza</th>
                   <th>Divisore</th>
-                  <th>Peso 4 → peso effettivo</th>
+                  <th>Esempio: peso 4 → peso effettivo</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>Giornaliera</td>
                   <td>÷ 1</td>
-                  <td><strong>4.0</strong> / giorno</td>
+                  <td><strong>4.0</strong> al giorno</td>
                 </tr>
                 <tr>
                   <td>Settimanale</td>
                   <td>÷ 1.5</td>
-                  <td><strong>2.7</strong> / giorno</td>
+                  <td><strong>2.7</strong> al giorno</td>
                 </tr>
                 <tr>
                   <td>Mensile</td>
                   <td>÷ 2</td>
-                  <td><strong>2.0</strong> / giorno</td>
+                  <td><strong>2.0</strong> al giorno</td>
                 </tr>
               </tbody>
             </table>
             <p className="scoring-info-note">
-              Una mensile (peso 4) completata vale circa la metà di una giornaliera (peso 4)
-              completata ogni giorno del mese.
+              Ad esempio, se avessi un'abitudine giornaliera con peso 4 e un'abitudine mensile
+              con peso 4, quella giornaliera avrebbe il doppio dell'impatto sul punteggio
+              perché richiede costanza quotidiana.
             </p>
           </section>
 
           {/* Retroattività */}
           <section className="scoring-info-section">
-            <h3>Abitudini settimanali e mensili</h3>
+            <h3>Abitudini settimanali e mensili: quando le fai non importa</h3>
             <p>
-              Per le abitudini non-quotidiane, quello che conta è <strong>completare l'obiettivo
-              nel periodo</strong>, non quando lo fai:
+              Per le abitudini non-quotidiane, conta solo
+              <strong> completare l'obiettivo nel periodo</strong>, non il giorno esatto:
             </p>
             <ul className="scoring-info-list">
               <li>
-                <strong>Senza penalizzazione tardiva:</strong> se visiti i nonni il 28 marzo,
-                il tuo punteggio di marzo conta quella visita per <em>tutto il mese</em>,
-                non solo per gli ultimi 3 giorni.
+                <strong>Nei report (settimanale/mensile):</strong> se hai completato
+                l'obiettivo in qualsiasi giorno del periodo, tutti i giorni di quel
+                periodo vengono contati al 100%. Ad esempio, se avessi un'abitudine mensile
+                e la completassi il 28 del mese, il report mostrerebbe il contributo
+                completo per tutti e 28 i giorni — non solo gli ultimi 2.
               </li>
               <li>
-                <strong>Punteggio live (OGGI):</strong> fino a quando non hai completato l'abitudine,
-                il punteggio giornaliero la conta come 0%. Una volta fatta, conta 100%
-                per il resto del periodo.
+                <strong>Punteggio live (OGGI):</strong> fino al completamento conta 0%,
+                poi passa al 100% per il resto del periodo. Il punteggio "OGGI" riflette
+                solo ciò che è già accaduto.
+              </li>
+            </ul>
+          </section>
+
+          {/* Quali punteggi esistono */}
+          <section className="scoring-info-section">
+            <h3>I punteggi dell'app</h3>
+            <p>Weighbit mostra punteggi diversi per diversi orizzonti temporali.
+              Tutti usano la stessa formula pesata, applicata a periodi diversi:</p>
+            <ul className="scoring-info-list">
+              <li>
+                <strong>OGGI:</strong> media pesata in tempo reale delle abitudini di oggi.
+                Le abitudini settimanali/mensili contano 100% se già completate nel periodo
+                corrente, 0% se non ancora.
+              </li>
+              <li>
+                <strong>Ultimi 7 / 30 giorni:</strong> media dei punteggi giornalieri
+                degli N giorni precedenti. Mostra la tua costanza recente.
+              </li>
+              <li>
+                <strong>Questa settimana / Questo mese:</strong> media dei punteggi
+                giornalieri del periodo corrente, con retroattività per le abitudini
+                non-quotidiane.
               </li>
             </ul>
           </section>
 
           {/* Esempio pratico */}
           <section className="scoring-info-section">
-            <h3>Esempio pratico</h3>
-            <p>Hai 2 abitudini, entrambe con peso 4:</p>
+            <h3>Esempio pratico (punteggio OGGI)</h3>
+            <p>
+              Supponi di avere due abitudini, entrambe con peso 4:
+            </p>
             <ul className="scoring-info-list">
-              <li>🏃 Corsa mattutina — <strong>giornaliera</strong>, peso effettivo 4.0</li>
-              <li>👨‍👩‍👧 Visita ai nonni — <strong>mensile</strong>, peso effettivo 2.0</li>
+              <li>
+                Un'abitudine <strong>giornaliera</strong> (es. una qualsiasi routine quotidiana) —
+                peso effettivo <strong>4.0</strong>
+              </li>
+              <li>
+                Un'abitudine <strong>mensile</strong> (es. qualsiasi obiettivo mensile) —
+                peso effettivo <strong>2.0</strong> (÷2)
+              </li>
             </ul>
-            <p>
-              Se fai la corsa e visiti i nonni:{' '}
-              <strong>(4.0×100% + 2.0×100%) / (4.0 + 2.0) = 100%</strong>
-            </p>
-            <p>
-              Se fai solo la corsa:{' '}
-              <strong>(4.0×100% + 2.0×0%) / 6.0 = 66.7%</strong>
-            </p>
-            <p>
-              Se fai solo i nonni:{' '}
-              <strong>(4.0×0% + 2.0×100%) / 6.0 = 33.3%</strong>
-            </p>
+            <p>Totale pesi effettivi: 4.0 + 2.0 = <strong>6.0</strong></p>
+            <div className="scoring-examples-grid">
+              <div className="scoring-example-row">
+                <span>Entrambe completate oggi</span>
+                <strong>100%</strong>
+              </div>
+              <div className="scoring-example-row">
+                <span>Solo la giornaliera completata</span>
+                <strong>66.7%</strong>
+                <span className="scoring-example-calc">(4.0 / 6.0)</span>
+              </div>
+              <div className="scoring-example-row">
+                <span>Solo la mensile completata</span>
+                <strong>33.3%</strong>
+                <span className="scoring-example-calc">(2.0 / 6.0)</span>
+              </div>
+              <div className="scoring-example-row">
+                <span>Nessuna completata</span>
+                <strong>0%</strong>
+              </div>
+            </div>
           </section>
 
         </div>

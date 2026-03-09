@@ -2720,6 +2720,47 @@ body {
   border-left: 2px solid var(--color-border);
 }
 
+.scoring-examples-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.scoring-example-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.scoring-example-row:last-child {
+  border-bottom: none;
+}
+
+.scoring-example-row span:first-child {
+  flex: 1;
+  color: var(--color-text-secondary, #888);
+}
+
+.scoring-example-row strong {
+  min-width: 44px;
+  text-align: right;
+  color: var(--color-primary);
+}
+
+.scoring-example-calc {
+  font-size: 11px;
+  color: var(--color-text-secondary, #888);
+  opacity: 0.7;
+  min-width: 60px;
+}
+
 /* Bottone ℹ con tooltip (US-031) */
 /* Pallino ℹ in basso a destra della card — piccolo e discreto (US-031) */
 .report-card-info {

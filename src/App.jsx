@@ -1170,9 +1170,14 @@ function App() {
                     </div>
                     <div className="habit-meta">
                       <span className="habit-weight">{'★'.repeat(habit.weight)}</span>
-                      {isDaily && stats.currentStreak > 0 && (
-                        <span className="habit-streak">🔥 {stats.currentStreak}</span>
-                      )}
+                      {isDaily
+                        ? stats.currentStreak > 0 && (
+                            <span className="habit-streak">🔥 {stats.currentStreak}</span>
+                          )
+                        : isCompleted && (
+                            <span className="habit-streak">🔥</span>
+                          )
+                      }
                       {category && (
                         <span
                           className="habit-category-badge"
