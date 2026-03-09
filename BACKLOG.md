@@ -136,6 +136,35 @@ La migrazione tra habit tracker è una delle principali barriere all'adozione. U
 
 ---
 
+### US-V2-009: Divisore timeframe configurabile dall'utente
+**Priority:** V2 - Could Have
+
+**User Story:**
+- **As a**: power user di Weighbit
+- **I want to**: poter regolare il divisore di normalizzazione per abitudini settimanali e mensili (default: ÷1.5 e ÷2)
+- **So that**: possa personalizzare quanto peso voglio dare alle abitudini non-quotidiane rispetto alle giornaliere
+
+**Rationale:**
+Il divisore attuale (÷1.5 settimanale, ÷2 mensile) è una scelta di default ragionevole ma arbitraria.
+Un power user potrebbe voler portare le mensili a ÷1 (stesso peso delle daily) o a ÷5 (peso minimo).
+Esporre questo controllo rende la value proposition ancora più trasparente e differenziante.
+
+**Acceptance Criteria:**
+- [ ] Sezione "Impostazioni punteggio" (o dentro il modal ℹ️ già esistente)
+- [ ] Slider o input numerico per "Divisore settimanale" (range: 1.0–5.0, default: 1.5)
+- [ ] Slider o input numerico per "Divisore mensile" (range: 1.0–10.0, default: 2.0)
+- [ ] Anteprima live del punteggio attuale con il nuovo divisore
+- [ ] Salvataggio in localStorage (e sync cloud se loggato)
+- [ ] Il modal ℹ️ si aggiorna per mostrare i divisori correnti dell'utente
+
+**Open Questions:**
+- Rischio confusione: esporre questo numero a tutti gli utenti o solo a chi clicca "Avanzato"?
+- Come gestire il cambio di divisore rispetto allo storico (punteggi passati cambiano retroattivamente)?
+
+**WSJF:** BV=3, TC=1, RROE=2, JS=3 → SP=2
+
+---
+
 ### US-V2-006: Dominio Custom (invece di Vercel)
 **Priority:** V2 - Nice to Have
 
