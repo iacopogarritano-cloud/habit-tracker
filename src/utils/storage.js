@@ -164,7 +164,16 @@ export function getMonthBounds(dateStr) {
  * @param {string} [date] - Data di riferimento (default: oggi)
  * @returns {{ currentValue: number, target: number, percent: number }}
  */
-export function getPeriodCompletionForHabit(data, habit, date = getTodayDate()) {
+// Divisore per normalizzazione peso in base al timeframe.
+// Evita che abitudini mensili (fatte 1x) valgano quanto giornaliere (fatte 30x).
+// daily ÷1, weekly ÷1.5, monthly ÷2.
+export function getPeriodDivisor(timeframe) {
+  if (timeframe === 'monthly') return 2
+  if (timeframe === 'weekly') return 1.5
+  return 1
+}
+
+export function getPeriodCompletionForHabit(data, habit, date = getTodayDate(), retroactive = false) {
   // Daily: logica originale
   if (!habit.timeframe || habit.timeframe === 'daily') {
     const checkIn = getCheckIn(data, habit.id, date)
@@ -184,19 +193,18 @@ export function getPeriodCompletionForHabit(data, habit, date = getTodayDate()) 
   let currentValue = 0
   const current = new Date(bounds.start + 'T00:00:00')
   const end = new Date(bounds.end + 'T00:00:00')
-  // Usa `date` come cap invece di una seconda chiamata a getTodayDate()
-  // evita race condition a mezzanotte e usa la stessa data di riferimento del periodo
   const todayDate = new Date(date + 'T00:00:00')
+  // retroactive = true: guarda l'intero periodo (per report storici).
+  // Esempio: mensile fatta il 28 → tutti i giorni del mese mostrano 100%.
+  const endCap = retroactive ? end : todayDate
 
-  while (current <= end && current <= todayDate) {
+  while (current <= end && current <= endCap) {
     const dateStr = formatLocalDate(current)
     const checkIn = getCheckIn(data, habit.id, dateStr)
     if (checkIn && checkIn.value > 0) {
       if (habit.type === 'boolean') {
-        // Boolean: conta i giorni fatti
         currentValue++
       } else {
-        // Count/duration: somma i valori
         currentValue += checkIn.value
       }
     }
@@ -674,8 +682,10 @@ export function getWeightedDailyProgress(data) {
 
   for (const habit of activeHabits) {
     const completionPercent = getHabitCompletionPercent(data, habit.id) / 100
-    weightedSum += habit.weight * completionPercent
-    totalWeight += habit.weight
+    const divisor = getPeriodDivisor(habit.timeframe)
+    const effectiveWeight = habit.weight / divisor
+    weightedSum += effectiveWeight * completionPercent
+    totalWeight += effectiveWeight
 
     if (completionPercent >= 1) {
       completedCount++
@@ -702,11 +712,11 @@ export function getWeightedDailyProgress(data) {
  * @param {string} date - Data YYYY-MM-DD
  * @returns {number} Percentuale 0-100
  */
-export function getHabitCompletionPercentForDate(data, habitId, date) {
+export function getHabitCompletionPercentForDate(data, habitId, date, retroactive = false) {
   const habit = data.habits.find((h) => h.id === habitId)
   if (!habit) return 0
 
-  return getPeriodCompletionForHabit(data, habit, date).percent
+  return getPeriodCompletionForHabit(data, habit, date, retroactive).percent
 }
 
 /**
@@ -731,14 +741,19 @@ export function getWeightedProgressForDate(data, date) {
   let hasAnyCheckIn = false
 
   for (const habit of habitsForDate) {
-    const completionPercent = getHabitCompletionPercentForDate(data, habit.id, date) / 100
+    const isDaily = !habit.timeframe || habit.timeframe === 'daily'
+    // retroactive = true per weekly/monthly: se fatta in qualsiasi momento del periodo,
+    // tutti i giorni di quel periodo mostrano 100% (no penalizzazione tardiva).
+    const completionPercent = getHabitCompletionPercentForDate(data, habit.id, date, !isDaily) / 100
 
     // Verifica se c'è almeno un check-in per questa data
     const checkIn = getCheckIn(data, habit.id, date)
     if (checkIn) hasAnyCheckIn = true
 
-    weightedSum += habit.weight * completionPercent
-    totalWeight += habit.weight
+    const divisor = getPeriodDivisor(habit.timeframe)
+    const effectiveWeight = habit.weight / divisor
+    weightedSum += effectiveWeight * completionPercent
+    totalWeight += effectiveWeight
 
     if (completionPercent >= 1) {
       completedCount++

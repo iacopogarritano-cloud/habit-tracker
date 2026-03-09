@@ -24,6 +24,7 @@ import supabase from './lib/supabase'
 import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
 import { Card, CardContent } from './components/ui/card'
+import { ScoringInfoModal } from './components/ScoringInfoModal'
 import EmojiPicker from 'emoji-picker-react'
 import {
   Dialog,
@@ -101,6 +102,8 @@ function App() {
   const [showHeatmapView, setShowHeatmapView] = useState(false)
   // State per trend view (US-V2-008)
   const [showTrendView, setShowTrendView] = useState(false)
+  // State per modal spiegazione punteggio
+  const [showScoringInfo, setShowScoringInfo] = useState(false)
   const [reportInitialPeriod, setReportInitialPeriod] = useState(null)
 
   // Sort mode: 'weight' | 'alpha' | 'category' | 'manual'
@@ -708,6 +711,17 @@ function App() {
         multiTimeframeProgress={multiTimeframeProgress}
       />
 
+      {/* Link spiegazione punteggio */}
+      <div className="scoring-info-link-row">
+        <button
+          className="scoring-info-link"
+          onClick={() => setShowScoringInfo(true)}
+          title="Come funziona il punteggio?"
+        >
+          ℹ️ Come viene calcolato il punteggio?
+        </button>
+      </div>
+
       {/* Form creazione/modifica abitudine (US-002, US-006) */}
       {showForm && (
         <section className="form-section">
@@ -720,6 +734,9 @@ function App() {
           />
         </section>
       )}
+
+      {/* Modal spiegazione punteggio */}
+      <ScoringInfoModal open={showScoringInfo} onClose={() => setShowScoringInfo(false)} />
 
       {/* Modal conferma eliminazione (US-007) */}
       <Dialog open={!!deletingHabit} onOpenChange={(open) => !open && setDeletingHabit(null)}>
