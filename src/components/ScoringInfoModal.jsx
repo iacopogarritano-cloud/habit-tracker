@@ -33,7 +33,7 @@ export function ScoringInfoModal({ open, onClose }) {
               Punteggio = Σ (peso_effettivo × completamento%) / Σ pesi_effettivi
             </div>
             <p>
-              Un'abitudine con peso 5 incide il doppio di una con peso 2,
+              Un'abitudine con peso 4 incide il doppio di una con peso 2,
               indipendentemente da quante abitudini hai in totale.
             </p>
           </section>
@@ -49,7 +49,7 @@ export function ScoringInfoModal({ open, onClose }) {
               </div>
               <div className="scoring-weight-row">
                 <span className="scoring-weight-stars">⭐⭐⭐</span>
-                <span>Abitudine importante — impatta la settimana</span>
+                <span>Abitudine importante — incide sensibilmente sul punteggio</span>
               </div>
               <div className="scoring-weight-row">
                 <span className="scoring-weight-stars">⭐⭐⭐⭐⭐</span>
@@ -109,7 +109,7 @@ export function ScoringInfoModal({ open, onClose }) {
 
           {/* Retroattività */}
           <section className="scoring-info-section">
-            <h3>Abitudini settimanali e mensili: quando le fai non importa</h3>
+            <h3>Retroattività delle abitudini non-quotidiane</h3>
             <p>
               Per le abitudini non-quotidiane, conta solo
               <strong> completare l'obiettivo nel periodo</strong>, non il giorno esatto:
@@ -118,9 +118,8 @@ export function ScoringInfoModal({ open, onClose }) {
               <li>
                 <strong>Nei report (settimanale/mensile):</strong> se hai completato
                 l'obiettivo in qualsiasi giorno del periodo, tutti i giorni di quel
-                periodo vengono contati al 100%. Ad esempio, se avessi un'abitudine mensile
-                e la completassi il 28 del mese, il report mostrerebbe il contributo
-                completo per tutti e 28 i giorni — non solo gli ultimi 2.
+                periodo vengono contati al 100%. Il punteggio di periodo risulta
+                comunque 100% indipendentemente da quando hai completato l'abitudine.
               </li>
               <li>
                 <strong>Punteggio live (OGGI):</strong> fino al completamento conta 0%,
@@ -128,6 +127,13 @@ export function ScoringInfoModal({ open, onClose }) {
                 solo ciò che è già accaduto.
               </li>
             </ul>
+            <p className="scoring-info-note">
+              Nota: il divisore dinamico fa sì che i giorni a fine periodo pesino
+              di più di quelli a inizio periodo nel punteggio giornaliero. Per questo,
+              completare un'abitudine mensile il 28 del mese dà un contributo giornaliero
+              maggiore rispetto al completarla il giorno 1 — anche se in entrambi i casi
+              il report mensile mostra 100%.
+            </p>
           </section>
 
           {/* Quali punteggi esistono */}
