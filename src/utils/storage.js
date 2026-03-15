@@ -164,12 +164,39 @@ export function getMonthBounds(dateStr) {
  * @param {string} [date] - Data di riferimento (default: oggi)
  * @returns {{ currentValue: number, target: number, percent: number }}
  */
-// Divisore per normalizzazione peso in base al timeframe.
-// Evita che abitudini mensili (fatte 1x) valgano quanto giornaliere (fatte 30x).
-// daily ÷1, weekly ÷1.5, monthly ÷2.
-export function getPeriodDivisor(timeframe) {
-  if (timeframe === 'monthly') return 2
-  if (timeframe === 'weekly') return 1.5
+// Divisore dinamico per normalizzazione peso in base al timeframe e al giorno nel periodo.
+// Evita che abitudini settimanali/mensili pesino troppo nei giorni iniziali del periodo,
+// quando l'esito finale è ancora incerto ("black box").
+//
+// Formula: divisoreStatico × (lunghezzaPeriodo / giornoNelPeriodo)
+//   - Lunedì (1/7):  1.5 × 7/1 = 10.5  → peso minuscolo (periodo appena iniziato)
+//   - Domenica (7/7): 1.5 × 7/7 = 1.5  → peso pieno (fine periodo, divisore statico)
+//   - Mese giorno 1: 2 × 30/1 = 60
+//   - Mese ultimo giorno: 2 × 30/30 = 2 → peso pieno
+//
+// Scelta di design (Opzione A): il divisore è sempre dinamico, anche per date storiche.
+// Il punteggio di un giorno passato rimane uguale a quello che era in quel momento,
+// senza ricalcoli retroattivi quando il periodo si chiude.
+export function getPeriodDivisor(timeframe, date = getTodayDate()) {
+  // Guard: date non valida → fallback a divisore 1 (nessuna normalizzazione)
+  if (!date || isNaN(new Date(date + 'T00:00:00').getTime())) return 1
+
+  if (timeframe === 'monthly') {
+    const { start, end } = getMonthBounds(date)
+    const startDate = new Date(start + 'T00:00:00')
+    const endDate = new Date(end + 'T00:00:00')
+    // Math.round (non Math.floor) per tollerare shift DST (±1h = ±0.04 giorni)
+    const periodLength = Math.round((endDate - startDate) / 86400000) + 1
+    const dayInPeriod = Math.round((new Date(date + 'T00:00:00') - startDate) / 86400000) + 1
+    return 2 * periodLength / dayInPeriod
+  }
+  if (timeframe === 'weekly') {
+    const { start } = getWeekBounds(date)
+    const startDate = new Date(start + 'T00:00:00')
+    // Math.round (non Math.floor) per tollerare shift DST (±1h = ±0.04 giorni)
+    const dayInPeriod = Math.round((new Date(date + 'T00:00:00') - startDate) / 86400000) + 1
+    return 1.5 * 7 / dayInPeriod
+  }
   return 1
 }
 
@@ -676,13 +703,14 @@ export function getWeightedDailyProgress(data) {
     return { percent: 0, completed: 0, total: 0 }
   }
 
+  const today = getTodayDate()
   let weightedSum = 0
   let totalWeight = 0
   let completedCount = 0
 
   for (const habit of activeHabits) {
     const completionPercent = getHabitCompletionPercent(data, habit.id) / 100
-    const divisor = getPeriodDivisor(habit.timeframe)
+    const divisor = getPeriodDivisor(habit.timeframe, today)
     const effectiveWeight = habit.weight / divisor
     weightedSum += effectiveWeight * completionPercent
     totalWeight += effectiveWeight
@@ -750,7 +778,7 @@ export function getWeightedProgressForDate(data, date) {
     const checkIn = getCheckIn(data, habit.id, date)
     if (checkIn) hasAnyCheckIn = true
 
-    const divisor = getPeriodDivisor(habit.timeframe)
+    const divisor = getPeriodDivisor(habit.timeframe, date)
     const effectiveWeight = habit.weight / divisor
     weightedSum += effectiveWeight * completionPercent
     totalWeight += effectiveWeight

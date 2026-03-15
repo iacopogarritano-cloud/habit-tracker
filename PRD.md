@@ -146,7 +146,9 @@ Come utente, voglio...
 **Dashboard principale (Homepage):**
 - **⭐ MINI DASHBOARD OVERVIEW** (top of page) - **UNIQUE FEATURE!**
   - **Weighted Completion % Today:** Es. "72% delle priorità completate"
-  - Formula: `(Σ peso_habit × completion_%) / Σ peso_totale`
+  - Formula: `Σ(pesoEffettivo × completion%) / Σ pesoEffettivo`
+  - `pesoEffettivo = weight / divisoreDinamico`
+  - **Divisore dinamico:** per abitudini settimanali/mensili, il divisore cresce da un valore alto a inizio periodo fino al divisore pieno (÷1.5 settimanale, ÷2 mensile) a fine periodo. Questo evita che l'esito incerto di un'abitudine settimanale penalizzi il punteggio del lunedì.
   - Visual: Circular progress bar o gauge
   - Color-coded: Verde (>80%), Giallo (60-80%), Rosso (<60%)
   - **Value:** Colpo d'occhio su "come sta andando la mia vita oggi" (non solo "quante abitudini")

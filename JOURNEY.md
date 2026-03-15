@@ -231,6 +231,23 @@ Building a habit tracking application to demonstrate end-to-end product manageme
 - **Trade-offs:** More initial setup vs deeper insights and interview talking points
 - **Outcome:** 11 user stories prioritized, clear MVP scope (5 Must Have = 18 SP ≈ 3-4 weeks)
 
+**9. Dynamic Divisor for Weekly/Monthly Habits (Scoring Integrity)**
+- **Decision:** Replace static divisors (÷1.5 weekly, ÷2 monthly) with a dynamic divisor that starts high on day 1 of the period and converges to the static value on the last day
+- **Formula:** `dynamicDivisor = staticDivisor × (periodLength / dayInPeriod)`
+  - Weekly Monday (1/7): ÷10.5 → weekly habit has minimal weight
+  - Weekly Sunday (7/7): ÷1.5 → full static weight ✓
+  - Monthly day 1: ÷60 → minimal weight
+  - Monthly last day: ÷2 → full static weight ✓
+- **Problem it solves:** Static divisors caused weekly habits to artificially deflate the daily score on Mondays (when the week is just starting and the outcome is unknown). A ÷1.5 weight on Monday implies the same certainty as on Sunday — which is mathematically wrong.
+- **Option A (dynamic always) vs Option B (static for past, dynamic for current):**
+  - Option B was rejected because it creates *retroactive score changes*: the score of a past Monday would change once the week closes (from ÷10.5 to ÷1.5). The past should be immutable.
+  - Option A was chosen: the score of any day reflects exactly the information available on that day. Period.
+- **100% cap guarantee:** The formula is `earnedWeight / totalWeight`, where `earnedWeight ≤ totalWeight` always. Score can never exceed 100% regardless of divisor value.
+- **Outcome:** Score is now honest about uncertainty. Early in the period, weekly/monthly habits contribute little (outcome unknown). By end of period, they have full intended weight. This eliminates the "Monday score is artificially low" problem.
+
+**PM Talking Point:**
+> "I identified a scoring integrity issue: static divisors on weekly habits made Monday daily scores artificially low, because the app was penalizing Monday as if the weekly habit was already overdue. I designed a dynamic divisor formula that starts high on Monday (÷10.5) and converges to the intended ÷1.5 by Sunday. I also evaluated two retroactive scoring options and chose the one that preserves score immutability — past scores never change, just like a journal entry."
+
 **8. BACKLOG.md Local (vs Notion MCP Integration)**
 - **Decision:** Manage backlog in local BACKLOG.md file instead of Notion
 - **Rationale:**

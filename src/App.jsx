@@ -137,6 +137,10 @@ function App() {
   const [quickAddModal, setQuickAddModal] = useState(null) // { habitId, habitName, currentValue, unit }
   const [quickAddAmount, setQuickAddAmount] = useState('')
 
+  // State quick-remove modal (- variabile)
+  const [quickRemoveModal, setQuickRemoveModal] = useState(null) // { habitId, habitName, currentValue, unit }
+  const [quickRemoveAmount, setQuickRemoveAmount] = useState('')
+
   // State bug report (US-030)
   const [showBugReport, setShowBugReport] = useState(false)
   const [bugMessage, setBugMessage] = useState('')
@@ -374,6 +378,16 @@ function App() {
     setQuickAddAmount('')
   }, [quickAddModal, quickAddAmount, checkIn])
 
+  // Handler per quick-remove (modal -) — useCallback PRIMA degli early return (regola hooks)
+  const handleQuickRemove = useCallback(() => {
+    if (!quickRemoveModal) return
+    const amount = parseInt(quickRemoveAmount, 10)
+    if (isNaN(amount) || amount <= 0) return
+    checkIn(quickRemoveModal.habitId, Math.max(0, quickRemoveModal.currentValue - amount))
+    setQuickRemoveModal(null)
+    setQuickRemoveAmount('')
+  }, [quickRemoveModal, quickRemoveAmount, checkIn])
+
   // Loading state
   if (isLoading || authLoading) {
     return <div className="app-loading">Caricamento...</div>
@@ -477,12 +491,6 @@ function App() {
     }
   }
 
-  // Handler per decrementare
-  const handleDecrement = (habitId, currentValue) => {
-    if (currentValue > 0) {
-      checkIn(habitId, currentValue - 1)
-    }
-  }
 
   // Handler per reset giornata (con undo support)
   const handleResetDay = () => {
@@ -792,7 +800,22 @@ function App() {
       {selectedDate && (
         <DayView
           date={selectedDate}
-          habits={getHabitsForDate(selectedDate)}
+          habits={(() => {
+              const arr = getHabitsForDate(selectedDate)
+              if (sortMode === 'weight') return [...arr].sort((a, b) => b.weight - a.weight)
+              if (sortMode === 'alpha') return [...arr].sort((a, b) => a.name.localeCompare(b.name, 'it'))
+              if (sortMode === 'category') return [...arr].sort((a, b) => {
+                const catA = a.categoryId ? (categories.find(c => c.id === a.categoryId)?.name || '') : ''
+                const catB = b.categoryId ? (categories.find(c => c.id === b.categoryId)?.name || '') : ''
+                return catA.localeCompare(catB, 'it') || a.name.localeCompare(b.name, 'it')
+              })
+              if (sortMode === 'manual') return [...arr].sort((a, b) => {
+                const iA = manualOrder.indexOf(a.id)
+                const iB = manualOrder.indexOf(b.id)
+                return (iA === -1 ? Infinity : iA) - (iB === -1 ? Infinity : iB)
+              })
+              return arr
+            })()}
           getCheckInForDate={getCheckInForDate}
           getPeriodCompletion={getPeriodCompletion}
           getProgressForDate={getProgressForDate}
@@ -1215,7 +1238,7 @@ function App() {
                         <input
                           type="range"
                           min="0"
-                          max={isDaily ? Math.max(habit.target, currentValue) : Math.max(habit.target, periodInfo?.currentValue ?? 0)}
+                          max={habit.target}
                           value={isDaily ? currentValue : (periodInfo?.currentValue ?? 0)}
                           onChange={(e) => checkIn(habit.id, parseInt(e.target.value, 10))}
                           className="progress-slider"
@@ -1288,12 +1311,15 @@ function App() {
                               setQuickAddAmount('')
                             }}
                             className="btn-increment"
-                            disabled={isDaily ? currentValue >= habit.target : isCompleted}
                           >
                             +
                           </button>
                           <button
-                            onClick={() => handleDecrement(habit.id, currentValue)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setQuickRemoveModal({ habitId: habit.id, habitName: habit.name, currentValue, unit: habit.unit })
+                              setQuickRemoveAmount('')
+                            }}
                             className="btn-decrement"
                             disabled={isDaily ? currentValue === 0 : (periodInfo?.currentValue ?? 0) === 0}
                           >
@@ -1479,6 +1505,42 @@ function App() {
               disabled={!quickAddAmount || parseInt(quickAddAmount, 10) <= 0}
             >
               Aggiungi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick-remove modal: immissione quantità da rimuovere dal pulsante - */}
+      <Dialog
+        open={!!quickRemoveModal}
+        onOpenChange={(open) => { if (!open) { setQuickRemoveModal(null); setQuickRemoveAmount('') } }}
+      >
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Rimuovi da {quickRemoveModal?.habitName}</DialogTitle>
+            <DialogDescription>
+              Inserisci la quantità da rimuovere{quickRemoveModal?.unit ? ` (${quickRemoveModal.unit})` : ''}.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            type="number"
+            min="1"
+            max={quickRemoveModal?.currentValue}
+            step="1"
+            value={quickRemoveAmount}
+            onChange={(e) => setQuickRemoveAmount(e.target.value)}
+            placeholder="Quantità"
+            autoFocus
+            onKeyDown={(e) => { if (e.key === 'Enter') handleQuickRemove() }}
+            style={{ marginTop: '4px' }}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setQuickRemoveModal(null); setQuickRemoveAmount('') }}>Annulla</Button>
+            <Button
+              onClick={handleQuickRemove}
+              disabled={!quickRemoveAmount || parseInt(quickRemoveAmount, 10) <= 0}
+            >
+              Rimuovi
             </Button>
           </DialogFooter>
         </DialogContent>

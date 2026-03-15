@@ -60,42 +60,50 @@ export function ScoringInfoModal({ open, onClose }) {
 
           {/* Timeframe */}
           <section className="scoring-info-section">
-            <h3>Frequenza e normalizzazione</h3>
+            <h3>Frequenza e normalizzazione dinamica</h3>
             <p>
               Fare qualcosa una volta al mese è diverso dal farlo ogni giorno.
-              Per riflettere questo, le abitudini non-quotidiane vengono normalizzate
-              tramite un divisore applicato al loro peso:
+              Le abitudini non-quotidiane vengono normalizzate tramite un divisore
+              applicato al loro peso — e il divisore è <strong>dinamico</strong>: cambia
+              in base a quanti giorni sono passati nel periodo.
+            </p>
+            <p>
+              <strong>Perché dinamico?</strong> A inizio settimana, non sappiamo ancora
+              se l'abitudine settimanale verrà completata. Il peso è quindi ridotto
+              al minimo. Man mano che il periodo avanza, il peso cresce fino a raggiungere
+              il valore pieno a fine periodo.
             </p>
             <table className="scoring-timeframe-table">
               <thead>
                 <tr>
                   <th>Frequenza</th>
-                  <th>Divisore</th>
-                  <th>Esempio: peso 4 → peso effettivo</th>
+                  <th>Divisore a inizio periodo</th>
+                  <th>Divisore a fine periodo</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>Giornaliera</td>
                   <td>÷ 1</td>
-                  <td><strong>4.0</strong> al giorno</td>
+                  <td>÷ 1</td>
                 </tr>
                 <tr>
                   <td>Settimanale</td>
-                  <td>÷ 1.5</td>
-                  <td><strong>2.7</strong> al giorno</td>
+                  <td>÷ 10.5 (lunedì)</td>
+                  <td>÷ 1.5 (domenica)</td>
                 </tr>
                 <tr>
                   <td>Mensile</td>
-                  <td>÷ 2</td>
-                  <td><strong>2.0</strong> al giorno</td>
+                  <td>÷ ~60 (giorno 1)</td>
+                  <td>÷ 2 (ultimo giorno)</td>
                 </tr>
               </tbody>
             </table>
             <p className="scoring-info-note">
-              Ad esempio, se avessi un'abitudine giornaliera con peso 4 e un'abitudine mensile
-              con peso 4, quella giornaliera avrebbe il doppio dell'impatto sul punteggio
-              perché richiede costanza quotidiana.
+              In questo modo, il punteggio di ogni giorno riflette esattamente
+              ciò che si sapeva in quel momento — senza ricalcoli retroattivi.
+              Il lunedì, l'abitudine settimanale pesa pochissimo (periodo appena iniziato).
+              La domenica, pesa quasi quanto una giornaliera.
             </p>
           </section>
 
@@ -147,24 +155,26 @@ export function ScoringInfoModal({ open, onClose }) {
 
           {/* Esempio pratico */}
           <section className="scoring-info-section">
-            <h3>Esempio pratico (punteggio OGGI)</h3>
+            <h3>Esempio pratico (ultimo giorno del mese)</h3>
             <p>
-              Supponi di avere due abitudini, entrambe con peso 4:
+              Supponi di avere due abitudini, entrambe con peso 4,
+              e di trovarti all'<strong>ultimo giorno del mese</strong>
+              (quando il divisore mensile ha raggiunto il valore pieno ÷2):
             </p>
             <ul className="scoring-info-list">
               <li>
-                Un'abitudine <strong>giornaliera</strong> (es. una qualsiasi routine quotidiana) —
-                peso effettivo <strong>4.0</strong>
+                Un'abitudine <strong>giornaliera</strong> —
+                peso effettivo <strong>4.0</strong> (÷1)
               </li>
               <li>
-                Un'abitudine <strong>mensile</strong> (es. qualsiasi obiettivo mensile) —
-                peso effettivo <strong>2.0</strong> (÷2)
+                Un'abitudine <strong>mensile</strong> —
+                peso effettivo <strong>2.0</strong> (÷2, fine periodo)
               </li>
             </ul>
             <p>Totale pesi effettivi: 4.0 + 2.0 = <strong>6.0</strong></p>
             <div className="scoring-examples-grid">
               <div className="scoring-example-row">
-                <span>Entrambe completate oggi</span>
+                <span>Entrambe completate</span>
                 <strong>100%</strong>
               </div>
               <div className="scoring-example-row">
@@ -182,6 +192,11 @@ export function ScoringInfoModal({ open, onClose }) {
                 <strong>0%</strong>
               </div>
             </div>
+            <p className="scoring-info-note">
+              All'inizio del mese lo stesso scenario darebbe percentuali diverse,
+              perché il divisore mensile è più alto (il periodo è appena iniziato).
+              Il 100% è sempre raggiungibile completando tutte le abitudini attive.
+            </p>
           </section>
 
         </div>

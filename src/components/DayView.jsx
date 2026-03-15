@@ -158,6 +158,19 @@ export function DayView({
     setQuickAddAmount('')
   }, [quickAddModal, quickAddAmount, onCheckIn, date])
 
+  // State quick-remove modal (pulsante -)
+  const [quickRemoveModal, setQuickRemoveModal] = useState(null) // { habitId, habitName, currentValue, unit }
+  const [quickRemoveAmount, setQuickRemoveAmount] = useState('')
+
+  const handleQuickRemove = useCallback(() => {
+    if (!quickRemoveModal) return
+    const amount = parseInt(quickRemoveAmount, 10)
+    if (isNaN(amount) || amount <= 0) return
+    onCheckIn(quickRemoveModal.habitId, Math.max(0, quickRemoveModal.currentValue - amount), date)
+    setQuickRemoveModal(null)
+    setQuickRemoveAmount('')
+  }, [quickRemoveModal, quickRemoveAmount, onCheckIn, date])
+
   // Mese visualizzato nel calendario (può essere diverso dalla data selezionata)
   const [viewMonth, setViewMonth] = useState(() => {
     const d = new Date(date)
@@ -246,12 +259,6 @@ export function DayView({
     onSelectDate(dayDate)
   }
 
-  // Handler per decrementare
-  const handleDecrement = (habitId, currentValue) => {
-    if (currentValue > 0) {
-      onCheckIn(habitId, currentValue - 1, date)
-    }
-  }
 
   return (
     <div className="dayview-overlay" onClick={onClose}>
@@ -392,12 +399,7 @@ export function DayView({
                       <input
                         type="range"
                         min="0"
-                        max={(() => {
-                          const isDaily = !habit.timeframe || habit.timeframe === 'daily'
-                          return isDaily
-                            ? Math.max(habit.target, habit.currentValue)
-                            : Math.max(habit.target, habit.periodInfo?.currentValue ?? 0)
-                        })()}
+                        max={habit.target}
                         value={!habit.timeframe || habit.timeframe === 'daily' ? habit.currentValue : (habit.periodInfo?.currentValue ?? 0)}
                         onChange={(e) => onCheckIn(habit.id, parseInt(e.target.value, 10), date)}
                         className="progress-slider"
@@ -468,12 +470,15 @@ export function DayView({
                               setQuickAddAmount('')
                             }}
                             className="btn-increment"
-                            disabled={habit.isCompleted}
                           >
                             +
                           </button>
                           <button
-                            onClick={() => handleDecrement(habit.id, habit.currentValue)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setQuickRemoveModal({ habitId: habit.id, habitName: habit.name, currentValue: habit.currentValue, unit: habit.unit })
+                              setQuickRemoveAmount('')
+                            }}
                             className="btn-decrement"
                             disabled={habit.currentValue === 0}
                           >
@@ -520,6 +525,41 @@ export function DayView({
               disabled={!quickAddAmount || parseInt(quickAddAmount, 10) <= 0}
             >
               Aggiungi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Quick-remove modal: immissione quantità da rimuovere dal pulsante - */}
+      <Dialog
+        open={!!quickRemoveModal}
+        onOpenChange={(open) => { if (!open) { setQuickRemoveModal(null); setQuickRemoveAmount('') } }}
+      >
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Rimuovi da {quickRemoveModal?.habitName}</DialogTitle>
+            <DialogDescription>
+              Inserisci la quantità da rimuovere{quickRemoveModal?.unit ? ` (${quickRemoveModal.unit})` : ''}.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            type="number"
+            min="1"
+            max={quickRemoveModal?.currentValue}
+            step="1"
+            value={quickRemoveAmount}
+            onChange={(e) => setQuickRemoveAmount(e.target.value)}
+            placeholder="Quantità"
+            autoFocus
+            onKeyDown={(e) => { if (e.key === 'Enter') handleQuickRemove() }}
+            style={{ marginTop: '4px' }}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setQuickRemoveModal(null); setQuickRemoveAmount('') }}>Annulla</Button>
+            <Button
+              onClick={handleQuickRemove}
+              disabled={!quickRemoveAmount || parseInt(quickRemoveAmount, 10) <= 0}
+            >
+              Rimuovi
             </Button>
           </DialogFooter>
         </DialogContent>
